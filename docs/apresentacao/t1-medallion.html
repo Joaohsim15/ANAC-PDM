@@ -4,92 +4,95 @@
 <title>Medallion VRA</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 
 <style>
+  /* Paleta extraida do Modelo de Apresentacao do Instituto de Informatica:
+     accent1 #0072B9, accent2 #005CA1, dk1 #212121, lt2 #F9F9F9, dk2 #969696. */
   :root {
-    --ground:   #F5F7FA;
+    --ground:   #F9F9F9;
     --surface:  #FFFFFF;
-    --ink:      #14202C;
-    --ink-2:    #3D4C5C;
-    --muted:    #6B7B8C;
-    --line:     #D7E0E8;
-    --line-2:   #EAEFF4;
+    --ink:      #212121;
+    --ink-2:    #474747;
+    --muted:    #757575;
+    --line:     #E0E3E6;
+    --line-2:   #EFF1F3;
 
-    --bronze:   #9C5F33;
-    --silver:   #5E6D7C;
-    --gold:     #8A6708;
-    --accent:   #1B5E9C;
-    --barred:   #A3382B;
+    --inf:      #0072B9;
+    --inf-dark: #005CA1;
 
-    --bronze-fill: #F4E7DC;
-    --silver-fill: #E6EBF0;
-    --gold-fill:   #F5EBCF;
-    --accent-fill: #E0EBF7;
-    --neutral-fill:#EDF1F5;
+    --bronze:   #8A5A2B;
+    --silver:   #5C6B78;
+    --gold:     #7C6410;
+    --barred:   #A32A1E;
 
-    --display: "Barlow Condensed", "Arial Narrow", sans-serif;
-    --body:    "Source Sans 3", system-ui, sans-serif;
-    --mono:    "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    --bronze-fill: #F3ECE4;
+    --silver-fill: #EAEDF0;
+    --gold-fill:   #F2EEE0;
+    --inf-fill:    #E3EFF7;
+    --neutral-fill:#EEF0F2;
+
+    --sans: "IBM Plex Sans", Arial, Helvetica, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
   }
 
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --ground:   #0D141B;
-      --surface:  #151F29;
-      --ink:      #E9EFF5;
-      --ink-2:    #B6C4D0;
-      --muted:    #8496A6;
-      --line:     #26333F;
-      --line-2:   #1C2833;
+      --ground:   #10151A;
+      --surface:  #171D24;
+      --ink:      #E8EBEE;
+      --ink-2:    #B2BAC2;
+      --muted:    #869099;
+      --line:     #283038;
+      --line-2:   #1D242B;
 
-      --bronze:   #D28C55;
-      --silver:   #A2B2C1;
-      --gold:     #D9AE3E;
-      --accent:   #63A9E9;
-      --barred:   #E8796A;
+      --inf:      #4FA6E0;
+      --inf-dark: #7FBEE8;
 
-      --bronze-fill: #2A1D12;
-      --silver-fill: #1E2A35;
-      --gold-fill:   #2C2413;
-      --accent-fill: #14283C;
-      --neutral-fill:#1A242E;
+      --bronze:   #C89463;
+      --silver:   #9FACB8;
+      --gold:     #C4A94F;
+      --barred:   #DC8072;
+
+      --bronze-fill: #241C13;
+      --silver-fill: #1D242B;
+      --gold-fill:   #232013;
+      --inf-fill:    #14242F;
+      --neutral-fill:#1A2027;
     }
   }
 
   :root[data-theme="dark"] {
-    --ground:   #0D141B;
-    --surface:  #151F29;
-    --ink:      #E9EFF5;
-    --ink-2:    #B6C4D0;
-    --muted:    #8496A6;
-    --line:     #26333F;
-    --line-2:   #1C2833;
+    --ground:   #10151A;
+    --surface:  #171D24;
+    --ink:      #E8EBEE;
+    --ink-2:    #B2BAC2;
+    --muted:    #869099;
+    --line:     #283038;
+    --line-2:   #1D242B;
 
-    --bronze:   #D28C55;
-    --silver:   #A2B2C1;
-    --gold:     #D9AE3E;
-    --accent:   #63A9E9;
-    --barred:   #E8796A;
+    --inf:      #4FA6E0;
+    --inf-dark: #7FBEE8;
 
-    --bronze-fill: #2A1D12;
-    --silver-fill: #1E2A35;
-    --gold-fill:   #2C2413;
-    --accent-fill: #14283C;
-    --neutral-fill:#1A242E;
+    --bronze:   #C89463;
+    --silver:   #9FACB8;
+    --gold:     #C4A94F;
+    --barred:   #DC8072;
+
+    --bronze-fill: #241C13;
+    --silver-fill: #1D242B;
+    --gold-fill:   #232013;
+    --inf-fill:    #14242F;
+    --neutral-fill:#1A2027;
   }
 
   * { box-sizing: border-box; }
 
-  html {
-    scroll-behavior: smooth;
-    background: var(--ground);
-  }
+  html { scroll-behavior: smooth; background: var(--ground); }
 
   @media (min-width: 780px) and (min-height: 620px) {
     html { scroll-snap-type: y mandatory; }
   }
-
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
   }
@@ -98,9 +101,9 @@
     margin: 0;
     background: var(--ground);
     color: var(--ink);
-    font-family: var(--body);
-    font-size: 17px;
-    line-height: 1.55;
+    font-family: var(--sans);
+    font-size: 16.5px;
+    line-height: 1.6;
     -webkit-font-smoothing: antialiased;
   }
 
@@ -110,403 +113,335 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding-block: 56px 72px;
-    padding-inline: 24px;
+    padding-block: 58px;
+    padding-inline: 28px;
     border-bottom: 1px solid var(--line-2);
+    position: relative;
   }
 
-  .wrap {
-    width: 100%;
-    max-width: 1180px;
-    margin-inline: auto;
+  /* faixa institucional no topo de cada tela */
+  .slide::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 3px;
+    background: var(--inf);
   }
 
-  /* ---------- eyebrow: posição na sequência + janela de tempo ---------- */
+  .wrap { width: 100%; max-width: 1150px; margin-inline: auto; }
+
   .eyebrow {
     display: flex;
     align-items: baseline;
-    gap: 14px;
+    gap: 16px;
     font-family: var(--mono);
-    font-size: 12px;
-    letter-spacing: 0.08em;
+    font-size: 11.5px;
+    letter-spacing: 0.07em;
     text-transform: uppercase;
     color: var(--muted);
-    margin-bottom: 22px;
+    padding-bottom: 12px;
+    margin-bottom: 30px;
+    border-bottom: 1px solid var(--line);
   }
-  .eyebrow .step {
-    color: var(--accent);
-    font-weight: 500;
-  }
-  .eyebrow .clock {
-    margin-left: auto;
-    font-variant-numeric: tabular-nums;
-  }
+  .eyebrow .clock { margin-left: auto; font-variant-numeric: tabular-nums; }
 
   h1 {
-    font-family: var(--display);
-    font-weight: 700;
-    font-size: clamp(2.6rem, 6.4vw, 5rem);
-    line-height: 0.98;
-    letter-spacing: -0.005em;
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: clamp(1.95rem, 4vw, 3rem);
+    line-height: 1.15;
+    letter-spacing: -0.018em;
     text-wrap: balance;
-    margin: 0 0 10px;
+    margin: 0 0 16px;
   }
 
   h2 {
-    font-family: var(--display);
     font-weight: 600;
-    font-size: clamp(1.9rem, 3.8vw, 3rem);
-    line-height: 1.06;
+    font-size: clamp(1.45rem, 2.7vw, 2.05rem);
+    line-height: 1.2;
+    letter-spacing: -0.014em;
     text-wrap: balance;
-    margin: 0 0 8px;
+    margin: 0 0 12px;
   }
 
   .dek {
-    font-size: clamp(1.02rem, 1.5vw, 1.24rem);
+    font-size: clamp(0.99rem, 1.3vw, 1.11rem);
     color: var(--ink-2);
-    max-width: 62ch;
-    margin: 0 0 30px;
+    max-width: 68ch;
+    margin: 0 0 34px;
   }
 
-  code, .mono { font-family: var(--mono); }
+  code, .mono { font-family: var(--mono); font-size: 0.92em; }
+
+  /* marca hexagonal do Instituto */
+  .hex-mark { display: block; width: 46px; height: auto; color: var(--inf); margin-bottom: 22px; }
+  .hex { width: 11px; height: auto; vertical-align: -1px; margin-right: 8px; }
 
   /* ---------- capa ---------- */
-  .cover-meta {
+  .institutional {
     font-family: var(--mono);
-    font-size: 13px;
+    font-size: 12px;
+    letter-spacing: 0.05em;
     color: var(--muted);
-    letter-spacing: 0.04em;
-    margin-bottom: 40px;
+    margin: 0 0 34px;
+    line-height: 1.85;
   }
+  .institutional strong { color: var(--ink-2); font-weight: 500; }
 
   .figures {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-    gap: 2px;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1px;
     background: var(--line);
     border: 1px solid var(--line);
-    border-radius: 3px;
-    overflow: hidden;
   }
-  .fig {
-    background: var(--surface);
-    padding: 22px 24px;
-  }
+  .fig { background: var(--surface); padding: 20px 22px; }
   .fig .n {
-    font-family: var(--display);
-    font-weight: 700;
-    font-size: clamp(2rem, 4vw, 2.9rem);
-    line-height: 1;
+    font-weight: 600;
+    font-size: clamp(1.55rem, 2.9vw, 2.1rem);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
     font-variant-numeric: tabular-nums;
     display: block;
+    color: var(--ink);
   }
   .fig .k {
     font-family: var(--mono);
-    font-size: 11.5px;
+    font-size: 10.5px;
     text-transform: uppercase;
-    letter-spacing: 0.09em;
+    letter-spacing: 0.08em;
     color: var(--muted);
-    margin-top: 8px;
+    margin-top: 7px;
     display: block;
   }
-  .fig.bronze .n { color: var(--bronze); }
-  .fig.gold   .n { color: var(--gold); }
-  .fig.acc    .n { color: var(--accent); }
 
   /* ---------- diagrama ---------- */
   figure { margin: 0; }
-  .canvas {
-    overflow-x: auto;
-    padding-bottom: 6px;
-  }
-  .canvas svg {
-    display: block;
-    width: 100%;
-    min-width: 860px;
-    height: auto;
-  }
+  .canvas { overflow-x: auto; padding-bottom: 6px; }
+  .canvas svg { display: block; width: 100%; min-width: 880px; height: auto; }
   figcaption {
-    margin-top: 18px;
-    font-size: 0.97rem;
+    margin-top: 20px;
+    font-size: 0.94rem;
     color: var(--muted);
-    max-width: 74ch;
+    max-width: 78ch;
   }
 
-  /* ---------- por que: linhas camada / motivo ---------- */
-  .reasons {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    border-top: 1px solid var(--line);
-  }
+  /* ---------- justificativa ---------- */
+  .reasons { border-top: 1px solid var(--line); }
   .reason {
     display: grid;
-    grid-template-columns: 190px 1fr;
-    gap: 28px;
-    padding-block: 26px;
+    grid-template-columns: 200px 1fr;
+    gap: 30px;
+    padding-block: 24px;
     border-bottom: 1px solid var(--line);
     align-items: start;
   }
   .reason .layer {
-    font-family: var(--display);
-    font-weight: 700;
-    font-size: clamp(1.5rem, 2.6vw, 2.1rem);
-    line-height: 1;
-    text-transform: uppercase;
-    letter-spacing: 0.02em;
-  }
-  .reason .layer small {
-    display: block;
     font-family: var(--mono);
-    font-size: 11px;
+    font-size: 12.5px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding-top: 3px;
+    display: flex;
+    align-items: baseline;
+  }
+  .reason .layer .txt small {
+    display: block;
+    font-size: 10.5px;
     font-weight: 400;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.03em;
     text-transform: none;
     color: var(--muted);
-    margin-top: 9px;
+    margin-top: 7px;
   }
   .reason.b .layer { color: var(--bronze); }
   .reason.s .layer { color: var(--silver); }
   .reason.g .layer { color: var(--gold); }
 
   .reason .claim {
-    font-size: clamp(1.06rem, 1.7vw, 1.32rem);
+    font-size: clamp(1.05rem, 1.5vw, 1.24rem);
     font-weight: 600;
-    margin: 0 0 7px;
+    letter-spacing: -0.012em;
+    margin: 0 0 8px;
     line-height: 1.3;
   }
   .reason .detail {
     margin: 0;
     color: var(--ink-2);
-    max-width: 68ch;
+    max-width: 72ch;
+    font-size: 0.975rem;
   }
 
-  /* ---------- features: dentro / fora ---------- */
-  .split {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 34px;
-  }
+  /* ---------- contrato de features ---------- */
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 38px; }
   .col-head {
-    font-family: var(--mono);
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.09em;
-    padding-bottom: 10px;
-    margin-bottom: 16px;
-    border-bottom: 2px solid;
-  }
-  .col-head.in  { color: var(--accent); border-color: var(--accent); }
-  .col-head.out { color: var(--barred); border-color: var(--barred); }
-  .col-head span {
-    float: right;
-    font-variant-numeric: tabular-nums;
-    letter-spacing: 0;
-  }
-
-  .cols {
     display: flex;
-    flex-wrap: wrap;
-    gap: 7px;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.085em;
+    padding-bottom: 9px;
     margin-bottom: 16px;
+    border-bottom: 1px solid;
   }
+  .col-head.in  { color: var(--inf); border-color: var(--inf); }
+  .col-head.out { color: var(--barred); border-color: var(--barred); }
+  .col-head span { font-variant-numeric: tabular-nums; letter-spacing: 0; }
+
+  .cols { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
   .chip {
     font-family: var(--mono);
-    font-size: 13px;
-    padding: 5px 10px;
-    border-radius: 3px;
-    background: var(--accent-fill);
+    font-size: 12.5px;
+    padding: 5px 9px;
+    background: var(--inf-fill);
     color: var(--ink);
     border: 1px solid transparent;
   }
   .chip.no {
     background: transparent;
-    border: 1px dashed var(--barred);
+    border: 1px solid var(--barred);
     color: var(--barred);
-    text-decoration: line-through;
-    text-decoration-thickness: 1px;
   }
-  .note {
-    font-size: 0.95rem;
-    color: var(--muted);
+  .note { font-size: 0.92rem; color: var(--muted); margin: 0; max-width: 58ch; }
+
+  .rule-box { margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--line); }
+  .rule-box p {
     margin: 0;
-    max-width: 54ch;
+    max-width: 92ch;
+    font-size: 0.975rem;
+    color: var(--ink-2);
   }
+  .rule-box b { color: var(--ink); font-weight: 600; }
 
-  .rule-box {
-    margin-top: 30px;
-    border-left: 3px solid var(--gold);
-    padding: 4px 0 4px 20px;
-  }
-  .rule-box p { margin: 0; max-width: 78ch; }
-  .rule-box strong { color: var(--gold); }
-
-  /* ---------- SQL ---------- */
+  /* ---------- treinamento ---------- */
   .sql-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
-    gap: 34px;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+    gap: 38px;
     align-items: start;
   }
   pre {
     margin: 0;
     background: var(--surface);
     border: 1px solid var(--line);
-    border-radius: 4px;
+    border-top: 2px solid var(--inf);
     padding: 20px 22px;
     overflow-x: auto;
     font-family: var(--mono);
-    font-size: 13.5px;
-    line-height: 1.72;
+    font-size: 12.5px;
+    line-height: 1.78;
     color: var(--ink);
   }
-  .kw  { color: var(--accent); font-weight: 500; }
+  .kw  { color: var(--inf); font-weight: 500; }
   .str { color: var(--bronze); }
   .cm  { color: var(--muted); }
 
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-variant-numeric: tabular-nums;
-  }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
   caption {
     text-align: left;
     font-family: var(--mono);
-    font-size: 12px;
+    font-size: 11.5px;
     text-transform: uppercase;
-    letter-spacing: 0.09em;
+    letter-spacing: 0.085em;
     color: var(--muted);
-    padding-bottom: 12px;
+    padding-bottom: 11px;
   }
   th, td {
     text-align: right;
-    padding: 11px 8px;
+    padding: 10px 8px;
     border-bottom: 1px solid var(--line);
-    font-size: 15px;
+    font-size: 14.5px;
   }
   th:first-child, td:first-child { text-align: left; }
   thead th {
     font-family: var(--mono);
-    font-size: 11px;
+    font-size: 10.5px;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.055em;
     color: var(--muted);
     font-weight: 400;
   }
   tbody tr.win td { font-weight: 600; }
-  tbody tr.win td:first-child { color: var(--accent); }
+  tbody tr.win td:first-child { color: var(--inf); }
 
   .finding {
     margin-top: 22px;
-    font-size: 0.98rem;
+    font-size: 0.935rem;
     color: var(--ink-2);
-    border-top: 1px solid var(--line);
-    padding-top: 18px;
-    max-width: 60ch;
+    max-width: 62ch;
   }
-  .finding b { color: var(--ink); }
+  .finding b { color: var(--ink); font-weight: 600; }
 
-  /* ---------- navegação ---------- */
-  .rail {
-    position: fixed;
-    right: 20px;
-    top: 50%;
-    transform: translateY(-50%);
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    z-index: 10;
-  }
-  .rail a {
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    border: 1px solid var(--muted);
-    background: transparent;
-    display: block;
-    transition: background 0.18s, border-color 0.18s;
-  }
-  .rail a[aria-current="true"] {
-    background: var(--accent);
-    border-color: var(--accent);
-  }
-  .rail a:focus-visible,
-  a:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 3px;
-  }
+  a:focus-visible { outline: 2px solid var(--inf); outline-offset: 3px; }
 
   @media (max-width: 900px) {
     .sql-grid, .split { grid-template-columns: 1fr; }
     .reason { grid-template-columns: 1fr; gap: 10px; }
-    .rail { display: none; }
   }
 </style>
 
-<nav class="rail" aria-label="Telas">
-  <a href="#s1" aria-label="Tela 1" aria-current="true"></a>
-  <a href="#s2" aria-label="Tela 2"></a>
-  <a href="#s3" aria-label="Tela 3"></a>
-  <a href="#s4" aria-label="Tela 4"></a>
-  <a href="#s5" aria-label="Tela 5"></a>
-</nav>
-
-<!-- ══════════════════════════ 1. CAPA ══════════════════════════ -->
+<!-- ══════════════════════════ 1 ══════════════════════════ -->
 <section class="slide" id="s1">
   <div class="wrap">
     <div class="eyebrow">
-      <span class="step">01 / 05</span>
-      <span>Trabalho 1 &middot; PDM_BIA &middot; INF-UFG</span>
+      <span>01 / 05</span>
+      <span>Processamento de Dados Massivos &middot; Trabalho 1</span>
       <span class="clock">0:00 – 0:20</span>
     </div>
 
-    <h1>Predição de atraso de partida<br>sobre o VRA da ANAC</h1>
+    <!-- triade hexagonal: o motivo do Instituto, aqui tambem contando as tres camadas -->
+    <svg class="hex-mark" viewBox="-11 -12 38 38" role="img"
+         aria-label="Marca hexagonal do Instituto de Informática">
+      <g fill="currentColor">
+        <polygon points="0,-9 -7.8,-4.5 -7.8,4.5 0,9 7.8,4.5 7.8,-4.5"></polygon>
+        <polygon points="15.6,-9 7.8,-4.5 7.8,4.5 15.6,9 23.4,4.5 23.4,-4.5" opacity="0.62"></polygon>
+        <polygon points="7.8,4.5 0,9 0,18 7.8,22.5 15.6,18 15.6,9" opacity="0.34"></polygon>
+      </g>
+    </svg>
+
+    <h1>Predição de atraso de partida em voos regulares brasileiros</h1>
     <p class="dek">
-      Arquitetura Medallion no BigQuery e classificação binária em BigQuery ML,
-      sobre três anos de voos regulares brasileiros.
+      Arquitetura Medallion implementada no BigQuery e classificação binária em
+      BigQuery ML, sobre a base de Voos Regulares Ativos da ANAC no recorte de
+      2022 a 2024.
     </p>
-    <p class="cover-meta">pdm-bia-2026.tf_anac &middot; recorte 2022–2024</p>
+
+    <p class="institutional">
+      <strong>Instituto de Informática</strong> &middot; Universidade Federal de Goiás<br>
+      pdm-bia-2026.tf_anac
+    </p>
 
     <div class="figures">
-      <div class="fig bronze">
-        <span class="n">2.843.883</span>
-        <span class="k">Voos na Bronze</span>
-      </div>
-      <div class="fig">
-        <span class="n">36</span>
-        <span class="k">Arquivos CSV da fonte</span>
-      </div>
-      <div class="fig gold">
-        <span class="n">10</span>
-        <span class="k">Features online-safe</span>
-      </div>
-      <div class="fig acc">
-        <span class="n">2</span>
-        <span class="k">Modelos BigQuery ML</span>
-      </div>
+      <div class="fig"><span class="n">2.843.883</span><span class="k">Registros ingeridos</span></div>
+      <div class="fig"><span class="n">36</span><span class="k">Arquivos de origem</span></div>
+      <div class="fig"><span class="n">10</span><span class="k">Features do contrato</span></div>
+      <div class="fig"><span class="n">2</span><span class="k">Modelos treinados</span></div>
     </div>
   </div>
 </section>
 
-<!-- ══════════════════════════ 2. DIAGRAMA ══════════════════════════ -->
+<!-- ══════════════════════════ 2 ══════════════════════════ -->
 <section class="slide" id="s2">
   <div class="wrap">
     <div class="eyebrow">
-      <span class="step">02 / 05</span>
-      <span>O pipeline inteiro</span>
+      <span>02 / 05</span>
+      <span>Estrutura do pipeline</span>
       <span class="clock">0:20 – 1:10</span>
     </div>
 
-    <h2>Do CSV cru ao modelo, em quatro paradas</h2>
+    <h2>Organização das camadas</h2>
     <p class="dek">
-      Cada camada tem uma responsabilidade só, e a contagem cai a cada passo —
-      é essa queda que prova que houve trabalho de verdade no meio.
+      Cada camada possui responsabilidade única e delimitada. A redução progressiva
+      do volume entre etapas corresponde às operações de filtragem e consolidação
+      aplicadas em cada uma delas.
     </p>
 
     <figure>
       <div class="canvas">
-        <svg viewBox="0 0 1200 320" role="img"
-             aria-label="Fluxo do pipeline: 36 arquivos CSV no GCS viram a camada Bronze como external table, depois a Silver tipada e deduplicada, depois a Gold com dez features, e por fim dois modelos no BigQuery ML.">
+        <svg viewBox="0 0 1200 318" role="img"
+             aria-label="Fluxo do pipeline: 36 arquivos CSV armazenados no GCS originam a camada Bronze como external table; a Silver aplica tipagem e deduplicação; a Gold deriva dez features; e a etapa final treina dois modelos em BigQuery ML.">
           <defs>
             <marker id="arw" viewBox="0 0 10 10" refX="9" refY="5"
                     markerWidth="7" markerHeight="7" orient="auto-start-reverse">
@@ -514,164 +449,177 @@
             </marker>
           </defs>
 
-          <!-- contagens -->
-          <g font-family="JetBrains Mono, monospace" font-size="15" font-weight="500"
+          <g font-family="IBM Plex Mono, monospace" font-size="14" font-weight="500"
              text-anchor="middle" style="font-variant-numeric: tabular-nums;">
-            <text x="93"   y="46" fill="var(--muted)">36 arquivos</text>
-            <text x="341"  y="46" fill="var(--bronze)">2.843.883</text>
-            <text x="589"  y="46" fill="var(--silver)">~2,6 mi</text>
-            <text x="837"  y="46" fill="var(--gold)">2,62 mi</text>
-            <text x="1085" y="46" fill="var(--accent)">2,47 mi treino</text>
+            <text x="93"   y="44" fill="var(--muted)">36 arquivos</text>
+            <text x="341"  y="44" fill="var(--bronze)">2.843.883</text>
+            <text x="589"  y="44" fill="var(--silver)">~2,6 mi</text>
+            <text x="837"  y="44" fill="var(--gold)">2,62 mi</text>
+            <text x="1085" y="44" fill="var(--inf)">2,47 mi treino</text>
           </g>
 
-          <!-- caixas -->
-          <g stroke-width="1.5">
-            <rect x="10"   y="80" width="165" height="96" rx="3"
+          <g stroke-width="1.25">
+            <rect x="10"   y="78" width="165" height="94"
                   fill="var(--neutral-fill)" stroke="var(--muted)"></rect>
-            <rect x="258"  y="80" width="165" height="96" rx="3"
+            <rect x="258"  y="78" width="165" height="94"
                   fill="var(--bronze-fill)" stroke="var(--bronze)"></rect>
-            <rect x="506"  y="80" width="165" height="96" rx="3"
+            <rect x="506"  y="78" width="165" height="94"
                   fill="var(--silver-fill)" stroke="var(--silver)"></rect>
-            <rect x="754"  y="80" width="165" height="96" rx="3"
+            <rect x="754"  y="78" width="165" height="94"
                   fill="var(--gold-fill)" stroke="var(--gold)"></rect>
-            <rect x="1002" y="80" width="165" height="96" rx="3"
-                  fill="var(--accent-fill)" stroke="var(--accent)"></rect>
+            <rect x="1002" y="78" width="165" height="94"
+                  fill="var(--inf-fill)" stroke="var(--inf)"></rect>
           </g>
 
-          <!-- rótulos das caixas -->
-          <g font-family="Barlow Condensed, sans-serif" font-size="27" font-weight="700"
-             text-anchor="middle" letter-spacing="0.5">
-            <text x="93"   y="124" fill="var(--ink)">GCS</text>
-            <text x="341"  y="124" fill="var(--bronze)">BRONZE</text>
-            <text x="589"  y="124" fill="var(--silver)">SILVER</text>
-            <text x="837"  y="124" fill="var(--gold)">GOLD</text>
-            <text x="1085" y="124" fill="var(--accent)">BQ ML</text>
+          <g font-family="IBM Plex Sans, Arial, sans-serif" font-size="19" font-weight="600"
+             text-anchor="middle" letter-spacing="1.1">
+            <text x="93"   y="120" fill="var(--ink)">GCS</text>
+            <text x="341"  y="120" fill="var(--bronze)">BRONZE</text>
+            <text x="589"  y="120" fill="var(--silver)">SILVER</text>
+            <text x="837"  y="120" fill="var(--gold)">GOLD</text>
+            <text x="1085" y="120" fill="var(--inf)">BQ ML</text>
           </g>
-          <g font-family="JetBrains Mono, monospace" font-size="10.5"
+          <g font-family="IBM Plex Mono, monospace" font-size="10"
              text-anchor="middle" fill="var(--muted)">
-            <text x="93"   y="150">dados-anac-vra</text>
-            <text x="341"  y="150">tb_anac_bronze</text>
-            <text x="589"  y="150">tb_anac_silver</text>
-            <text x="837"  y="150">..._gold_features</text>
-            <text x="1085" y="150">mdl_anac_*</text>
+            <text x="93"   y="146">dados-anac-vra</text>
+            <text x="341"  y="146">tb_anac_bronze</text>
+            <text x="589"  y="146">tb_anac_silver</text>
+            <text x="837"  y="146">..._gold_features</text>
+            <text x="1085" y="146">mdl_anac_*</text>
           </g>
 
-          <!-- setas -->
-          <g stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arw)">
-            <line x1="179" y1="128" x2="252"  y2="128"></line>
-            <line x1="427" y1="128" x2="500"  y2="128"></line>
-            <line x1="675" y1="128" x2="748"  y2="128"></line>
-            <line x1="923" y1="128" x2="996"  y2="128"></line>
+          <g stroke="var(--muted)" stroke-width="1.25" marker-end="url(#arw)">
+            <line x1="179" y1="125" x2="252" y2="125"></line>
+            <line x1="427" y1="125" x2="500" y2="125"></line>
+            <line x1="675" y1="125" x2="748" y2="125"></line>
+            <line x1="923" y1="125" x2="996" y2="125"></line>
           </g>
-          <g font-family="JetBrains Mono, monospace" font-size="10"
+          <g font-family="IBM Plex Mono, monospace" font-size="9.5"
              text-anchor="middle" fill="var(--muted)">
-            <text x="215" y="114">schema-</text>
-            <text x="215" y="126" dy="-2">on-read</text>
-            <text x="463" y="114">tipa +</text>
-            <text x="463" y="126" dy="-2">dedup</text>
-            <text x="711" y="114">deriva</text>
-            <text x="711" y="126" dy="-2">features</text>
-            <text x="959" y="114">SELECT *</text>
-            <text x="959" y="126" dy="-2">na view</text>
+            <text x="215" y="108">schema-</text>
+            <text x="215" y="119">on-read</text>
+            <text x="463" y="108">tipagem</text>
+            <text x="463" y="119">e dedup</text>
+            <text x="711" y="108">derivação</text>
+            <text x="711" y="119">de features</text>
+            <text x="959" y="108">SELECT *</text>
+            <text x="959" y="119">na view</text>
           </g>
 
-          <!-- detalhes sob cada caixa -->
-          <g font-family="Source Sans 3, sans-serif" font-size="12.5"
+          <g font-family="IBM Plex Sans, Arial, sans-serif" font-size="12"
              text-anchor="middle" fill="var(--ink-2)">
-            <text x="93" y="207">CSV · ISO-8859-1</text>
-            <text x="93" y="226">2 layouts distintos</text>
-            <text x="93" y="245">particionado por lote</text>
+            <text x="93" y="203">CSV, ISO-8859-1</text>
+            <text x="93" y="222">dois layouts distintos</text>
+            <text x="93" y="241">particionado por lote</text>
 
-            <text x="341" y="207">external table</text>
-            <text x="341" y="226">todo campo STRING</text>
-            <text x="341" y="245">append-only</text>
+            <text x="341" y="203">external table</text>
+            <text x="341" y="222">todos os campos STRING</text>
+            <text x="341" y="241">append-only</text>
 
-            <text x="589" y="207">tabela nativa</text>
-            <text x="589" y="226">tipada e deduplicada</text>
-            <text x="589" y="245">particionada + cluster</text>
+            <text x="589" y="203">tabela nativa</text>
+            <text x="589" y="222">tipada e deduplicada</text>
+            <text x="589" y="241">particionada e clusterizada</text>
 
-            <text x="837" y="207">10 features + alvo</text>
-            <text x="837" y="226">flag is_eval</text>
-            <text x="837" y="245">2 views de corte</text>
+            <text x="837" y="203">dez features e o alvo</text>
+            <text x="837" y="222">indicador is_eval</text>
+            <text x="837" y="241">duas views de corte</text>
 
-            <text x="1085" y="207">LOGISTIC_REG</text>
-            <text x="1085" y="226">BOOSTED_TREE</text>
-            <text x="1085" y="245">exportados p/ GCS</text>
+            <text x="1085" y="203">LOGISTIC_REG</text>
+            <text x="1085" y="222">BOOSTED_TREE</text>
+            <text x="1085" y="241">exportados para o GCS</text>
           </g>
 
-          <!-- régua do corte temporal -->
           <g>
-            <line x1="754" y1="278" x2="1167" y2="278"
+            <line x1="754" y1="274" x2="1167" y2="274"
                   stroke="var(--gold)" stroke-width="1" stroke-dasharray="3 3"></line>
-            <text x="960" y="300" font-family="JetBrains Mono, monospace" font-size="10.5"
+            <text x="960" y="296" font-family="IBM Plex Mono, monospace" font-size="10"
                   text-anchor="middle" fill="var(--gold)">
-              split temporal: últimos 60 dias ficam fora do treino
+              divisão temporal: os últimos 60 dias são reservados para avaliação
             </text>
           </g>
         </svg>
       </div>
       <figcaption>
-        A Bronze não copia dado nenhum — é <em>schema-on-read</em> sobre o GCS, então
-        criá-la custa segundos e nada de armazenamento. A queda de 2,84 para ~2,6 milhões
-        acontece na Silver: voos cancelados, duplicatas e outliers saem ali.
+        A camada Bronze não replica dados: trata-se de acesso <em>schema-on-read</em> sobre
+        os arquivos no GCS, sem custo de armazenamento adicional. A redução de 2,84 para
+        aproximadamente 2,6 milhões de registros ocorre na Silver, onde são descartados voos
+        cancelados, duplicatas e valores fora da faixa plausível.
       </figcaption>
     </figure>
   </div>
 </section>
 
-<!-- ══════════════════════════ 3. POR QUE ══════════════════════════ -->
+<!-- ══════════════════════════ 3 ══════════════════════════ -->
 <section class="slide" id="s3">
   <div class="wrap">
     <div class="eyebrow">
-      <span class="step">03 / 05</span>
-      <span>Por que Medallion</span>
+      <span>03 / 05</span>
+      <span>Justificativa da arquitetura</span>
       <span class="clock">1:10 – 2:00</span>
     </div>
 
-    <h2>Cada camada resolve um problema que nós encontramos</h2>
+    <h2>Motivação de cada fronteira</h2>
     <p class="dek">
-      Não é separação por convenção. Cada fronteira existe porque um problema
-      concreto do VRA apareceu e precisou de um lugar para morar.
+      A segmentação em camadas não decorre de convenção. Cada fronteira responde a
+      uma característica específica e verificada da fonte de dados.
     </p>
 
     <div class="reasons">
       <div class="reason b">
-        <div class="layer">Bronze<small>tb_anac_bronze</small></div>
+        <div class="layer">
+          <svg class="hex" viewBox="-9 -10 18 20" aria-hidden="true">
+            <polygon points="0,-9 -7.8,-4.5 -7.8,4.5 0,9 7.8,4.5 7.8,-4.5" fill="currentColor"></polygon>
+          </svg>
+          <span class="txt">Bronze<small>tb_anac_bronze</small></span>
+        </div>
         <div>
-          <p class="claim">A fonte é instável.</p>
+          <p class="claim">Instabilidade estrutural da fonte</p>
           <p class="detail">
-            Os 36 arquivos não têm o mesmo formato: a coluna <code>Codeshare</code> aparece
-            a partir de out/2022, então 15 arquivos têm 21 colunas e 21 têm 20. As datas vêm
-            em dois padrões e o encoding é ISO-8859-1. Guardando tudo cru e como texto,
-            quando a fonte muda de novo só a Silver precisa mudar — a Bronze nunca é
-            reingerida.
+            Os 36 arquivos do recorte não compartilham o mesmo formato. A coluna
+            <code>Codeshare</code> passa a ser emitida a partir de outubro de 2022, de modo
+            que 15 arquivos apresentam 21 colunas e 21 apresentam 20. As datas ocorrem em
+            dois padrões distintos e a codificação é ISO-8859-1. A preservação do dado em
+            estado bruto assegura que alterações futuras da fonte sejam absorvidas na Silver,
+            sem necessidade de reingestão.
           </p>
         </div>
       </div>
 
       <div class="reason s">
-        <div class="layer">Silver<small>tb_anac_silver</small></div>
+        <div class="layer">
+          <svg class="hex" viewBox="-9 -10 18 20" aria-hidden="true">
+            <polygon points="0,-9 -7.8,-4.5 -7.8,4.5 0,9 7.8,4.5 7.8,-4.5" fill="currentColor"></polygon>
+          </svg>
+          <span class="txt">Silver<small>tb_anac_silver</small></span>
+        </div>
         <div>
-          <p class="claim">O dado bruto mente.</p>
+          <p class="claim">Inconsistências no dado bruto</p>
           <p class="detail">
-            Há registros duplicados, voos cancelados misturados aos realizados e outliers
-            impossíveis — o atraso mínimo era &minus;1.453 min e o máximo +3.894 min, virada de
-            data mal gravada. A Silver tipa, deduplica pela identidade natural da perna de
-            voo e corta em ±24h. A limpeza mora num lugar só, em vez de repetida em cada
-            consulta.
+            A base contém registros duplicados, voos cancelados misturados aos realizados e
+            valores implausíveis — o atraso mínimo observado foi de &minus;1.453 minutos e o
+            máximo de +3.894 minutos, atribuídos a erro de virada de data. A Silver aplica
+            tipagem, deduplica pela identidade natural da perna de voo e restringe o atraso a
+            ±24 horas. A limpeza é centralizada em uma única etapa, em vez de replicada em
+            cada consulta.
           </p>
         </div>
       </div>
 
       <div class="reason g">
-        <div class="layer">Gold<small>..._gold_features_atraso</small></div>
+        <div class="layer">
+          <svg class="hex" viewBox="-9 -10 18 20" aria-hidden="true">
+            <polygon points="0,-9 -7.8,-4.5 -7.8,4.5 0,9 7.8,4.5 7.8,-4.5" fill="currentColor"></polygon>
+          </svg>
+          <span class="txt">Gold<small>..._gold_features_atraso</small></span>
+        </div>
         <div>
-          <p class="claim">O modelo não pode ver o futuro.</p>
+          <p class="claim">Prevenção de vazamento de alvo</p>
           <p class="detail">
-            É aqui que a fronteira do vazamento de alvo é desenhada: toda coluna que só
-            existe <em>depois</em> da decolagem vira insumo do rótulo, nunca entrada. A Gold
-            também marca o corte temporal de avaliação, para que treino e teste jamais se
-            cruzem no tempo.
+            Nesta camada é estabelecida a fronteira que separa informação disponível antes da
+            decolagem daquela que só existe após. Toda coluna posterior à partida é tratada
+            como insumo do rótulo, nunca como entrada do modelo. A Gold também registra o
+            corte temporal de avaliação, garantindo que os conjuntos de treino e teste não se
+            sobreponham no tempo.
           </p>
         </div>
       </div>
@@ -679,24 +627,24 @@
   </div>
 </section>
 
-<!-- ══════════════════════════ 4. FEATURES E VIEWS ══════════════════════════ -->
+<!-- ══════════════════════════ 4 ══════════════════════════ -->
 <section class="slide" id="s4">
   <div class="wrap">
     <div class="eyebrow">
-      <span class="step">04 / 05</span>
-      <span>As features e a barreira</span>
+      <span>04 / 05</span>
+      <span>Contrato de features</span>
       <span class="clock">2:00 – 2:40</span>
     </div>
 
-    <h2>Dez colunas entram. Cinco não podem entrar nunca.</h2>
+    <h2>Colunas admitidas e colunas vedadas</h2>
     <p class="dek">
-      A tabela Gold tem quinze colunas, mas o modelo só pode enxergar dez —
-      todas conhecidas antes de o avião sair do portão.
+      A tabela Gold possui quinze colunas, das quais apenas dez integram o vetor de
+      entrada do modelo. Todas são conhecidas antes da saída da aeronave do portão.
     </p>
 
     <div class="split">
       <div>
-        <div class="col-head in">Features do contrato <span>10</span></div>
+        <div class="col-head in"><span>Features do contrato</span><span>10</span></div>
         <div class="cols">
           <span class="chip">sg_empresa_icao</span>
           <span class="chip">sg_icao_origem</span>
@@ -710,13 +658,13 @@
           <span class="chip">mes</span>
         </div>
         <p class="note">
-          Todas derivam da <em>programação</em> do voo. É o que permite servir o mesmo
-          modelo em tempo real no Trabalho Final, com um payload autocontido.
+          Todas derivam da programação do voo, o que viabiliza servir o mesmo modelo em
+          tempo real no Trabalho Final por meio de um payload autocontido.
         </p>
       </div>
 
       <div>
-        <div class="col-head out">Barradas <span>5</span></div>
+        <div class="col-head out"><span>Colunas vedadas</span><span>5</span></div>
         <div class="cols">
           <span class="chip no">atraso_partida_minutos</span>
           <span class="chip no">faixa_atraso</span>
@@ -725,49 +673,50 @@
           <span class="chip no">dt_partida_prevista</span>
         </div>
         <p class="note">
-          As duas primeiras só existem depois da decolagem: se entrassem no vetor, o modelo
-          aprenderia <code>atrasou = atraso &gt; 15</code> e devolveria AUC 1,0. As outras
-          três são chave e rastreabilidade.
+          As duas primeiras só existem após a decolagem: admitidas no vetor, permitiriam ao
+          modelo derivar <code>atrasou = atraso &gt; 15</code> e produziriam AUC igual a 1,0.
+          As três restantes são chaves de identificação e rastreabilidade.
         </p>
       </div>
     </div>
 
     <div class="rule-box">
       <p>
-        <strong>Por isso existem as duas views.</strong>
-        Sem elas o <code>CREATE MODEL</code> precisaria de um <code>SELECT * EXCEPT(...)</code> —
-        uma lista negra, cujo modo de falha é silencioso: basta alguém acrescentar uma coluna
-        à Gold e esquecer de somá-la ao <code>EXCEPT</code> para ela virar feature sozinha,
-        sem erro nenhum, só uma métrica boa demais. A view inverte para lista branca: enumera
-        as dez, e <code>SELECT *</code> sobre ela não consegue ver mais nada. É a diferença
-        entre lembrar de excluir e não ter como incluir.
+        <b>Função das duas views.</b> Na ausência delas, o <code>CREATE MODEL</code>
+        dependeria de <code>SELECT * EXCEPT(...)</code>, isto é, de uma lista de exclusão.
+        O modo de falha dessa abordagem é silencioso: a inclusão de uma nova coluna na Gold
+        sem a correspondente atualização da lista faria com que ela integrasse o vetor de
+        entrada sem gerar erro, manifestando-se apenas como métrica anomalamente elevada.
+        As views invertem a lógica para lista de inclusão, enumerando explicitamente as dez
+        features admitidas; um <code>SELECT *</code> sobre elas não alcança nenhuma outra
+        coluna.
       </p>
     </div>
   </div>
 </section>
 
-<!-- ══════════════════════════ 5. TREINAMENTO ══════════════════════════ -->
+<!-- ══════════════════════════ 5 ══════════════════════════ -->
 <section class="slide" id="s5">
   <div class="wrap">
     <div class="eyebrow">
-      <span class="step">05 / 05</span>
-      <span>Treinamento e placar</span>
+      <span>05 / 05</span>
+      <span>Treinamento e avaliação</span>
       <span class="clock">2:40 – 3:20</span>
     </div>
 
-    <h2>Um <code>CREATE MODEL</code> sobre a view de treino</h2>
+    <h2>Especificação do modelo</h2>
     <p class="dek">
-      SQL puro, sem sair do BigQuery. As opções que importam estão anotadas —
-      cada uma responde a uma característica real da base.
+      O treinamento é declarado em SQL, sem dependência externa ao BigQuery. As opções
+      relevantes estão anotadas: cada uma responde a uma característica verificada da base.
     </p>
 
     <div class="sql-grid">
       <pre><span class="kw">CREATE OR REPLACE MODEL</span>
   `pdm-bia-2026.tf_anac.mdl_anac_m1_boosted_tree`
 <span class="kw">OPTIONS</span> (
-  MODEL_TYPE       = <span class="str">'BOOSTED_TREE_CLASSIFIER'</span>,  <span class="cm">-- exporta p/ Vertex</span>
+  MODEL_TYPE       = <span class="str">'BOOSTED_TREE_CLASSIFIER'</span>,  <span class="cm">-- exportável</span>
   INPUT_LABEL_COLS = [<span class="str">'atrasou'</span>],
-  AUTO_CLASS_WEIGHTS = <span class="kw">TRUE</span>,                <span class="cm">-- só 17,1% atrasam</span>
+  AUTO_CLASS_WEIGHTS = <span class="kw">TRUE</span>,                <span class="cm">-- 17,1% positivos</span>
   CATEGORY_ENCODING_METHOD = <span class="str">'LABEL_ENCODING'</span>, <span class="cm">-- 175 aeroportos</span>
   MAX_ITERATIONS   = 50,
   MAX_TREE_DEPTH   = 8,
@@ -778,25 +727,22 @@
 
       <div>
         <table>
-          <caption>Avaliados no mesmo corte temporal</caption>
+          <caption>Avaliação sobre o mesmo corte temporal</caption>
           <thead>
             <tr><th>Modelo</th><th>AUC</th><th>Revoc.</th><th>Prec.</th></tr>
           </thead>
           <tbody>
-            <tr>
-              <td>LOGISTIC_REG</td><td>0,6417</td><td>0,7291</td><td>0,3119</td>
-            </tr>
-            <tr class="win">
-              <td>BOOSTED_TREE</td><td>0,6584</td><td>0,7459</td><td>0,3147</td>
-            </tr>
+            <tr><td>LOGISTIC_REG</td><td>0,6417</td><td>0,7291</td><td>0,3119</td></tr>
+            <tr class="win"><td>BOOSTED_TREE</td><td>0,6584</td><td>0,7459</td><td>0,3147</td></tr>
           </tbody>
         </table>
 
         <p class="finding">
-          <b>O achado:</b> a meta era AUC ≥ 0,70 e não chegamos. As dez features descrevem
-          só a programação do voo — falta o estado do dia: meteorologia, rotação da aeronave,
-          atraso acumulado da malha. O baseline existe justamente para dar tamanho ao número:
-          sem ele, 0,66 não significaria nada.
+          <b>Observação sobre o resultado.</b> A meta estabelecida de AUC ≥ 0,70 não foi
+          atingida. A hipótese é que as dez features descrevem exclusivamente a programação
+          do voo, sem representar o estado operacional do dia — condições meteorológicas,
+          rotação da aeronave e atraso acumulado da malha. O baseline linear cumpre a função
+          de dimensionar o resultado: isoladamente, o valor de 0,6584 não seria interpretável.
         </p>
       </div>
     </div>
@@ -805,16 +751,6 @@
 
 <script>
   const slides = Array.from(document.querySelectorAll(".slide"));
-  const dots = Array.from(document.querySelectorAll(".rail a"));
-
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach((e) => {
-      if (!e.isIntersecting) return;
-      const i = slides.indexOf(e.target);
-      dots.forEach((d, j) => d.setAttribute("aria-current", String(i === j)));
-    });
-  }, { threshold: 0.55 });
-  slides.forEach((s) => io.observe(s));
 
   function current() {
     const mid = window.scrollY + window.innerHeight / 2;
