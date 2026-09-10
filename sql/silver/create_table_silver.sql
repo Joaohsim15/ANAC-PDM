@@ -1,23 +1,3 @@
--- Cria a camada Silver do VRA a partir da Bronze: tipagem explícita
--- (RF-005), dedup via QUALIFY ROW_NUMBER() (RF-006), filtro de voos
--- REALIZADO (RF-007), descarte de pares incompletos e de outliers
--- (RF-008/RF-008b) e cálculo do atraso de partida em minutos (RF-009).
---
--- Cópia literal da SQL executada por `client.query(sql_silver)` em
--- bronze_to_silver_vra.ipynb — só os nomes de tabela já vêm resolvidos
--- (o notebook monta a mesma string via f-string com PROJECT_ID/DATASET_ID).
---
--- Decisões que valem uma nota (detalhe completo em docs/bronze_silver.md):
---   - dt_referencia tem dois formatos na fonte (AAAA-MM-DD nos arquivos
---     mais antigos, DD/MM/AAAA HH:MM:SS nos mais novos — mesma leva que
---     trouxe a coluna Codeshare na Bronze). Daí o COALESCE de dois
---     SAFE.PARSE_DATE.
---   - Faixa plausível de atraso (RF-008) fixada em ±1440 min (±24h) —
---     confirmado com o grupo; o PRD só cita os extremos observados como
---     exemplo, sem fixar um corte.
---   - PARTITION BY dt_referencia: já definida no PRD §10.2 como chave de
---     particionamento. CLUSTER BY só é possível aqui porque a Silver é
---     tabela nativa — a Bronze, external table, não aceita CLUSTER BY.
 CREATE OR REPLACE TABLE `pdm-bia-2026.tf_anac.tb_anac_silver`
 PARTITION BY dt_referencia
 CLUSTER BY sg_empresa_icao, sg_icao_origem

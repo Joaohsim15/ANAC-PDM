@@ -1,29 +1,3 @@
--- Cria a camada Bronze do VRA como external table sobre o GCS.
---
--- RF-002: todos os campos STRING, append-only, sem transformação.
--- RF-003: `_ingested_at` e `_batch_id` vêm do layout Hive do caminho no GCS
---   (WITH PARTITION COLUMNS, modo AUTO); `_source_uri` é coberto pela
---   pseudo-coluna nativa `_FILE_NAME`, disponível em toda query sem precisar
---   de uma coluna própria — ver docs/bronze_silver.md.
--- RF-004: particionada por data de ingestão via partição Hive
---   (`_ingested_at=<data>` no caminho do objeto).
---
--- Equivalente em SQL DDL ao que raw_to_bronze_vra.ipynb monta via
--- `bigquery.ExternalConfig` + `bigquery.HivePartitioningOptions` (client
--- Python) — aqui expresso como CREATE EXTERNAL TABLE puro, para ficar
--- versionado como SQL e revisável na avaliação do T1.
---
--- Pré-requisito: os CSVs já precisam estar no layout particionado (célula de
--- reorganização do notebook os move para lá):
---   gs://dados-anac-vra/bronze/vra/raw/_ingested_at=<data>/_batch_id=<lote>/*.csv
---
--- Ordem das 21 colunas = mapeamento posicional do CSV (skip_leading_rows não
--- casa por nome de cabeçalho, então a ordem abaixo tem que bater com a do
--- arquivo fonte). `ds_codeshare` é a 21ª coluna: schema drift real,
--- descoberto nos arquivos a partir de out/2022 — 15 dos 36 arquivos do
--- recorte 2022-2024 têm 21 colunas, 21 têm 20. `allow_jagged_rows = true`
--- é o que permite ler os dois formatos na mesma tabela (linhas de 20 colunas
--- ficam com ds_codeshare = NULL). Detalhe completo em docs/bronze_silver.md.
 CREATE OR REPLACE EXTERNAL TABLE `pdm-bia-2026.tf_anac.tb_vra_bronze`
 (
   sg_empresa_icao       STRING OPTIONS(description = 'Código ICAO da companhia operadora'),
