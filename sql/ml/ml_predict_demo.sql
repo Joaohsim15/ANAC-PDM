@@ -1,23 +1,8 @@
 -- ============================================================================
--- BigQuery ML - Predicao e explicabilidade: O BLOCO AO VIVO da apresentacao
--- Atende  : RF-018 - Aceite A1.10 - roteiro secao 14.1 (3:30-4:30)
--- ----------------------------------------------------------------------------
--- Este e o unico arquivo executado AO VIVO. Nada aqui treina nada: sao leituras
--- de segundos sobre um modelo que ja existe. O voo e montado na hora, a partir
--- de um horario previsto - todas as 10 features saem da PROGRAMACAO do voo,
--- nenhuma de dado pos-partida. E o que prova que o modelo do T1 continua valido
--- quando servido em tempo real no TF.
---
--- Nota de tipo: p.label e comparado como STRING para nao depender de o BigQuery
--- ML devolver o rotulo como INT64 ou como STRING nesta versao.
---
--- Rodar UM BLOCO POR VEZ: selecione o trecho e Ctrl+Enter.
+-- BigQuery ML - Predicao e explicabilidade
 -- ============================================================================
 
--- ------------------------ 1. Um voo inventado na hora (A1.10) -------------
--- Trocar livremente empresa, aeroportos, equipamento e horario durante a demo.
--- As tres features de calendario sao DERIVADAS do horario previsto na propria
--- query: o professor ve que nada foi pre-calculado.
+-- ------------------------ 1. Um voo inventado na hora -------------
 WITH voo_inventado AS (
 SELECT
 'GLO'  AS sg_empresa_icao,      -- GOL
@@ -56,12 +41,7 @@ ELSE                          'RISCO BAIXO'
 END                   AS faixa_de_risco
 FROM predicao;
 
--- ------------------ 2. Por que? SHAP nativo (RF-018, secao 14.2) ----------
--- Os tres atributos que mais empurraram a probabilidade, para cima ou para
--- baixo. Trinta segundos de demo que transformam um numero em uma decisao
--- justificavel - e a razao de a persona pedir explicabilidade (secao 4.2).
--- Medido em 10/09/2026: mes +0,131 - hora_partida_prevista +0,089 -
--- nr_assentos_ofertados +0,067. Dezembro, fim de tarde, aeronave grande.
+-- ------------------ 2. Por que? SHAP nativo ----------
 WITH voo_inventado AS (
 SELECT
 'GLO' AS sg_empresa_icao, 'SBGO' AS sg_icao_origem, 'SBGR' AS sg_icao_destino,
@@ -82,11 +62,7 @@ STRUCT(3 AS top_k_features)
 ), UNNEST(top_feature_attributions) AS atribuicao
 ORDER BY ABS(empurrao) DESC;
 
--- --------------- 3. Ranking operacional do dia (cenario CU-01/CU-03) ------
--- O uso real da persona: nao "este voo atrasa?", e "quais dos voos de hoje
--- merecem atencao antecipada?". As colunas extras passadas ao ML.PREDICT
--- atravessam a funcao intactas - nao entram no vetor de features, mas voltam
--- na saida, o que permite comparar predicao com o que de fato aconteceu.
+-- --------------- 3. Ranking operacional do dia ------
 SELECT
 sg_empresa_icao,
 nr_voo,
