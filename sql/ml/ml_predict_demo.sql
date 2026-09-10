@@ -35,8 +35,8 @@ SELECT
 predicted_atrasou     AS predicao,
 ROUND(prob_atraso, 4) AS prob_atraso,
 CASE
-WHEN prob_atraso >= 0.70 THEN 'RISCO ALTO'
-WHEN prob_atraso >= 0.40 THEN 'RISCO MEDIO'
+WHEN prob_atraso >= 0.60 THEN 'RISCO ALTO'   -- 17% dos voos; acima de 0,70 cai para <1%
+WHEN prob_atraso >= 0.50 THEN 'RISCO MEDIO'
 ELSE                          'RISCO BAIXO'
 END                   AS faixa_de_risco
 FROM predicao;
