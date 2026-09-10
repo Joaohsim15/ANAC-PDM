@@ -1,0 +1,833 @@
+<!-- charset explicito: o arquivo tambem e aberto direto do disco na apresentacao,
+     sem servidor que declare o encoding no cabecalho HTTP. -->
+<meta charset="utf-8">
+<title>Medallion VRA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap">
+
+<style>
+  :root {
+    --ground:   #F5F7FA;
+    --surface:  #FFFFFF;
+    --ink:      #14202C;
+    --ink-2:    #3D4C5C;
+    --muted:    #6B7B8C;
+    --line:     #D7E0E8;
+    --line-2:   #EAEFF4;
+
+    --bronze:   #9C5F33;
+    --silver:   #5E6D7C;
+    --gold:     #8A6708;
+    --accent:   #1B5E9C;
+    --barred:   #A3382B;
+
+    --bronze-fill: #F4E7DC;
+    --silver-fill: #E6EBF0;
+    --gold-fill:   #F5EBCF;
+    --accent-fill: #E0EBF7;
+    --neutral-fill:#EDF1F5;
+
+    --display: "Barlow Condensed", "Arial Narrow", sans-serif;
+    --body:    "Source Sans 3", system-ui, sans-serif;
+    --mono:    "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:   #0D141B;
+      --surface:  #151F29;
+      --ink:      #E9EFF5;
+      --ink-2:    #B6C4D0;
+      --muted:    #8496A6;
+      --line:     #26333F;
+      --line-2:   #1C2833;
+
+      --bronze:   #D28C55;
+      --silver:   #A2B2C1;
+      --gold:     #D9AE3E;
+      --accent:   #63A9E9;
+      --barred:   #E8796A;
+
+      --bronze-fill: #2A1D12;
+      --silver-fill: #1E2A35;
+      --gold-fill:   #2C2413;
+      --accent-fill: #14283C;
+      --neutral-fill:#1A242E;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground:   #0D141B;
+    --surface:  #151F29;
+    --ink:      #E9EFF5;
+    --ink-2:    #B6C4D0;
+    --muted:    #8496A6;
+    --line:     #26333F;
+    --line-2:   #1C2833;
+
+    --bronze:   #D28C55;
+    --silver:   #A2B2C1;
+    --gold:     #D9AE3E;
+    --accent:   #63A9E9;
+    --barred:   #E8796A;
+
+    --bronze-fill: #2A1D12;
+    --silver-fill: #1E2A35;
+    --gold-fill:   #2C2413;
+    --accent-fill: #14283C;
+    --neutral-fill:#1A242E;
+  }
+
+  * { box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+    background: var(--ground);
+  }
+
+  @media (min-width: 780px) and (min-height: 620px) {
+    html { scroll-snap-type: y mandatory; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+  }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 17px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .slide {
+    scroll-snap-align: start;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-block: 56px 72px;
+    padding-inline: 24px;
+    border-bottom: 1px solid var(--line-2);
+  }
+
+  .wrap {
+    width: 100%;
+    max-width: 1180px;
+    margin-inline: auto;
+  }
+
+  /* ---------- eyebrow: posição na sequência + janela de tempo ---------- */
+  .eyebrow {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 22px;
+  }
+  .eyebrow .step {
+    color: var(--accent);
+    font-weight: 500;
+  }
+  .eyebrow .clock {
+    margin-left: auto;
+    font-variant-numeric: tabular-nums;
+  }
+
+  h1 {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: clamp(2.6rem, 6.4vw, 5rem);
+    line-height: 0.98;
+    letter-spacing: -0.005em;
+    text-wrap: balance;
+    margin: 0 0 10px;
+  }
+
+  h2 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: clamp(1.9rem, 3.8vw, 3rem);
+    line-height: 1.06;
+    text-wrap: balance;
+    margin: 0 0 8px;
+  }
+
+  .dek {
+    font-size: clamp(1.02rem, 1.5vw, 1.24rem);
+    color: var(--ink-2);
+    max-width: 62ch;
+    margin: 0 0 30px;
+  }
+
+  code, .mono { font-family: var(--mono); }
+
+  /* ---------- capa ---------- */
+  .cover-meta {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    margin-bottom: 40px;
+  }
+
+  .figures {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 2px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .fig {
+    background: var(--surface);
+    padding: 22px 24px;
+  }
+  .fig .n {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: clamp(2rem, 4vw, 2.9rem);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    display: block;
+  }
+  .fig .k {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: var(--muted);
+    margin-top: 8px;
+    display: block;
+  }
+  .fig.bronze .n { color: var(--bronze); }
+  .fig.gold   .n { color: var(--gold); }
+  .fig.acc    .n { color: var(--accent); }
+
+  /* ---------- diagrama ---------- */
+  figure { margin: 0; }
+  .canvas {
+    overflow-x: auto;
+    padding-bottom: 6px;
+  }
+  .canvas svg {
+    display: block;
+    width: 100%;
+    min-width: 860px;
+    height: auto;
+  }
+  figcaption {
+    margin-top: 18px;
+    font-size: 0.97rem;
+    color: var(--muted);
+    max-width: 74ch;
+  }
+
+  /* ---------- por que: linhas camada / motivo ---------- */
+  .reasons {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border-top: 1px solid var(--line);
+  }
+  .reason {
+    display: grid;
+    grid-template-columns: 190px 1fr;
+    gap: 28px;
+    padding-block: 26px;
+    border-bottom: 1px solid var(--line);
+    align-items: start;
+  }
+  .reason .layer {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: clamp(1.5rem, 2.6vw, 2.1rem);
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+  .reason .layer small {
+    display: block;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    text-transform: none;
+    color: var(--muted);
+    margin-top: 9px;
+  }
+  .reason.b .layer { color: var(--bronze); }
+  .reason.s .layer { color: var(--silver); }
+  .reason.g .layer { color: var(--gold); }
+
+  .reason .claim {
+    font-size: clamp(1.06rem, 1.7vw, 1.32rem);
+    font-weight: 600;
+    margin: 0 0 7px;
+    line-height: 1.3;
+  }
+  .reason .detail {
+    margin: 0;
+    color: var(--ink-2);
+    max-width: 68ch;
+  }
+
+  /* ---------- features: dentro / fora ---------- */
+  .split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 34px;
+  }
+  .col-head {
+    font-family: var(--mono);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    padding-bottom: 10px;
+    margin-bottom: 16px;
+    border-bottom: 2px solid;
+  }
+  .col-head.in  { color: var(--accent); border-color: var(--accent); }
+  .col-head.out { color: var(--barred); border-color: var(--barred); }
+  .col-head span {
+    float: right;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
+  }
+
+  .cols {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-bottom: 16px;
+  }
+  .chip {
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 5px 10px;
+    border-radius: 3px;
+    background: var(--accent-fill);
+    color: var(--ink);
+    border: 1px solid transparent;
+  }
+  .chip.no {
+    background: transparent;
+    border: 1px dashed var(--barred);
+    color: var(--barred);
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
+  }
+  .note {
+    font-size: 0.95rem;
+    color: var(--muted);
+    margin: 0;
+    max-width: 54ch;
+  }
+
+  .rule-box {
+    margin-top: 30px;
+    border-left: 3px solid var(--gold);
+    padding: 4px 0 4px 20px;
+  }
+  .rule-box p { margin: 0; max-width: 78ch; }
+  .rule-box strong { color: var(--gold); }
+
+  /* ---------- SQL ---------- */
+  .sql-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    gap: 34px;
+    align-items: start;
+  }
+  pre {
+    margin: 0;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 20px 22px;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 13.5px;
+    line-height: 1.72;
+    color: var(--ink);
+  }
+  .kw  { color: var(--accent); font-weight: 500; }
+  .str { color: var(--bronze); }
+  .cm  { color: var(--muted); }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-variant-numeric: tabular-nums;
+  }
+  caption {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: var(--muted);
+    padding-bottom: 12px;
+  }
+  th, td {
+    text-align: right;
+    padding: 11px 8px;
+    border-bottom: 1px solid var(--line);
+    font-size: 15px;
+  }
+  th:first-child, td:first-child { text-align: left; }
+  thead th {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    font-weight: 400;
+  }
+  tbody tr.win td { font-weight: 600; }
+  tbody tr.win td:first-child { color: var(--accent); }
+
+  .finding {
+    margin-top: 22px;
+    font-size: 0.98rem;
+    color: var(--ink-2);
+    border-top: 1px solid var(--line);
+    padding-top: 18px;
+    max-width: 60ch;
+  }
+  .finding b { color: var(--ink); }
+
+  /* ---------- navegação ---------- */
+  .rail {
+    position: fixed;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 10;
+  }
+  .rail a {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    border: 1px solid var(--muted);
+    background: transparent;
+    display: block;
+    transition: background 0.18s, border-color 0.18s;
+  }
+  .rail a[aria-current="true"] {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  .rail a:focus-visible,
+  a:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  @media (max-width: 900px) {
+    .sql-grid, .split { grid-template-columns: 1fr; }
+    .reason { grid-template-columns: 1fr; gap: 10px; }
+    .rail { display: none; }
+  }
+</style>
+
+<nav class="rail" aria-label="Telas">
+  <a href="#s1" aria-label="Tela 1" aria-current="true"></a>
+  <a href="#s2" aria-label="Tela 2"></a>
+  <a href="#s3" aria-label="Tela 3"></a>
+  <a href="#s4" aria-label="Tela 4"></a>
+  <a href="#s5" aria-label="Tela 5"></a>
+</nav>
+
+<!-- ══════════════════════════ 1. CAPA ══════════════════════════ -->
+<section class="slide" id="s1">
+  <div class="wrap">
+    <div class="eyebrow">
+      <span class="step">01 / 05</span>
+      <span>Trabalho 1 &middot; PDM_BIA &middot; INF-UFG</span>
+      <span class="clock">0:00 – 0:20</span>
+    </div>
+
+    <h1>Predição de atraso de partida<br>sobre o VRA da ANAC</h1>
+    <p class="dek">
+      Arquitetura Medallion no BigQuery e classificação binária em BigQuery ML,
+      sobre três anos de voos regulares brasileiros.
+    </p>
+    <p class="cover-meta">pdm-bia-2026.tf_anac &middot; recorte 2022–2024</p>
+
+    <div class="figures">
+      <div class="fig bronze">
+        <span class="n">2.843.883</span>
+        <span class="k">Voos na Bronze</span>
+      </div>
+      <div class="fig">
+        <span class="n">36</span>
+        <span class="k">Arquivos CSV da fonte</span>
+      </div>
+      <div class="fig gold">
+        <span class="n">10</span>
+        <span class="k">Features online-safe</span>
+      </div>
+      <div class="fig acc">
+        <span class="n">2</span>
+        <span class="k">Modelos BigQuery ML</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════ 2. DIAGRAMA ══════════════════════════ -->
+<section class="slide" id="s2">
+  <div class="wrap">
+    <div class="eyebrow">
+      <span class="step">02 / 05</span>
+      <span>O pipeline inteiro</span>
+      <span class="clock">0:20 – 1:10</span>
+    </div>
+
+    <h2>Do CSV cru ao modelo, em quatro paradas</h2>
+    <p class="dek">
+      Cada camada tem uma responsabilidade só, e a contagem cai a cada passo —
+      é essa queda que prova que houve trabalho de verdade no meio.
+    </p>
+
+    <figure>
+      <div class="canvas">
+        <svg viewBox="0 0 1200 320" role="img"
+             aria-label="Fluxo do pipeline: 36 arquivos CSV no GCS viram a camada Bronze como external table, depois a Silver tipada e deduplicada, depois a Gold com dez features, e por fim dois modelos no BigQuery ML.">
+          <defs>
+            <marker id="arw" viewBox="0 0 10 10" refX="9" refY="5"
+                    markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <polygon points="0,1 9,5 0,9" fill="var(--muted)"></polygon>
+            </marker>
+          </defs>
+
+          <!-- contagens -->
+          <g font-family="JetBrains Mono, monospace" font-size="15" font-weight="500"
+             text-anchor="middle" style="font-variant-numeric: tabular-nums;">
+            <text x="93"   y="46" fill="var(--muted)">36 arquivos</text>
+            <text x="341"  y="46" fill="var(--bronze)">2.843.883</text>
+            <text x="589"  y="46" fill="var(--silver)">~2,6 mi</text>
+            <text x="837"  y="46" fill="var(--gold)">2,62 mi</text>
+            <text x="1085" y="46" fill="var(--accent)">2,47 mi treino</text>
+          </g>
+
+          <!-- caixas -->
+          <g stroke-width="1.5">
+            <rect x="10"   y="80" width="165" height="96" rx="3"
+                  fill="var(--neutral-fill)" stroke="var(--muted)"></rect>
+            <rect x="258"  y="80" width="165" height="96" rx="3"
+                  fill="var(--bronze-fill)" stroke="var(--bronze)"></rect>
+            <rect x="506"  y="80" width="165" height="96" rx="3"
+                  fill="var(--silver-fill)" stroke="var(--silver)"></rect>
+            <rect x="754"  y="80" width="165" height="96" rx="3"
+                  fill="var(--gold-fill)" stroke="var(--gold)"></rect>
+            <rect x="1002" y="80" width="165" height="96" rx="3"
+                  fill="var(--accent-fill)" stroke="var(--accent)"></rect>
+          </g>
+
+          <!-- rótulos das caixas -->
+          <g font-family="Barlow Condensed, sans-serif" font-size="27" font-weight="700"
+             text-anchor="middle" letter-spacing="0.5">
+            <text x="93"   y="124" fill="var(--ink)">GCS</text>
+            <text x="341"  y="124" fill="var(--bronze)">BRONZE</text>
+            <text x="589"  y="124" fill="var(--silver)">SILVER</text>
+            <text x="837"  y="124" fill="var(--gold)">GOLD</text>
+            <text x="1085" y="124" fill="var(--accent)">BQ ML</text>
+          </g>
+          <g font-family="JetBrains Mono, monospace" font-size="10.5"
+             text-anchor="middle" fill="var(--muted)">
+            <text x="93"   y="150">dados-anac-vra</text>
+            <text x="341"  y="150">tb_anac_bronze</text>
+            <text x="589"  y="150">tb_anac_silver</text>
+            <text x="837"  y="150">..._gold_features</text>
+            <text x="1085" y="150">mdl_anac_*</text>
+          </g>
+
+          <!-- setas -->
+          <g stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arw)">
+            <line x1="179" y1="128" x2="252"  y2="128"></line>
+            <line x1="427" y1="128" x2="500"  y2="128"></line>
+            <line x1="675" y1="128" x2="748"  y2="128"></line>
+            <line x1="923" y1="128" x2="996"  y2="128"></line>
+          </g>
+          <g font-family="JetBrains Mono, monospace" font-size="10"
+             text-anchor="middle" fill="var(--muted)">
+            <text x="215" y="114">schema-</text>
+            <text x="215" y="126" dy="-2">on-read</text>
+            <text x="463" y="114">tipa +</text>
+            <text x="463" y="126" dy="-2">dedup</text>
+            <text x="711" y="114">deriva</text>
+            <text x="711" y="126" dy="-2">features</text>
+            <text x="959" y="114">SELECT *</text>
+            <text x="959" y="126" dy="-2">na view</text>
+          </g>
+
+          <!-- detalhes sob cada caixa -->
+          <g font-family="Source Sans 3, sans-serif" font-size="12.5"
+             text-anchor="middle" fill="var(--ink-2)">
+            <text x="93" y="207">CSV · ISO-8859-1</text>
+            <text x="93" y="226">2 layouts distintos</text>
+            <text x="93" y="245">particionado por lote</text>
+
+            <text x="341" y="207">external table</text>
+            <text x="341" y="226">todo campo STRING</text>
+            <text x="341" y="245">append-only</text>
+
+            <text x="589" y="207">tabela nativa</text>
+            <text x="589" y="226">tipada e deduplicada</text>
+            <text x="589" y="245">particionada + cluster</text>
+
+            <text x="837" y="207">10 features + alvo</text>
+            <text x="837" y="226">flag is_eval</text>
+            <text x="837" y="245">2 views de corte</text>
+
+            <text x="1085" y="207">LOGISTIC_REG</text>
+            <text x="1085" y="226">BOOSTED_TREE</text>
+            <text x="1085" y="245">exportados p/ GCS</text>
+          </g>
+
+          <!-- régua do corte temporal -->
+          <g>
+            <line x1="754" y1="278" x2="1167" y2="278"
+                  stroke="var(--gold)" stroke-width="1" stroke-dasharray="3 3"></line>
+            <text x="960" y="300" font-family="JetBrains Mono, monospace" font-size="10.5"
+                  text-anchor="middle" fill="var(--gold)">
+              split temporal: últimos 60 dias ficam fora do treino
+            </text>
+          </g>
+        </svg>
+      </div>
+      <figcaption>
+        A Bronze não copia dado nenhum — é <em>schema-on-read</em> sobre o GCS, então
+        criá-la custa segundos e nada de armazenamento. A queda de 2,84 para ~2,6 milhões
+        acontece na Silver: voos cancelados, duplicatas e outliers saem ali.
+      </figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ══════════════════════════ 3. POR QUE ══════════════════════════ -->
+<section class="slide" id="s3">
+  <div class="wrap">
+    <div class="eyebrow">
+      <span class="step">03 / 05</span>
+      <span>Por que Medallion</span>
+      <span class="clock">1:10 – 2:00</span>
+    </div>
+
+    <h2>Cada camada resolve um problema que nós encontramos</h2>
+    <p class="dek">
+      Não é separação por convenção. Cada fronteira existe porque um problema
+      concreto do VRA apareceu e precisou de um lugar para morar.
+    </p>
+
+    <div class="reasons">
+      <div class="reason b">
+        <div class="layer">Bronze<small>tb_anac_bronze</small></div>
+        <div>
+          <p class="claim">A fonte é instável.</p>
+          <p class="detail">
+            Os 36 arquivos não têm o mesmo formato: a coluna <code>Codeshare</code> aparece
+            a partir de out/2022, então 15 arquivos têm 21 colunas e 21 têm 20. As datas vêm
+            em dois padrões e o encoding é ISO-8859-1. Guardando tudo cru e como texto,
+            quando a fonte muda de novo só a Silver precisa mudar — a Bronze nunca é
+            reingerida.
+          </p>
+        </div>
+      </div>
+
+      <div class="reason s">
+        <div class="layer">Silver<small>tb_anac_silver</small></div>
+        <div>
+          <p class="claim">O dado bruto mente.</p>
+          <p class="detail">
+            Há registros duplicados, voos cancelados misturados aos realizados e outliers
+            impossíveis — o atraso mínimo era &minus;1.453 min e o máximo +3.894 min, virada de
+            data mal gravada. A Silver tipa, deduplica pela identidade natural da perna de
+            voo e corta em ±24h. A limpeza mora num lugar só, em vez de repetida em cada
+            consulta.
+          </p>
+        </div>
+      </div>
+
+      <div class="reason g">
+        <div class="layer">Gold<small>..._gold_features_atraso</small></div>
+        <div>
+          <p class="claim">O modelo não pode ver o futuro.</p>
+          <p class="detail">
+            É aqui que a fronteira do vazamento de alvo é desenhada: toda coluna que só
+            existe <em>depois</em> da decolagem vira insumo do rótulo, nunca entrada. A Gold
+            também marca o corte temporal de avaliação, para que treino e teste jamais se
+            cruzem no tempo.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════ 4. FEATURES E VIEWS ══════════════════════════ -->
+<section class="slide" id="s4">
+  <div class="wrap">
+    <div class="eyebrow">
+      <span class="step">04 / 05</span>
+      <span>As features e a barreira</span>
+      <span class="clock">2:00 – 2:40</span>
+    </div>
+
+    <h2>Dez colunas entram. Cinco não podem entrar nunca.</h2>
+    <p class="dek">
+      A tabela Gold tem quinze colunas, mas o modelo só pode enxergar dez —
+      todas conhecidas antes de o avião sair do portão.
+    </p>
+
+    <div class="split">
+      <div>
+        <div class="col-head in">Features do contrato <span>10</span></div>
+        <div class="cols">
+          <span class="chip">sg_empresa_icao</span>
+          <span class="chip">sg_icao_origem</span>
+          <span class="chip">sg_icao_destino</span>
+          <span class="chip">cd_tipo_linha</span>
+          <span class="chip">sg_equipamento_icao</span>
+          <span class="chip">nr_assentos_ofertados</span>
+          <span class="chip">hora_partida_prevista</span>
+          <span class="chip">duracao_prevista_min</span>
+          <span class="chip">dia_semana</span>
+          <span class="chip">mes</span>
+        </div>
+        <p class="note">
+          Todas derivam da <em>programação</em> do voo. É o que permite servir o mesmo
+          modelo em tempo real no Trabalho Final, com um payload autocontido.
+        </p>
+      </div>
+
+      <div>
+        <div class="col-head out">Barradas <span>5</span></div>
+        <div class="cols">
+          <span class="chip no">atraso_partida_minutos</span>
+          <span class="chip no">faixa_atraso</span>
+          <span class="chip no">dt_referencia</span>
+          <span class="chip no">nr_voo</span>
+          <span class="chip no">dt_partida_prevista</span>
+        </div>
+        <p class="note">
+          As duas primeiras só existem depois da decolagem: se entrassem no vetor, o modelo
+          aprenderia <code>atrasou = atraso &gt; 15</code> e devolveria AUC 1,0. As outras
+          três são chave e rastreabilidade.
+        </p>
+      </div>
+    </div>
+
+    <div class="rule-box">
+      <p>
+        <strong>Por isso existem as duas views.</strong>
+        Sem elas o <code>CREATE MODEL</code> precisaria de um <code>SELECT * EXCEPT(...)</code> —
+        uma lista negra, cujo modo de falha é silencioso: basta alguém acrescentar uma coluna
+        à Gold e esquecer de somá-la ao <code>EXCEPT</code> para ela virar feature sozinha,
+        sem erro nenhum, só uma métrica boa demais. A view inverte para lista branca: enumera
+        as dez, e <code>SELECT *</code> sobre ela não consegue ver mais nada. É a diferença
+        entre lembrar de excluir e não ter como incluir.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════ 5. TREINAMENTO ══════════════════════════ -->
+<section class="slide" id="s5">
+  <div class="wrap">
+    <div class="eyebrow">
+      <span class="step">05 / 05</span>
+      <span>Treinamento e placar</span>
+      <span class="clock">2:40 – 3:20</span>
+    </div>
+
+    <h2>Um <code>CREATE MODEL</code> sobre a view de treino</h2>
+    <p class="dek">
+      SQL puro, sem sair do BigQuery. As opções que importam estão anotadas —
+      cada uma responde a uma característica real da base.
+    </p>
+
+    <div class="sql-grid">
+      <pre><span class="kw">CREATE OR REPLACE MODEL</span>
+  `pdm-bia-2026.tf_anac.mdl_anac_m1_boosted_tree`
+<span class="kw">OPTIONS</span> (
+  MODEL_TYPE       = <span class="str">'BOOSTED_TREE_CLASSIFIER'</span>,  <span class="cm">-- exporta p/ Vertex</span>
+  INPUT_LABEL_COLS = [<span class="str">'atrasou'</span>],
+  AUTO_CLASS_WEIGHTS = <span class="kw">TRUE</span>,                <span class="cm">-- só 17,1% atrasam</span>
+  CATEGORY_ENCODING_METHOD = <span class="str">'LABEL_ENCODING'</span>, <span class="cm">-- 175 aeroportos</span>
+  MAX_ITERATIONS   = 50,
+  MAX_TREE_DEPTH   = 8,
+  LEARN_RATE       = 0.1,
+  ENABLE_GLOBAL_EXPLAIN = <span class="kw">TRUE</span>             <span class="cm">-- SHAP nativo</span>
+) <span class="kw">AS</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> `...vw_anac_gold_treino_m1`;</pre>
+
+      <div>
+        <table>
+          <caption>Avaliados no mesmo corte temporal</caption>
+          <thead>
+            <tr><th>Modelo</th><th>AUC</th><th>Revoc.</th><th>Prec.</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>LOGISTIC_REG</td><td>0,6417</td><td>0,7291</td><td>0,3119</td>
+            </tr>
+            <tr class="win">
+              <td>BOOSTED_TREE</td><td>0,6584</td><td>0,7459</td><td>0,3147</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p class="finding">
+          <b>O achado:</b> a meta era AUC ≥ 0,70 e não chegamos. As dez features descrevem
+          só a programação do voo — falta o estado do dia: meteorologia, rotação da aeronave,
+          atraso acumulado da malha. O baseline existe justamente para dar tamanho ao número:
+          sem ele, 0,66 não significaria nada.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  const slides = Array.from(document.querySelectorAll(".slide"));
+  const dots = Array.from(document.querySelectorAll(".rail a"));
+
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((e) => {
+      if (!e.isIntersecting) return;
+      const i = slides.indexOf(e.target);
+      dots.forEach((d, j) => d.setAttribute("aria-current", String(i === j)));
+    });
+  }, { threshold: 0.55 });
+  slides.forEach((s) => io.observe(s));
+
+  function current() {
+    const mid = window.scrollY + window.innerHeight / 2;
+    return slides.findIndex((s) => s.offsetTop <= mid && mid < s.offsetTop + s.offsetHeight);
+  }
+
+  addEventListener("keydown", (ev) => {
+    const fwd = ["ArrowRight", "ArrowDown", "PageDown", " "];
+    const back = ["ArrowLeft", "ArrowUp", "PageUp"];
+    if (![...fwd, ...back].includes(ev.key)) return;
+    ev.preventDefault();
+    const i = current();
+    const next = fwd.includes(ev.key) ? Math.min(i + 1, slides.length - 1) : Math.max(i - 1, 0);
+    slides[next].scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+</script>
