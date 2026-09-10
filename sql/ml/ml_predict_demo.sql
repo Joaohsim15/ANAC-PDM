@@ -35,34 +35,13 @@ SELECT
 predicted_atrasou     AS predicao,
 ROUND(prob_atraso, 4) AS prob_atraso,
 CASE
-WHEN prob_atraso >= 0.60 THEN 'RISCO ALTO'   -- 17% dos voos; acima de 0,70 cai para <1%
+WHEN prob_atraso >= 0.60 THEN 'RISCO ALTO'
 WHEN prob_atraso >= 0.50 THEN 'RISCO MEDIO'
 ELSE                          'RISCO BAIXO'
 END                   AS faixa_de_risco
 FROM predicao;
 
--- ------------------ 2. Por que? SHAP nativo ----------
-WITH voo_inventado AS (
-SELECT
-'GLO' AS sg_empresa_icao, 'SBGO' AS sg_icao_origem, 'SBGR' AS sg_icao_destino,
-'N'   AS cd_tipo_linha,   'B738' AS sg_equipamento_icao,
-186   AS nr_assentos_ofertados,
-18    AS hora_partida_prevista,
-'6'   AS dia_semana,      '12'   AS mes,
-75    AS duracao_prevista_min
-)
-SELECT
-ROUND(prediction_value, 5)       AS score_bruto,
-atribuicao.feature               AS atributo,
-ROUND(atribuicao.attribution, 5) AS empurrao
-FROM ML.EXPLAIN_PREDICT(
-MODEL `pdm-bia-2026.tf_anac.mdl_anac_m1_boosted_tree`,
-TABLE voo_inventado,
-STRUCT(3 AS top_k_features)
-), UNNEST(top_feature_attributions) AS atribuicao
-ORDER BY ABS(empurrao) DESC;
-
--- --------------- 3. Ranking operacional do dia ------
+-- --------------- 2. Ranking operacional do dia ------
 SELECT
 sg_empresa_icao,
 nr_voo,
