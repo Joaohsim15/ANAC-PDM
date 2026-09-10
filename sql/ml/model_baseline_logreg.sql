@@ -2,20 +2,6 @@
 -- BigQuery ML - BASELINE: regressao logistica sobre o alvo binario
 -- Origem  : tf_anac.vw_anac_gold_treino_m1
 -- Destino : tf_anac.mdl_anac_baseline_logreg
--- Atende  : RF-014 - Aceite A1.8 - piso comparativo de AUC (secao 9.1)
--- ----------------------------------------------------------------------------
--- O baseline nao existe para ganhar: existe para dar significado ao numero de
--- M1. "AUC 0,66" sozinho nao diz nada; "AUC 0,66 contra 0,64 de um linear no
--- mesmo split" diz quanto a arvore aprendeu de interacao que o linear nao pega.
---
--- AUTO_CLASS_WEIGHTS = TRUE: a classe positiva e 17,1% da base. Sem reponderar,
--- o modelo minimiza perda prevendo 0 para quase tudo e a matriz de confusao do
--- ML.EVALUATE fica degenerada no limiar 0,5. O preco e probabilidade
--- descalibrada - aceitavel, porque o uso e ORDENAR voos por risco (secao 4.2).
---
--- Tempo MEDIDO: ~40 min sobre 2,47 mi de linhas. Rodar na vespera, nunca ao vivo.
--- Resultado medido em 10/09/2026, sobre is_eval, limiar 0,5:
---   AUC-ROC 0,6417 - precisao 0,3119 - revocacao 0,7291 - F1 0,4369
 -- ============================================================================
 
 CREATE OR REPLACE MODEL `pdm-bia-2026.tf_anac.mdl_anac_baseline_logreg`
