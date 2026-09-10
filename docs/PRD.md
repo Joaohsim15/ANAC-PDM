@@ -11,8 +11,8 @@
 | Produto | Plataforma de Predição de Atraso de Voos |
 | Código do repositório | `ANAC-PDM` |
 | Disciplina | PDM_BIA — Processamento de Dados Massivos · INF/UFG |
-| Versão do documento | 1.1 |
-| Data | 18/08/2026 |
+| Versão do documento | 1.2 |
+| Data | 10/09/2026 |
 | Estado | Aprovado para execução |
 | Autores | Igor Reis Braziel · João Henrique F. Simielli · Bruno Moreira Lavalli Calura · João Pedro de Castro Gomes Fernandes |
 | Documentos relacionados | [`enunciados/trabalho-1.md`](enunciados/trabalho-1.md) · [`enunciados/trabalho-2.md`](enunciados/trabalho-2.md) · [`enunciados/trabalho-final.md`](enunciados/trabalho-final.md) |
@@ -23,6 +23,7 @@
 | --- | --- | --- | --- |
 | 1.0 | 18/08/2026 | Grupo | Versão inicial. Consolida decisões de arquitetura, requisitos das três entregas, métricas-alvo, glossário e dicionário de dados. |
 | 1.1 | 18/08/2026 | Grupo | Três blocos de mudança. **(a) Fonte de dados:** substituída a raspagem de CSV pela **API REST oficial do VRA** (`sas.anac.gov.br/sas/vra_api`), descoberta após o portal `gov.br` se mostrar inacessível a cliente automatizado — reescreve RF-001 e resolve **P-04**. **(b) Dicionário de dados:** a [§10.2](#102-dicionário-de-dados--vra-bruto) foi substituída pelo schema **verificado** de 20 campos; a versão 1.0 presumia 13 campos e estava incorreta. **(c) Predição de faixa:** especificado o **modelo em cascata** (binário + faixa) na nova [§6.5](#65-modelo-em-cascata--binário--faixa), **como proposta pendente de ratificação pelo grupo** — aberta em **P-08**. A exclusão de "segundo modelo" e "multiclasse" da [§5.2](#52-fora-de-escopo) está *suspensa*, não revogada; tudo que depende de M2 está marcado *(condicional a P-08)*. Correção associada: o limiar de 15 min **não** é o padrão ANAC, como afirmavam as §§3.1 e 11 — a ANAC considera pontual até 30 min. |
+| 1.2 | 10/09/2026 | Grupo | **Fonte de dados do T1 revertida para CSV.** A ingestão histórica do T1 passa a baixar os CSVs mensais do VRA publicados em `siros.anac.gov.br` (um arquivo por mês, via script, sem WAF) em vez de chamar a API REST — os arquivos já haviam sido baixados pelo grupo antes da carga da Bronze. Reescreve [§3.3](#33-fonte-de-dados), RF-001 e RF-001b. A API REST **não** foi removida do projeto: continua documentada em [§3.3.1](#331-endpoints) como alternativa não utilizada pela implementação atual — nenhuma outra entrega (T2/TF) dependia dela para a ingestão do VRA, então o escopo delas não muda. Efeito colateral descoberto na prática: os CSVs **não têm schema fixo** — 15 dos 36 arquivos do recorte 2022-2024 trazem uma 21ª coluna (`Codeshare`, ausente antes de out/2022) e `dt_referencia` aparece em dois formatos de data diferentes conforme o arquivo. Tratado na Bronze (`allow_jagged_rows`) e na Silver (`COALESCE` de dois parses) — detalhe completo em `docs/bronze_silver.md`, fora do PRD. |
 
 ### 1.2 Convenções
 
@@ -38,8 +39,11 @@
 
 Este documento especifica uma plataforma de dados e MLOps na Google Cloud que
 prediz, **antes da decolagem**, a probabilidade de um voo comercial brasileiro
-partir com mais de 15 minutos de atraso. A fonte é a **API REST oficial do VRA
-(Voo Regular Ativo)** da ANAC.
+partir com mais de 15 minutos de atraso. A fonte de dados é o **VRA (Voo
+Regular Ativo)** da ANAC — a carga histórica do T1 usa os **CSVs mensais**
+publicados em `siros.anac.gov.br` ([§3.3](#33-fonte-de-dados)); a API REST
+oficial do VRA foi a fonte original planejada e permanece documentada, mas não
+é usada pela implementação atual.
 
 Há uma extensão proposta e ainda **não ratificada**: prever também a **faixa de
 duração** do atraso, por meio de um segundo modelo em cascata
@@ -110,39 +114,67 @@ cumprir o enunciado.
 
 ### 3.3 Fonte de dados
 
+> ✅ **v1.2 (10/09/2026):** a carga histórica do T1 usa os **CSVs mensais**,
+> não a API REST. O grupo já tinha baixado os arquivos (um por mês, via
+> script) antes de decidir a camada Bronze, e manteve essa fonte em vez de
+> reescrever a ingestão para a API. A tabela abaixo descreve a fonte
+> **efetivamente usada**; a API, que era a decisão da v1.1, segue documentada
+> em [§3.3.1](#331-endpoints) mas não é chamada pela implementação atual.
+
 | Item | Valor |
 | --- | --- |
 | Conjunto | VRA — Voo Regular Ativo |
 | Publicador | ANAC — Agência Nacional de Aviação Civil (CGSD/GTAS/SAS) |
 | Licença | Dados abertos governamentais |
-| **Meio de acesso** | **API REST oficial**, `https://sas.anac.gov.br/sas/vra_api` |
-| Formato | JSON, UTF-8, HTTP 200 · **verificado em 18/08/2026** |
+| **Meio de acesso** | **Download de CSV**, um arquivo por mês, `https://siros.anac.gov.br/siros/registros/diversos/vra/<ano>/VRA_<ano>_<mês>.csv` |
+| Formato | CSV, `;`-separado, encoding Latin-1/CP1252 (não UTF-8) — **verificado nos arquivos reais**, diferente do que a v1.1 presumia para a API |
+| Schema | **Instável.** 20 ou 21 colunas conforme o mês (coluna extra `Codeshare` a partir de out/2022) e `dt_referencia` em dois formatos de data diferentes — ver `docs/bronze_silver.md` |
 | Granularidade | Um registro por etapa de voo (origem → destino) |
-| Periodicidade | Publicação mensal, com defasagem de ≈ 7 semanas |
-| Volume | ≈ 2.300 a 2.900 voos/dia · ≈ 81 mil/mês · ≈ 63 MB/mês em JSON |
+| Periodicidade | Publicação mensal |
+| Volume (recorte 2022-2024 usado no T1) | 36 arquivos, ≈ 856 MB, ≈ 2,8 milhões de linhas |
 
-**Por que a API e não o CSV.** O portal `gov.br` que hospeda os CSVs está atrás
-de um WAF de *bot defense*: qualquer cliente automatizado recebe HTTP 200 com um
-desafio JavaScript no lugar do arquivo, e a página de origem exige CAPTCHA. Não
-há caminho de download programático por ali. A API do SAS/ANAC, ao contrário,
-responde JSON diretamente, **sem autenticação, sem chave e sem WAF** — e ainda
-entrega **20 campos** contra os 11 do CSV, incluindo dois atributos pré-partida
-valiosos que o CSV não tem (equipamento e assentos ofertados).
+**Por que o CSV e não a API.** A v1.1 deste documento tinha decidido pela API
+REST oficial (`sas.anac.gov.br/sas/vra_api`) exatamente pelo bloqueio de WAF
+no portal `gov.br`. Essa limitação **continua real** — o portal `gov.br` de
+dados abertos segue inacessível a cliente automatizado. Só que
+`siros.anac.gov.br`, o domínio que hospeda os CSVs usados aqui, é um terceiro
+caminho, **diferente do portal `gov.br` e sem esse bloqueio**: os arquivos são
+baixáveis por script simples, um `GET` por mês, sem autenticação e sem WAF
+(ver `baixar_dados.py`). Como o grupo já tinha baixado o recorte inteiro por
+essa via antes de montar a Bronze, a ingestão do T1 foi construída sobre esse
+CSV em vez de reescrever para a API — trade-off aceito: **menos 1-2 campos
+pré-partida** que só a API tinha (equipamento e assentos ofertados, mantidos
+no contrato de features original) **contra schema instável** (20/21 colunas,
+dois formatos de data), tratado na Bronze e na Silver.
 
 #### 3.3.1 Endpoints
 
-| Endpoint | Parâmetros | Uso no projeto |
+> ⚠ **Não utilizado pela implementação atual** (v1.2) — mantido como
+> referência caso o projeto volte a usar a API REST em alguma entrega futura.
+> Nenhuma outra entrega (T2/TF) depende deste endpoint: a única API chamada
+> ao vivo em T2/TF é a API de predição do próprio projeto (Cloud Run,
+> RF-033), não a API do VRA.
+
+| Endpoint | Parâmetros | Uso previsto (não implementado) |
 | --- | --- | --- |
-| `GET /sas/vra_api/vra` | `dt_referencia1`, `dt_referencia2` (`ddmmyyyy`) | **Carga histórica.** Um mês inteiro em ≈ 20 s |
-| `GET /sas/vra_api/vra/data` | `dt_voo` (`ddmmyyyy`) | **Carga diária** e alimentação do simulador |
+| `GET /sas/vra_api/vra` | `dt_referencia1`, `dt_referencia2` (`ddmmyyyy`) | Carga histórica. Um mês inteiro em ≈ 20 s |
+| `GET /sas/vra_api/vra/data` | `dt_voo` (`ddmmyyyy`) | Carga diária e alimentação do simulador |
 | `GET /sas/vra_api/vra/voo` | `dt_voo`, `sg_empresa_icao`, `sg_icao_origem`, `sg_icao_destino`, `nr_voo` | Inspeção pontual e depuração |
 
-> ⚠ **A API retorna resposta truncada sem sinalizar erro.** Uma chamada a
-> `vra/data?dt_voo=15042026` devolveu HTTP 200 com 841 registros; a repetição da
-> mesma chamada devolveu 2.768. O corte é silencioso — não há status de erro, nem
-> `Content-Length` divergente. A ingestão **DEVE** validar a integridade de cada
-> resposta antes de persistir (RF-001b). Tratar HTTP 200 como sucesso é, aqui,
-> uma falha de projeto.
+> ⚠ **A API retorna resposta truncada sem sinalizar erro** (achado da v1.1,
+> preservado aqui porque é um risco real caso o projeto volte a usar a API em
+> alguma entrega futura). Uma chamada a `vra/data?dt_voo=15042026` devolveu
+> HTTP 200 com 841 registros; a repetição da mesma chamada devolveu 2.768. O
+> corte é silencioso — não há status de erro, nem `Content-Length`
+> divergente. Qualquer ingestão que volte a usar esta API **DEVE** validar a
+> integridade de cada resposta antes de persistir. Tratar HTTP 200 como
+> sucesso é, aqui, uma falha de projeto.
+>
+> A ingestão do T1, por baixar CSV em vez de chamar esta API, não está
+> exposta a este risco específico — mas tem o seu próprio, tratado por
+> RF-001b: um download HTTP truncado silenciaria do mesmo jeito. A mitigação
+> real, implementada em `scripts/ingest_bronze_vra_to_gcs.py`, é comparar
+> tamanho e contagem de linhas do arquivo local contra o que chegou no GCS.
 
 ---
 
@@ -194,8 +226,8 @@ agregada, com indicadores de pontualidade por empresa, aeroporto e período.
 
 ### 5.1 Em escopo
 
-- Ingestão em lote do VRA, via API REST oficial, para o Google Cloud Storage em
-  formato bruto.
+- Ingestão em lote do VRA, via download dos CSVs mensais (§3.3), para o Google
+  Cloud Storage em formato bruto.
 - Arquitetura Medallion (Bronze → Silver → Gold) no BigQuery.
 - Modelo de classificação binária de atraso, treinado com BigQuery ML em SQL puro.
 - ⚠ *(condicional a P-08)* Segundo modelo, multiclasse, para a faixa de duração
@@ -233,7 +265,7 @@ na avaliação:
 ```mermaid
 flowchart TB
     subgraph batch["Camada batch — T1"]
-        ANAC[("API REST VRA<br/>sas.anac.gov.br")] -->|ingestão JSON| GCS[("GCS<br/>zona raw")]
+        ANAC[("CSV VRA<br/>siros.anac.gov.br")] -->|download mensal| GCS[("GCS<br/>zona raw")]
         GCS -->|external table| BRONZE["Bronze<br/>tudo STRING, append-only"]
         BRONZE --> SILVER["Silver<br/>tipagem, dedup, filtros"]
         SILVER --> GOLDAGG["Gold · agg_*<br/>agregados de BI"]
@@ -289,21 +321,27 @@ orquestram o fluxo fim a fim.
 
 ### 6.3 Estrutura planejada do repositório
 
-O prefixo numérico nas pastas de SQL torna a ordem de execução autoevidente, o
-que atende diretamente ao critério de organização (20% da nota em cada entrega).
+> ⚠ **v1.2 (10/09/2026):** a organização de `sql/` mudou do prefixo numérico de
+> pasta (`00_setup`, `10_bronze`, ...) planejado na v1.1 para uma pasta por
+> camada Medallion sem numeração (`sql/setup`, `sql/bronze`, `sql/silver`,
+> ...) — decisão do grupo ao implementar o T1. A ordem de execução passa a ser
+> a própria sequência das camadas, não mais autoevidente pelo nome da pasta;
+> documentá-la aqui é o que substitui o prefixo numérico para o critério de
+> organização (20% da nota em cada entrega).
 
-```
+```text
 terraform/                  # infraestrutura declarada, mínima
-ingestion/                  # batch: consome a API do VRA, valida, grava JSON no GCS
+scripts/                    # batch: baixa o CSV do VRA, valida, grava no GCS
+notebooks/                  # notebooks de criação das tabelas por camada
 streaming/
   producer/                 # simulador de eventos → Pub/Sub
   dataflow/                 # pipeline Beam
 sql/
-  00_setup/                 # datasets, permissões
-  10_bronze/                # external tables
-  20_silver/                # tipagem, dedup, limpeza
-  30_gold/                  # agregados de BI e features de ML
-  40_ml/                    # CREATE MODEL, ML.EVALUATE, EXPORT MODEL
+  setup/                    # datasets, permissões
+  bronze/                   # external tables
+  silver/                   # tipagem, dedup, limpeza
+  gold/                     # agregados de BI e features de ML
+  ml/                       # CREATE MODEL, ML.EVALUATE, EXPORT MODEL
 api/                        # FastAPI + Dockerfile (Cloud Run)
 orchestration/              # workflows n8n
 schemas/features.json       # contrato de features
@@ -398,8 +436,8 @@ isolado é perfeitamente compatível com um sistema ruim.
 
 | ID | Requisito | Prioridade |
 | --- | --- | --- |
-| **RF-001** | O sistema **DEVE** consumir a API REST oficial do VRA ([§3.3.1](#331-endpoints)) e gravar o JSON de resposta no GCS **sem transformação**. | Obrigatório |
-| **RF-001b** | A ingestão **DEVE** validar cada resposta antes de persistir: HTTP 200, JSON parseável, e **contagem mínima de registros por dia** (piso de 1.500, contra o mínimo observado de 2.279). Resposta reprovada **DEVE** ser refeita, não gravada — a API trunca silenciosamente ([§3.3](#33-fonte-de-dados)). | Obrigatório |
+| **RF-001** | O sistema **DEVE** baixar os CSVs mensais do VRA publicados em `siros.anac.gov.br` ([§3.3](#33-fonte-de-dados)) e gravar cada arquivo no GCS **sem transformação**. | Obrigatório |
+| **RF-001b** | A ingestão **DEVE** validar cada arquivo antes de considerar o lote completo: download bem-sucedido, tamanho do objeto no GCS igual ao do arquivo local, e contagem de linhas registrada por arquivo. Divergência de tamanho **DEVE** ser refeita, não aceita — um download HTTP truncado não é sinalizado por status de erro, o mesmo tipo de falha silenciosa já observado na API ([§3.3.1](#331-endpoints)). Implementado em `scripts/ingest_bronze_vra_to_gcs.py`. | Obrigatório |
 | **RF-001c** | A ingestão **DEVE** registrar, por lote, a data solicitada, a contagem recebida e o resultado da validação, de modo que um mês incompleto seja detectável por consulta e não por inspeção manual. | Obrigatório |
 | **RF-002** | A camada **Bronze DEVE** ser uma external table sobre o GCS, com todos os campos tipados como `STRING`, append-only. | Obrigatório |
 | **RF-003** | Cada registro Bronze **DEVE** carregar os metadados de linhagem `_ingested_at`, `_source_uri` e `_batch_id`. | Obrigatório |
@@ -601,6 +639,18 @@ roteiro de demonstração.
 > ✅ **Schema verificado em 18/08/2026** contra 81.119 registros de junho/2026
 > retornados pela API. Substitui o layout de 13 campos presumido na v1.0, que
 > estava incorreto. A coluna *preench.* traz a taxa de preenchimento medida.
+>
+> ⚠ **v1.2 (10/09/2026):** os nomes e semânticas de campo abaixo continuam
+> valendo como contrato — Bronze, Silver e Gold usam exatamente esses nomes.
+> Mas a implementação real do T1 lê CSV ([§3.3](#33-fonte-de-dados)), não a
+> API, e o CSV **não tem o schema fixo** que esta tabela documenta: 15 dos 36
+> arquivos do recorte 2022-2024 trazem uma 21ª coluna (`Codeshare`, sem
+> equivalente aqui) e `dt_referencia` aparece em dois formatos de data
+> diferentes conforme o mês do arquivo. Essa tabela não foi reescrita para o
+> CSV porque os nomes/semânticas batem posicionalmente com as 20 primeiras
+> colunas de qualquer um dos dois formatos — só a proveniência (API vs. CSV)
+> mudou. Detalhe completo, incluindo a coluna extra, em
+> `docs/bronze_silver.md`.
 
 | # | Campo | Tipo lógico | Preench. | Distintos | Semântica |
 | --- | --- | --- | --- | --- | --- |
@@ -798,7 +848,7 @@ dados permanecem intactos — nada é copiado entre projetos.
 | **R-03** | Cold start do Cloud Run causar timeout no primeiro lote do Beam | Alta | Alto — trava a demo do TF | `min-instances=1` no dia da apresentação (RNF-002) | TF |
 | **R-04** | ~~Schema real do VRA divergir do layout presumido~~ | — | — | **Encerrado na v1.1.** O schema foi verificado contra 81.119 registros reais e a [§10.2](#102-dicionário-de-dados--vra-bruto) foi corrigida. O layout presumido de fato divergia: 20 campos, não 13 | Fechado |
 | **R-13** | API do VRA retornar resposta truncada com HTTP 200, carregando mês incompleto sem sinal de erro | **Alta** — já observado | Alto — modelo treinado sobre base incompleta, sem sintoma visível | Validação de contagem por lote (RF-001b) e log de ingestão auditável (RF-001c) | T1 |
-| **R-14** | Indisponibilidade da API do VRA no momento de uma carga | Média | Médio — atrasa a carga, não a demo | Dado já em GCS e BigQuery antes da apresentação; nenhuma demo chama a API da ANAC ao vivo | T1 |
+| **R-14** | Indisponibilidade da fonte do VRA (`siros.anac.gov.br`) no momento de um download | Média | Médio — atrasa a carga, não a demo | Dado já em GCS e BigQuery antes da apresentação; nenhuma demo depende de baixar o VRA ao vivo | T1 |
 | **R-15** | ⚠ *(condicional a P-08)* Segundo modelo dobrar a superfície de falha da demo | Média | Médio | Chamada HTTP única, sem ramificação em tempo de execução, degradação graciosa ([§6.5.1](#651-riscos-da-cascata-e-como-estão-contidos)) | T2, TF |
 | **R-16** | ⚠ *(condicional a P-08)* Decisão sobre a cascata chegar **depois** de a Gold estar publicada | Média | Médio — reversão passa a mexer em tabela já usada | Ratificar P-08 **antes de M1**; enquanto isso, `faixa_atraso` não é escrita | Antes de M1 |
 | **R-05** | Falha de rede ou indisponibilidade de fonte externa durante a apresentação | Média | Crítico — zera os 60% da nota prática | Simulador de eventos (RF-029); nenhuma dependência externa durante a demo | T2 |
@@ -980,9 +1030,10 @@ verificados. A verificação **DEVE** ocorrer no ambiente de produção, não lo
 | Enunciado do Trabalho 1 | [`enunciados/trabalho-1.md`](enunciados/trabalho-1.md) |
 | Enunciado do Trabalho 2 | [`enunciados/trabalho-2.md`](enunciados/trabalho-2.md) |
 | Enunciado do Trabalho Final | [`enunciados/trabalho-final.md`](enunciados/trabalho-final.md) |
-| [API REST do VRA](https://sas.anac.gov.br/sas/vra_api) | **Fonte de dados do projeto.** Endpoints, campos e domínios |
+| [CSVs mensais do VRA (SIROS/ANAC)](https://siros.anac.gov.br/siros/registros/diversos/vra/) | **Fonte de dados efetivamente usada pelo T1** ([§3.3](#33-fonte-de-dados)). Um arquivo por mês, baixado por `baixar_dados.py` |
+| [API REST do VRA](https://sas.anac.gov.br/sas/vra_api) | Fonte planejada na v1.1, não usada pela implementação atual ([§3.3.1](#331-endpoints)). Endpoints, campos e domínios, mantidos como referência |
 | [Consulta VRA (SAS/ANAC)](https://sas.anac.gov.br/sas/bav/view/frmConsultaVRA) | Interface de consulta que expõe a API; útil para conferência manual |
-| [Página do VRA no portal de dados abertos](https://www.gov.br/anac/pt-br/acesso-a-informacao/dados-abertos/areas-de-atuacao/voos-e-operacoes-aereas/voo-regular-ativo-vra) | Documentação oficial do conjunto. **Os CSVs desta página são inacessíveis a cliente automatizado** ([§3.3](#33-fonte-de-dados)) |
+| [Página do VRA no portal de dados abertos](https://www.gov.br/anac/pt-br/acesso-a-informacao/dados-abertos/areas-de-atuacao/voos-e-operacoes-aereas/voo-regular-ativo-vra) | Documentação oficial do conjunto. **Os CSVs desta página** (distinta do SIROS) **são inacessíveis a cliente automatizado** ([§3.3](#33-fonte-de-dados)) |
 | Portaria SAS nº 2.177/2020 · Resolução nº 440/2017 | Domínios dos campos vindos do SIROS |
 | Portarias SAS nº 3.506 e 3.507/2019 · Resolução nº 191/2011 | Domínios dos campos de horário realizado, vindos do DataVoo |
 | Documentação do BigQuery ML | `CREATE MODEL`, `ML.EVALUATE`, `ML.PREDICT`, `ML.EXPLAIN_PREDICT`, `EXPORT MODEL` |

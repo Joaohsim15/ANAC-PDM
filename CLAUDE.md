@@ -20,10 +20,17 @@ apresentação ao vivo em produção:
 ## Decisões travadas — não reabrir sem pedido explícito
 
 - **Domínio:** predição de atraso de partida com dados do VRA/ANAC.
-- **Fonte:** **API REST oficial** `https://sas.anac.gov.br/sas/vra_api`, JSON, 20
-  campos, sem autenticação. **Não usar os CSVs do portal `gov.br`** — estão atrás
-  de WAF e não são baixáveis por script. Schema verificado, documentado no PRD
-  § 10.2. A API **trunca respostas sem erro HTTP**: toda ingestão valida contagem.
+- **Fonte (T1, v1.2):** **CSVs mensais** de `siros.anac.gov.br` — um arquivo por
+  mês, baixado por script (`baixar_dados.py`), sem WAF. **Não usar os CSVs do
+  portal `gov.br`** (domínio diferente do SIROS) — estão atrás de WAF e não são
+  baixáveis por script. Schema **instável**: 20 ou 21 colunas conforme o mês
+  (coluna extra `Codeshare` a partir de out/2022) e `dt_referencia` em dois
+  formatos de data — ver `docs/bronze_silver.md`. Nomes/semântica de campo
+  documentados no PRD § 10.2, verificados originalmente contra a API REST
+  oficial (`sas.anac.gov.br/sas/vra_api`), que era a fonte da v1.1 e segue
+  documentada no PRD § 3.3.1 mas não é usada pela implementação atual — a API
+  **trunca respostas sem erro HTTP**, e um download de CSV trunca do mesmo
+  jeito: toda ingestão valida contagem e tamanho (RF-001b).
 - **Modelo:** classificação binária. Alvo `atrasou = 1` se a partida real exceder
   a prevista em mais de 15 minutos.
 - **15 min não é o corte da ANAC.** É o padrão internacional (OTP15). A ANAC
@@ -80,8 +87,9 @@ apresentação ao vivo em produção:
 
 - Documentação e comentários em **português do Brasil**; nomes de variáveis,
   funções, tabelas e colunas em inglês ou no padrão já adotado no arquivo.
-- Prefixo numérico nas pastas de SQL define a ordem de execução (`00_setup`,
-  `10_bronze`, `20_silver`, `30_gold`, `40_ml`).
+- SQL organizado por camada em `sql/<camada>/` (`setup`, `bronze`, `silver`,
+  `gold`, `ml`) — sem prefixo numérico de pasta; a ordem de execução é a
+  própria ordem das camadas Medallion.
 - Não introduzir dependência nova sem justificar.
 - Requisitos são referenciados pelo identificador do PRD (`RF-012`, `RNF-008`).
 
