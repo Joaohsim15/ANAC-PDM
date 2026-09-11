@@ -1,0 +1,1077 @@
+<!-- charset explicito: o arquivo tambem e aberto direto do disco na apresentacao,
+     sem servidor que declare o encoding no cabecalho HTTP. -->
+<meta charset="utf-8">
+<title>Medallion VRA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+  /* Paleta extraida do Modelo de Apresentacao do Instituto de Informatica:
+     accent1 #0072B9, accent2 #005CA1, dk1 #212121, lt2 #F9F9F9, dk2 #969696. */
+  :root {
+    --ground:   #F9F9F9;
+    --surface:  #FFFFFF;
+    --ink:      #212121;
+    --ink-2:    #474747;
+    --muted:    #757575;
+    --line:     #E0E3E6;
+    --line-2:   #EFF1F3;
+
+    --inf:      #0072B9;
+    --inf-dark: #005CA1;
+
+    --bronze:   #8A5A2B;
+    --silver:   #5C6B78;
+    --gold:     #7C6410;
+    --barred:   #A32A1E;
+
+    --bronze-fill: #F3ECE4;
+    --silver-fill: #EAEDF0;
+    --gold-fill:   #F2EEE0;
+    --inf-fill:    #E3EFF7;
+    --neutral-fill:#EEF0F2;
+
+    --sans: "IBM Plex Sans", Arial, Helvetica, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:   #10151A;
+      --surface:  #171D24;
+      --ink:      #E8EBEE;
+      --ink-2:    #B2BAC2;
+      --muted:    #869099;
+      --line:     #283038;
+      --line-2:   #1D242B;
+      --inf:      #4FA6E0;
+      --inf-dark: #7FBEE8;
+      --bronze:   #C89463;
+      --silver:   #9FACB8;
+      --gold:     #C4A94F;
+      --barred:   #DC8072;
+      --bronze-fill: #241C13;
+      --silver-fill: #1D242B;
+      --gold-fill:   #232013;
+      --inf-fill:    #14242F;
+      --neutral-fill:#1A2027;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground:   #10151A;
+    --surface:  #171D24;
+    --ink:      #E8EBEE;
+    --ink-2:    #B2BAC2;
+    --muted:    #869099;
+    --line:     #283038;
+    --line-2:   #1D242B;
+    --inf:      #4FA6E0;
+    --inf-dark: #7FBEE8;
+    --bronze:   #C89463;
+    --silver:   #9FACB8;
+    --gold:     #C4A94F;
+    --barred:   #DC8072;
+    --bronze-fill: #241C13;
+    --silver-fill: #1D242B;
+    --gold-fill:   #232013;
+    --inf-fill:    #14242F;
+    --neutral-fill:#1A2027;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; background: var(--ground); }
+  @media (min-width: 780px) and (min-height: 620px) {
+    html { scroll-snap-type: y mandatory; }
+  }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16.5px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .slide {
+    scroll-snap-align: start;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-block: 58px;
+    padding-inline: 28px;
+    border-bottom: 1px solid var(--line-2);
+    position: relative;
+  }
+  .slide::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 3px;
+    background: var(--inf);
+  }
+  /* telas de referencia: nao entram nos 5 minutos */
+  .slide.ref::before { background: var(--muted); }
+
+  .wrap { width: 100%; max-width: 1150px; margin-inline: auto; }
+
+  .eyebrow {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding-bottom: 12px;
+    margin-bottom: 28px;
+    border-bottom: 1px solid var(--line);
+  }
+  .eyebrow .clock { margin-left: auto; font-variant-numeric: tabular-nums; }
+  .eyebrow .tag { margin-left: auto; color: var(--muted); }
+
+  h1 {
+    font-weight: 600;
+    font-size: clamp(1.95rem, 4vw, 3rem);
+    line-height: 1.15;
+    letter-spacing: -0.018em;
+    text-wrap: balance;
+    margin: 0 0 16px;
+  }
+  h2 {
+    font-weight: 600;
+    font-size: clamp(1.4rem, 2.6vw, 1.95rem);
+    line-height: 1.2;
+    letter-spacing: -0.014em;
+    text-wrap: balance;
+    margin: 0 0 12px;
+  }
+  .dek {
+    font-size: clamp(0.97rem, 1.28vw, 1.09rem);
+    color: var(--ink-2);
+    max-width: 70ch;
+    margin: 0 0 30px;
+  }
+
+  code, .mono { font-family: var(--mono); font-size: 0.92em; }
+
+  .hex-mark { display: block; width: 46px; height: auto; color: var(--inf); margin-bottom: 22px; }
+  .hex { width: 11px; height: auto; margin-right: 8px; flex: none; }
+
+  /* ---------- capa ---------- */
+  .institutional {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    margin: 0 0 34px;
+    line-height: 1.85;
+  }
+  .institutional strong { color: var(--ink-2); font-weight: 500; }
+
+  .figures {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+  }
+  .fig { background: var(--surface); padding: 19px 21px; }
+  .fig .n {
+    font-weight: 600;
+    font-size: clamp(1.5rem, 2.8vw, 2.05rem);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    display: block;
+  }
+  .fig .k {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-top: 7px;
+    display: block;
+  }
+
+  /* ---------- diagrama ---------- */
+  figure { margin: 0; }
+  .canvas { overflow-x: auto; padding-bottom: 6px; }
+  .canvas svg { display: block; width: 100%; min-width: 940px; height: auto; }
+  figcaption {
+    margin-top: 18px;
+    font-size: 0.93rem;
+    color: var(--muted);
+    max-width: 80ch;
+  }
+
+  /* ---------- linhas camada / conteudo ---------- */
+  .reasons { border-top: 1px solid var(--line); }
+  .reason {
+    display: grid;
+    grid-template-columns: 190px 1fr;
+    gap: 28px;
+    padding-block: 22px;
+    border-bottom: 1px solid var(--line);
+    align-items: start;
+  }
+  .reason .layer {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding-top: 3px;
+    display: flex;
+    align-items: baseline;
+  }
+  .reason .layer small {
+    display: block;
+    font-size: 10.5px;
+    font-weight: 400;
+    letter-spacing: 0.03em;
+    text-transform: none;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+  .reason.b .layer { color: var(--bronze); }
+  .reason.s .layer { color: var(--silver); }
+  .reason.g .layer { color: var(--gold); }
+  .reason.i .layer { color: var(--inf); }
+
+  .reason .claim {
+    font-size: clamp(1.02rem, 1.45vw, 1.18rem);
+    font-weight: 600;
+    letter-spacing: -0.012em;
+    margin: 0 0 7px;
+    line-height: 1.3;
+  }
+  .reason .detail { margin: 0; color: var(--ink-2); max-width: 74ch; font-size: 0.955rem; }
+  .reason ul {
+    margin: 0;
+    padding-left: 18px;
+    color: var(--ink-2);
+    font-size: 0.94rem;
+    max-width: 76ch;
+  }
+  .reason li { margin-bottom: 4px; }
+  .reason li::marker { color: var(--muted); }
+
+  /* ---------- contrato de features ---------- */
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; }
+  .col-head {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.085em;
+    padding-bottom: 9px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid;
+  }
+  .col-head.in  { color: var(--inf); border-color: var(--inf); }
+  .col-head.out { color: var(--barred); border-color: var(--barred); }
+  .col-head span { font-variant-numeric: tabular-nums; letter-spacing: 0; }
+
+  .cols { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+  .chip {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    padding: 5px 9px;
+    background: var(--inf-fill);
+    border: 1px solid transparent;
+  }
+  .chip.no { background: transparent; border: 1px solid var(--barred); color: var(--barred); }
+  .kind {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin: 0 0 7px;
+  }
+  .note { font-size: 0.91rem; color: var(--muted); margin: 0; max-width: 58ch; }
+
+  .rule-box { margin-top: 28px; padding-top: 18px; border-top: 1px solid var(--line); }
+  .rule-box p { margin: 0; max-width: 94ch; font-size: 0.955rem; color: var(--ink-2); }
+  .rule-box b { color: var(--ink); font-weight: 600; }
+
+  /* ---------- SQL e tabelas ---------- */
+  .sql-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+    gap: 36px;
+    align-items: start;
+  }
+  pre {
+    margin: 0;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-top: 2px solid var(--inf);
+    padding: 18px 20px;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.75;
+    color: var(--ink);
+  }
+  .kw  { color: var(--inf); font-weight: 500; }
+  .str { color: var(--bronze); }
+  .cm  { color: var(--muted); }
+
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  caption {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.085em;
+    color: var(--muted);
+    padding-bottom: 11px;
+  }
+  th, td {
+    text-align: right;
+    padding: 9px 8px;
+    border-bottom: 1px solid var(--line);
+    font-size: 14.5px;
+    vertical-align: top;
+  }
+  th:first-child, td:first-child { text-align: left; }
+  thead th {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.055em;
+    color: var(--muted);
+    font-weight: 400;
+  }
+  tbody tr.win td { font-weight: 600; }
+  tbody tr.win td:first-child { color: var(--inf); }
+
+  table.defs td { text-align: left; font-size: 0.94rem; }
+  table.defs td:first-child {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    white-space: nowrap;
+    color: var(--inf);
+    width: 1%;
+    padding-right: 22px;
+  }
+  table.defs td .val {
+    font-family: var(--mono);
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .finding { margin-top: 20px; font-size: 0.93rem; color: var(--ink-2); max-width: 62ch; }
+  .finding b { color: var(--ink); font-weight: 600; }
+
+  a:focus-visible { outline: 2px solid var(--inf); outline-offset: 3px; }
+
+  @media (max-width: 900px) {
+    .sql-grid, .split { grid-template-columns: 1fr; }
+    .reason { grid-template-columns: 1fr; gap: 10px; }
+  }
+</style>
+
+<!-- ══════════════════════════ 1 · CAPA ══════════════════════════ -->
+<section class="slide" id="s1">
+  <div class="wrap">
+    <div class="eyebrow">
+      <span>01 / 05</span>
+      <span>Processamento de Dados Massivos &middot; Trabalho 1</span>
+      <span class="clock">0:00 – 0:20</span>
+    </div>
+
+    <svg class="hex-mark" viewBox="-11 -12 38 38" role="img"
+         aria-label="Marca hexagonal do Instituto de Informática">
+      <g fill="currentColor">
+        <polygon points="0,-9 -7.8,-4.5 -7.8,4.5 0,9 7.8,4.5 7.8,-4.5"></polygon>
+        <polygon points="15.6,-9 7.8,-4.5 7.8,4.5 15.6,9 23.4,4.5 23.4,-4.5" opacity="0.62"></polygon>
+        <polygon points="7.8,4.5 0,9 0,18 7.8,22.5 15.6,18 15.6,9" opacity="0.34"></polygon>
+      </g>
+    </svg>
+
+    <h1>Predição de atraso de partida em voos regulares brasileiros</h1>
+    <p class="dek">
+      Arquitetura Medallion implementada no BigQuery e classificação binária em
+      BigQuery ML, sobre a base de Voos Regulares Ativos da ANAC no recorte de
+      2022 a 2024.
+    </p>
+
+    <p class="institutional">
+      <strong>Instituto de Informática</strong> &middot; Universidade Federal de Goiás<br>
+      pdm-bia-2026.tf_anac
+    </p>
+
+    <div class="figures">
+      <div class="fig"><span class="n">2.843.883</span><span class="k">Registros ingeridos</span></div>
+      <div class="fig"><span class="n">2.618.184</span><span class="k">Após limpeza</span></div>
+      <div class="fig"><span class="n">10</span><span class="k">Features do contrato</span></div>
+      <div class="fig"><span class="n">2</span><span class="k">Modelos treinados</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════ 2 · DIAGRAMA ══════════════════════════ -->
+<section class="slide" id="s2">
+  <div class="wrap">
+    <div class="eyebrow">
+      <span>02 / 05</span>
+      <span>Estrutura do pipeline</span>
+      <span class="clock">0:20 – 1:10</span>
+    </div>
+
+    <h2>Organização das camadas</h2>
+    <p class="dek">
+      Cada camada possui responsabilidade única. A Gold ramifica em duas views que
+      separam treino de avaliação: é essa bifurcação que garante que nenhum voo usado
+      para medir o modelo tenha sido visto durante o treinamento.
+    </p>
+
+    <figure>
+      <div class="canvas">
+        <svg viewBox="0 0 1270 336" role="img"
+             aria-label="Fluxo do pipeline: 36 arquivos CSV no GCS originam a Bronze como external table; a Silver aplica tipagem, deduplicação e filtros; a Gold deriva dez features; a Gold ramifica em duas views, treino e avaliação, que alimentam respectivamente o CREATE MODEL e o ML.EVALUATE.">
+          <defs>
+            <marker id="arw" viewBox="0 0 10 10" refX="9" refY="5"
+                    markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <polygon points="0,1 9,5 0,9" fill="var(--muted)"></polygon>
+            </marker>
+          </defs>
+
+          <!-- contagens sobre as caixas principais -->
+          <g font-family="IBM Plex Mono, monospace" font-size="13.5" font-weight="500"
+             text-anchor="middle" style="font-variant-numeric: tabular-nums;">
+            <text x="83"  y="126" fill="var(--muted)">36 arquivos</text>
+            <text x="303" y="126" fill="var(--bronze)">2.843.883</text>
+            <text x="523" y="126" fill="var(--silver)">2.618.184</text>
+            <text x="743" y="126" fill="var(--gold)">≈ 2,62 mi</text>
+          </g>
+
+          <!-- caixas principais -->
+          <g stroke-width="1.25">
+            <rect x="8"   y="140" width="150" height="92"
+                  fill="var(--neutral-fill)" stroke="var(--muted)"></rect>
+            <rect x="228" y="140" width="150" height="92"
+                  fill="var(--bronze-fill)" stroke="var(--bronze)"></rect>
+            <rect x="448" y="140" width="150" height="92"
+                  fill="var(--silver-fill)" stroke="var(--silver)"></rect>
+            <rect x="668" y="140" width="150" height="92"
+                  fill="var(--gold-fill)" stroke="var(--gold)"></rect>
+          </g>
+
+          <g font-family="IBM Plex Sans, Arial, sans-serif" font-size="17" font-weight="600"
+             text-anchor="middle" letter-spacing="1">
+            <text x="83"  y="180" fill="var(--ink)">FONTE</text>
+            <text x="303" y="180" fill="var(--bronze)">BRONZE</text>
+            <text x="523" y="180" fill="var(--silver)">SILVER</text>
+            <text x="743" y="180" fill="var(--gold)">GOLD</text>
+          </g>
+          <g font-family="IBM Plex Mono, monospace" font-size="9.5"
+             text-anchor="middle" fill="var(--muted)">
+            <text x="83"  y="202">CSV no GCS</text>
+            <text x="303" y="202">tb_anac_bronze</text>
+            <text x="523" y="202">tb_anac_silver</text>
+            <text x="743" y="202">tb_..._gold_features</text>
+          </g>
+
+          <!-- setas do tronco -->
+          <g stroke="var(--muted)" stroke-width="1.25" marker-end="url(#arw)">
+            <line x1="162" y1="186" x2="222" y2="186"></line>
+            <line x1="382" y1="186" x2="442" y2="186"></line>
+            <line x1="602" y1="186" x2="662" y2="186"></line>
+          </g>
+          <g font-family="IBM Plex Mono, monospace" font-size="9.5"
+             text-anchor="middle" fill="var(--muted)">
+            <text x="192" y="170">copia</text>
+            <text x="192" y="181">fiel</text>
+            <text x="412" y="170">tipar e</text>
+            <text x="412" y="181">limpar</text>
+            <text x="632" y="170">derivar e</text>
+            <text x="632" y="181">rotular</text>
+          </g>
+
+          <!-- bifurcacao da Gold nas duas views -->
+          <g stroke="var(--gold)" stroke-width="1.25" marker-end="url(#arw)" fill="none">
+            <path d="M 822 170 C 852 170, 856 132, 884 132"></path>
+            <path d="M 822 202 C 852 202, 856 240, 884 240"></path>
+          </g>
+
+          <g stroke-width="1.25">
+            <rect x="888" y="100" width="150" height="64"
+                  fill="var(--inf-fill)" stroke="var(--inf)"></rect>
+            <rect x="888" y="208" width="150" height="64"
+                  fill="var(--surface)" stroke="var(--silver)"></rect>
+          </g>
+          <g font-family="IBM Plex Mono, monospace" font-size="10" text-anchor="middle">
+            <text x="963" y="122" fill="var(--inf)" font-weight="500">vw_..._treino_m1</text>
+            <text x="963" y="138" fill="var(--muted)">is_eval = FALSE</text>
+            <text x="963" y="155" fill="var(--ink)" font-weight="500">2,47 mi voos</text>
+
+            <text x="963" y="230" fill="var(--silver)" font-weight="500">vw_..._avaliacao_m1</text>
+            <text x="963" y="246" fill="var(--muted)">is_eval = TRUE</text>
+            <text x="963" y="263" fill="var(--ink)" font-weight="500">151 mil voos</text>
+          </g>
+
+          <!-- consumo -->
+          <g stroke="var(--muted)" stroke-width="1.25" marker-end="url(#arw)">
+            <line x1="1042" y1="132" x2="1104" y2="132"></line>
+            <line x1="1042" y1="240" x2="1104" y2="240"></line>
+          </g>
+          <g stroke-width="1.25">
+            <rect x="1108" y="100" width="154" height="64"
+                  fill="var(--inf-fill)" stroke="var(--inf)"></rect>
+            <rect x="1108" y="208" width="154" height="64"
+                  fill="var(--surface)" stroke="var(--silver)"></rect>
+          </g>
+          <g font-family="IBM Plex Mono, monospace" font-size="10" text-anchor="middle">
+            <text x="1185" y="124" fill="var(--inf)" font-weight="500">CREATE MODEL</text>
+            <text x="1185" y="140" fill="var(--muted)">BOOSTED_TREE</text>
+            <text x="1185" y="156" fill="var(--muted)">LOGISTIC_REG</text>
+
+            <text x="1185" y="232" fill="var(--silver)" font-weight="500">ML.EVALUATE</text>
+            <text x="1185" y="248" fill="var(--muted)">AUC, revocação,</text>
+            <text x="1185" y="264" fill="var(--muted)">precisão</text>
+          </g>
+
+          <!-- detalhes sob o tronco -->
+          <g font-family="IBM Plex Sans, Arial, sans-serif" font-size="11.5"
+             text-anchor="middle" fill="var(--ink-2)">
+            <text x="83"  y="258">ISO-8859-1</text>
+            <text x="83"  y="276">dois layouts</text>
+
+            <text x="303" y="258">external table</text>
+            <text x="303" y="276">campos STRING</text>
+
+            <text x="523" y="258">tipada, deduplicada</text>
+            <text x="523" y="276">−7,9% de registros</text>
+
+            <text x="743" y="258">dez features + alvo</text>
+            <text x="743" y="276">indicador is_eval</text>
+          </g>
+
+          <text x="963" y="300" font-family="IBM Plex Mono, monospace" font-size="10"
+                text-anchor="middle" fill="var(--gold)">
+            divisão temporal: os últimos 60 dias nunca entram no treino
+          </text>
+        </svg>
+      </div>
+      <figcaption>
+        A Bronze não replica dados: é acesso <em>schema-on-read</em> sobre os arquivos no
+        GCS. A redução de 7,9% ocorre integralmente na Silver — voos cancelados, duplicatas
+        e atrasos fora de ±24 horas. A Gold praticamente não descarta registros, porque seu
+        papel é derivar features, não filtrar.
+      </figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ══════════════════════════ 3 · POR QUE ══════════════════════════ -->
+<section class="slide" id="s3">
+  <div class="wrap">
+    <div class="eyebrow">
+      <span>03 / 05</span>
+      <span>Justificativa da arquitetura</span>
+      <span class="clock">1:10 – 2:00</span>
+    </div>
+
+    <h2>Motivação de cada fronteira</h2>
+    <p class="dek">
+      A segmentação em camadas não decorre de convenção. Cada fronteira responde a
+      uma característica específica e verificada da fonte de dados.
+    </p>
+
+    <div class="reasons">
+      <div class="reason b">
+        <div class="layer">
+          <svg class="hex" viewBox="-9 -10 18 20" aria-hidden="true"><polygon points="0,-9 -7.8,-4.5 -7.8,4.5 0,9 7.8,4.5 7.8,-4.5" fill="currentColor"></polygon></svg>
+          <span>Bronze<small>tb_anac_bronze</small></span>
+        </div>
+        <div>
+          <p class="claim">Instabilidade estrutural da fonte</p>
+          <p class="detail">
+            Os 36 arquivos não compartilham o mesmo formato: a coluna <code>Codeshare</code>
+            passa a ser emitida em outubro de 2022, de modo que 15 arquivos têm 21 colunas e
+            21 têm 20. As datas ocorrem em dois padrões e a codificação é ISO-8859-1.
+            Preservar o dado em estado bruto assegura que alterações futuras sejam absorvidas
+            na Silver, sem necessidade de reingestão.
+          </p>
+        </div>
+      </div>
+
+      <div class="reason s">
+        <div class="layer">
+          <svg class="hex" viewBox="-9 -10 18 20" aria-hidden="true"><polygon points="0,-9 -7.8,-4.5 -7.8,4.5 0,9 7.8,4.5 7.8,-4.5" fill="currentColor"></polygon></svg>
+          <span>Silver<small>tb_anac_silver</small></span>
+        </div>
+        <div>
+          <p class="claim">Inconsistências no dado bruto</p>
+          <p class="detail">
+            A base contém registros duplicados, voos cancelados misturados aos realizados e
+            valores implausíveis — o atraso mínimo observado foi de &minus;1.453 minutos e o
+            máximo de +3.894, atribuídos a erro de virada de data. A limpeza é centralizada
+            em uma única etapa, em vez de replicada em cada consulta.
+          </p>
+        </div>
+      </div>
+
+      <div class="reason g">
+        <div class="layer">
+          <svg class="hex" viewBox="-9 -10 18 20" aria-hidden="true"><polygon points="0,-9 -7.8,-4.5 -7.8,4.5 0,9 7.8,4.5 7.8,-4.5" fill="currentColor"></polygon></svg>
+          <span>Gold<small>..._gold_features_atraso</small></span>
+        </div>
+        <div>
+          <p class="claim">Prevenção de vazamento de alvo</p>
+          <p class="detail">
+            Nesta camada é estabelecida a fronteira que separa informação disponível antes da
+            decolagem daquela que só existe após. Toda coluna posterior à partida é tratada
+            como insumo do rótulo, nunca como entrada do modelo. A Gold também registra o
+            corte temporal de avaliação.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════ 4 · FEATURES ══════════════════════════ -->
+<section class="slide" id="s4">
+  <div class="wrap">
+    <div class="eyebrow">
+      <span>04 / 05</span>
+      <span>Contrato de features</span>
+      <span class="clock">2:00 – 2:40</span>
+    </div>
+
+    <h2>Colunas admitidas e colunas vedadas</h2>
+    <p class="dek">
+      A tabela Gold possui quinze colunas, das quais apenas dez integram o vetor de
+      entrada. Todas são conhecidas antes da saída da aeronave do portão.
+    </p>
+
+    <div class="split">
+      <div>
+        <div class="col-head in"><span>Features do contrato</span><span>10</span></div>
+
+        <p class="kind">Categóricas &middot; 5</p>
+        <div class="cols">
+          <span class="chip">sg_empresa_icao</span>
+          <span class="chip">sg_icao_origem</span>
+          <span class="chip">sg_icao_destino</span>
+          <span class="chip">cd_tipo_linha</span>
+          <span class="chip">sg_equipamento_icao</span>
+        </div>
+
+        <p class="kind">Calendário &middot; 2</p>
+        <div class="cols">
+          <span class="chip">dia_semana</span>
+          <span class="chip">mes</span>
+        </div>
+
+        <p class="kind">Numéricas &middot; 3</p>
+        <div class="cols">
+          <span class="chip">nr_assentos_ofertados</span>
+          <span class="chip">hora_partida_prevista</span>
+          <span class="chip">duracao_prevista_min</span>
+        </div>
+
+        <p class="note">
+          Todas derivam da programação do voo, o que viabiliza servir o mesmo modelo em
+          tempo real no Trabalho Final por meio de um payload autocontido.
+        </p>
+      </div>
+
+      <div>
+        <div class="col-head out"><span>Colunas vedadas</span><span>5</span></div>
+
+        <p class="kind">Posteriores à decolagem &middot; 2</p>
+        <div class="cols">
+          <span class="chip no">atraso_partida_minutos</span>
+          <span class="chip no">faixa_atraso</span>
+        </div>
+
+        <p class="kind">Chave e rastreabilidade &middot; 3</p>
+        <div class="cols">
+          <span class="chip no">dt_referencia</span>
+          <span class="chip no">nr_voo</span>
+          <span class="chip no">dt_partida_prevista</span>
+        </div>
+
+        <p class="note">
+          As duas primeiras só existem após a decolagem: admitidas no vetor, permitiriam ao
+          modelo derivar <code>atrasou = atraso &gt; 15</code> e produziriam AUC igual a 1,0.
+          O alvo <code>atrasou</code> é calculado a partir da primeira e fica de fora do
+          vetor pelo mesmo motivo.
+        </p>
+      </div>
+    </div>
+
+    <div class="rule-box">
+      <p>
+        <b>Função das duas views.</b> Na ausência delas, o <code>CREATE MODEL</code>
+        dependeria de <code>SELECT * EXCEPT(...)</code>, isto é, de uma lista de exclusão.
+        O modo de falha dessa abordagem é silencioso: incluir uma nova coluna na Gold sem
+        atualizar a lista faria com que ela integrasse o vetor sem gerar erro, manifestando-se
+        apenas como métrica anomalamente elevada. As views invertem a lógica para lista de
+        inclusão, enumerando explicitamente as dez features admitidas.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════ 5 · MODELO ══════════════════════════ -->
+<section class="slide" id="s5">
+  <div class="wrap">
+    <div class="eyebrow">
+      <span>05 / 05</span>
+      <span>Treinamento e avaliação</span>
+      <span class="clock">2:40 – 3:20</span>
+    </div>
+
+    <h2>Especificação do modelo</h2>
+    <p class="dek">
+      O treinamento é declarado em SQL, sem dependência externa ao BigQuery. Cada opção
+      anotada responde a uma característica verificada da base.
+    </p>
+
+    <div class="sql-grid">
+      <pre><span class="kw">CREATE OR REPLACE MODEL</span>
+  `pdm-bia-2026.tf_anac.mdl_anac_m1_boosted_tree`
+<span class="kw">OPTIONS</span> (
+  MODEL_TYPE       = <span class="str">'BOOSTED_TREE_CLASSIFIER'</span>,  <span class="cm">-- exportável</span>
+  INPUT_LABEL_COLS = [<span class="str">'atrasou'</span>],
+  AUTO_CLASS_WEIGHTS = <span class="kw">TRUE</span>,                <span class="cm">-- 17,1% positivos</span>
+  CATEGORY_ENCODING_METHOD = <span class="str">'LABEL_ENCODING'</span>, <span class="cm">-- 175 aeroportos</span>
+  MAX_ITERATIONS   = 50,
+  MAX_TREE_DEPTH   = 8,
+  LEARN_RATE       = 0.1,
+  ENABLE_GLOBAL_EXPLAIN = <span class="kw">TRUE</span>             <span class="cm">-- SHAP nativo</span>
+) <span class="kw">AS</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> `...vw_anac_gold_treino_m1`;</pre>
+
+      <div>
+        <table>
+          <caption>Avaliação sobre o mesmo corte temporal</caption>
+          <thead>
+            <tr><th>Modelo</th><th>AUC</th><th>Revoc.</th><th>Prec.</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>LOGISTIC_REG</td><td>0,6417</td><td>0,7291</td><td>0,3119</td></tr>
+            <tr class="win"><td>BOOSTED_TREE</td><td>0,6584</td><td>0,7459</td><td>0,3147</td></tr>
+          </tbody>
+        </table>
+
+        <p class="finding">
+          <b>Observação sobre o resultado.</b> A meta de AUC ≥ 0,70 não foi atingida. A
+          hipótese é que as dez features descrevem exclusivamente a programação do voo, sem
+          representar o estado operacional do dia — meteorologia, rotação da aeronave e
+          atraso acumulado da malha. O ganho de apenas 0,0167 sobre o baseline linear indica
+          que a limitação está nos dados disponíveis, não na classe do modelo.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════ 6 · REF: TRATAMENTOS ══════════════════════════ -->
+<section class="slide ref" id="s6">
+  <div class="wrap">
+    <div class="eyebrow">
+      <span>Referência</span>
+      <span>Tratamentos aplicados</span>
+      <span class="tag">Não apresentado</span>
+    </div>
+
+    <h2>O que cada camada faz com o dado</h2>
+    <p class="dek">
+      A regra que organiza a divisão: a Bronze preserva, a Silver corrige, a Gold
+      interpreta. Nenhuma etapa refaz o trabalho da anterior.
+    </p>
+
+    <div class="reasons">
+      <div class="reason b">
+        <div class="layer">
+          <svg class="hex" viewBox="-9 -10 18 20" aria-hidden="true"><polygon points="0,-9 -7.8,-4.5 -7.8,4.5 0,9 7.8,4.5 7.8,-4.5" fill="currentColor"></polygon></svg>
+          <span>Bronze<small>nenhuma transformação</small></span>
+        </div>
+        <ul>
+          <li><em>External table</em> sobre o GCS: o dado permanece nos arquivos, sem cópia.</li>
+          <li>Todos os campos declarados como <code>STRING</code> — nada é convertido.</li>
+          <li>Particionamento Hive por <code>_ingested_at</code> e <code>_batch_id</code>.</li>
+          <li><code>allow_jagged_rows</code> permite conviver com linhas de 20 e de 21 colunas.</li>
+          <li>Codificação ISO-8859-1 e delimitador <code>;</code> declarados explicitamente.</li>
+          <li>Contagem validada contra o manifest de ingestão: 2.843.883 registros.</li>
+        </ul>
+      </div>
+
+      <div class="reason s">
+        <div class="layer">
+          <svg class="hex" viewBox="-9 -10 18 20" aria-hidden="true"><polygon points="0,-9 -7.8,-4.5 -7.8,4.5 0,9 7.8,4.5 7.8,-4.5" fill="currentColor"></polygon></svg>
+          <span>Silver<small>−225.699 registros</small></span>
+        </div>
+        <ul>
+          <li>Tipagem com <code>SAFE_CAST</code> e <code>SAFE.PARSE_DATETIME</code>: campo inválido vira nulo, não erro.</li>
+          <li><code>dt_referencia</code> resolvida por <code>COALESCE</code> entre os dois formatos de data da fonte.</li>
+          <li>Filtro <code>ds_situacao_voo = 'REALIZADO'</code>: cancelados saem.</li>
+          <li>Deduplicação por <code>QUALIFY ROW_NUMBER()</code> sobre empresa, voo, data, origem e partida prevista.</li>
+          <li>Descarte de pares incompletos e de atrasos fora de ±1.440 minutos.</li>
+          <li>Cálculo de <code>atraso_partida_minutos</code>; partição por data e cluster por empresa e origem.</li>
+        </ul>
+      </div>
+
+      <div class="reason g">
+        <div class="layer">
+          <svg class="hex" viewBox="-9 -10 18 20" aria-hidden="true"><polygon points="0,-9 -7.8,-4.5 -7.8,4.5 0,9 7.8,4.5 7.8,-4.5" fill="currentColor"></polygon></svg>
+          <span>Gold<small>praticamente sem descarte</small></span>
+        </div>
+        <ul>
+          <li>Derivação das features de calendário a partir da partida prevista.</li>
+          <li>Cálculo de <code>duracao_prevista_min</code> entre chegada e partida programadas.</li>
+          <li>Construção do alvo: <code>atrasou = 1</code> quando o atraso excede 15 minutos.</li>
+          <li>Marcação de <code>is_eval</code> nos últimos 60 dias, ancorada no máximo da base.</li>
+          <li>Guarda de plausibilidade: duração programada entre 10 e 1.200 minutos.</li>
+          <li>Publicação das duas views que enumeram as dez features admitidas.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════ 7 · REF: VIEWS ══════════════════════════ -->
+<section class="slide ref" id="s7">
+  <div class="wrap">
+    <div class="eyebrow">
+      <span>Referência</span>
+      <span>Por que duas views</span>
+      <span class="tag">Não apresentado</span>
+    </div>
+
+    <h2>Uma para treinar, outra para medir</h2>
+    <p class="dek">
+      As duas views leem a mesma tabela e enumeram as mesmas dez features. A única
+      diferença entre elas é o lado do corte temporal.
+    </p>
+
+    <div class="sql-grid">
+      <pre><span class="cm">-- alimenta o CREATE MODEL · 2,47 mi de voos</span>
+<span class="kw">CREATE OR REPLACE VIEW</span> vw_anac_gold_treino_m1 <span class="kw">AS</span>
+<span class="kw">SELECT</span> sg_empresa_icao, sg_icao_origem, sg_icao_destino,
+       cd_tipo_linha, sg_equipamento_icao, dia_semana, mes,
+       nr_assentos_ofertados, hora_partida_prevista,
+       duracao_prevista_min, atrasou
+<span class="kw">FROM</span>   tb_anac_gold_features_atraso
+<span class="kw">WHERE</span>  is_eval = <span class="kw">FALSE</span>;
+
+<span class="cm">-- alimenta o ML.EVALUATE · 151 mil voos</span>
+<span class="kw">CREATE OR REPLACE VIEW</span> vw_anac_gold_avaliacao_m1 <span class="kw">AS</span>
+<span class="kw">SELECT</span> <span class="cm">/* as mesmas dez colunas */</span>
+<span class="kw">FROM</span>   tb_anac_gold_features_atraso
+<span class="kw">WHERE</span>  is_eval = <span class="kw">TRUE</span>;</pre>
+
+      <div>
+        <table class="defs">
+          <caption>Duas funções distintas</caption>
+          <tbody>
+            <tr>
+              <td>Separar</td>
+              <td>O modelo é medido apenas em voos que nunca viu. A divisão é
+                  <span class="val">temporal</span>, jamais aleatória: em série temporal, sortear
+                  linhas deixaria o modelo prever o passado com informação do futuro e inflaria
+                  a métrica.</td>
+            </tr>
+            <tr>
+              <td>Nomear</td>
+              <td><code>is_eval</code> é um booleano solto; inverter o filtro por engano
+                  produziria números plausíveis e errados. O nome da view torna o erro visível.</td>
+            </tr>
+            <tr>
+              <td>Barrar</td>
+              <td>Enumerar as dez colunas converte a exclusão em <span class="val">lista de
+                  inclusão</span>. Um <code>SELECT *</code> sobre a view não alcança
+                  <code>atraso_partida_minutos</code>, aconteça o que acontecer com a tabela.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p class="finding">
+          <b>Por que 60 dias.</b> Curto demais, o conjunto de avaliação fica pequeno e a
+          métrica vira ruído. Longo demais, descarta-se justamente o período mais recente,
+          que é o mais parecido com aquilo que se quer prever. Sessenta dias custam 5,8% da
+          base e rendem 151 mil voos.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════ 8 · REF: MODELOS E MÉTRICAS ══════════════════════════ -->
+<section class="slide ref" id="s8">
+  <div class="wrap">
+    <div class="eyebrow">
+      <span>Referência</span>
+      <span>Modelos e métricas</span>
+      <span class="tag">Não apresentado</span>
+    </div>
+
+    <h2>Para que serve o baseline, e o que cada métrica mede</h2>
+
+    <div class="split">
+      <div>
+        <div class="col-head in"><span>Os dois modelos</span><span>2</span></div>
+        <table class="defs">
+          <tbody>
+            <tr>
+              <td>LOGISTIC_REG</td>
+              <td>Modelo linear: aprende um peso por feature e os soma. Não representa
+                  interação — não consegue expressar que uma combinação específica de empresa,
+                  aeroporto e horário é pior do que a soma das partes.</td>
+            </tr>
+            <tr>
+              <td>BOOSTED_TREE</td>
+              <td>Conjunto de árvores em <em>boosting</em>: cada árvore corrige o erro
+                  residual da anterior. Captura interação e não-linearidade sem que seja
+                  preciso declará-las.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="finding" style="margin-top:16px">
+          <b>A função do baseline.</b> Isoladamente, AUC 0,6584 não é interpretável. Medido
+          contra 0,6417 de um modelo linear no mesmo corte, revela que toda a estrutura
+          não-linear rendeu apenas 0,0167 — evidência de que a limitação está nas features
+          disponíveis, e não na classe do modelo. O baseline também funciona como controle:
+          se o modelo complexo perdesse para o linear, isso indicaria defeito de configuração.
+        </p>
+      </div>
+
+      <div>
+        <div class="col-head in"><span>As métricas</span><span>4</span></div>
+        <table class="defs">
+          <tbody>
+            <tr>
+              <td>AUC-ROC <span class="val">0,6584</span></td>
+              <td>Sorteando um voo que atrasou e outro que não, é a probabilidade de o modelo
+                  atribuir score maior ao que atrasou. Independe de limiar: mede a ordenação.
+                  O valor 0,5 equivale a acaso.</td>
+            </tr>
+            <tr>
+              <td>Revocação <span class="val">0,7459</span></td>
+              <td>Dos voos que de fato atrasaram, a fração que o modelo apontou. Captura
+                  74,6% dos atrasos reais.</td>
+            </tr>
+            <tr>
+              <td>Precisão <span class="val">0,3147</span></td>
+              <td>Dos voos apontados como atraso, a fração que atrasou de fato. Falsos
+                  alarmes são frequentes, o que é aceito deliberadamente.</td>
+            </tr>
+            <tr>
+              <td>Acurácia</td>
+              <td>Não utilizada como critério: 82,9% da base não atrasa, de modo que prever
+                  sempre a classe negativa produziria acurácia superior à do modelo.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="rule-box">
+      <p>
+        <b>O compromisso entre revocação e precisão é deliberado.</b>
+        <code>AUTO_CLASS_WEIGHTS = TRUE</code> reponderá a classe positiva, que representa
+        apenas 17,1% da base. Sem isso, o modelo minimizaria a perda prevendo a classe
+        negativa para quase tudo. O efeito é elevar a revocação ao custo da precisão, o que
+        corresponde ao uso pretendido: deixar de sinalizar um atraso custa mais do que
+        verificar um voo desnecessariamente.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════ 9 · REF: SAÍDA ══════════════════════════ -->
+<section class="slide ref" id="s9">
+  <div class="wrap">
+    <div class="eyebrow">
+      <span>Referência</span>
+      <span>Saída do modelo</span>
+      <span class="tag">Não apresentado</span>
+    </div>
+
+    <h2>O que o modelo devolve e qual problema resolve</h2>
+    <p class="dek">
+      O <code>ML.PREDICT</code> retorna a classe prevista e o vetor de probabilidades.
+      A aplicação consome a probabilidade, não a classe.
+    </p>
+
+    <div class="sql-grid">
+      <pre><span class="cm">-- saida do ML.PREDICT para um voo</span>
+predicted_atrasou        <span class="cm">→</span> 1
+predicted_atrasou_probs  <span class="cm">→</span> [{label: 0, prob: 0.38},
+                            {label: 1, prob: <span class="str">0.62</span>}]
+
+<span class="cm">-- o que a aplicacao usa</span>
+<span class="kw">SELECT</span> nr_voo, rota,
+       <span class="kw">ROUND</span>(prob_atraso, 4) <span class="kw">AS</span> risco
+<span class="kw">FROM</span>   predicoes
+<span class="kw">ORDER BY</span> risco <span class="kw">DESC</span>
+<span class="kw">LIMIT</span>  15;   <span class="cm">-- os 15 voos do dia a observar</span></pre>
+
+      <div>
+        <table class="defs">
+          <tbody>
+            <tr>
+              <td>Por que a probabilidade</td>
+              <td>A classe fixa o limiar em 0,5 e descarta informação. A probabilidade permite
+                  que o analista escolha o corte conforme a folga do turno: em dia apertado,
+                  observa-se apenas o topo da lista; em dia folgado, desce-se mais.</td>
+            </tr>
+            <tr>
+              <td>Problema resolvido</td>
+              <td>Antecipação. Saber, antes da decolagem, quais voos do dia concentram maior
+                  risco de atrasar mais de 15 minutos, de modo a realocar portão, equipe e
+                  conexões antes que o atraso se propague pela malha.</td>
+            </tr>
+            <tr>
+              <td>Explicabilidade</td>
+              <td><code>ML.EXPLAIN_PREDICT</code> devolve as atribuições SHAP: quais features
+                  empurraram a probabilidade e em que magnitude. Converte um número em uma
+                  decisão justificável.</td>
+            </tr>
+            <tr>
+              <td>Continuidade</td>
+              <td>O <code>EXPORT MODEL</code> já foi validado: o modelo sai em formato XGBoost
+                  e é importável no Vertex AI, que é do que depende o Trabalho 2.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  const slides = Array.from(document.querySelectorAll(".slide"));
+
+  function current() {
+    const mid = window.scrollY + window.innerHeight / 2;
+    return slides.findIndex((s) => s.offsetTop <= mid && mid < s.offsetTop + s.offsetHeight);
+  }
+
+  addEventListener("keydown", (ev) => {
+    const fwd = ["ArrowRight", "ArrowDown", "PageDown", " "];
+    const back = ["ArrowLeft", "ArrowUp", "PageUp"];
+    if (![...fwd, ...back].includes(ev.key)) return;
+    ev.preventDefault();
+    const i = current();
+    const next = fwd.includes(ev.key) ? Math.min(i + 1, slides.length - 1) : Math.max(i - 1, 0);
+    slides[next].scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+</script>
