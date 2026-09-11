@@ -135,7 +135,7 @@ docs/
 ```
 
 `sql/` tem uma pasta por camada Medallion (sem prefixo numérico) — a ordem de
-execução é a própria ordem das camadas: `setup` → `bronze` → `silver` →
+execução é a própria ordem das camadas: `bronze` → `silver` →
 `gold` → `ml`.
 
 ## Restrições que moldam o projeto
