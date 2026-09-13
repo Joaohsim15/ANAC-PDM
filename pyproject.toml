@@ -1,0 +1,9 @@
+[project]
+name = "anac-pdm"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.13"
+dependencies = [
+    "google-cloud-storage>=3.13.1",
+    "requests>=2.34.2",
+]

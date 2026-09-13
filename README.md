@@ -2,7 +2,8 @@
 
 Plataforma de dados e MLOps na Google Cloud que prediz, **antes da decolagem**, a
 probabilidade de um voo comercial brasileiro partir com mais de 15 minutos de
-atraso. Construída sobre a **API oficial do VRA (Voo Regular Ativo)** da ANAC.
+atraso. Construída sobre o **VRA (Voo Regular Ativo)** da ANAC — a carga
+histórica do T1 usa os **CSVs mensais** publicados em `siros.anac.gov.br`.
 
 > Projeto da disciplina **PDM_BIA — Processamento de Dados Massivos** · INF/UFG · 2026.
 
@@ -34,8 +35,8 @@ trabalhos independentes.
 
 ## Arquitetura
 
-```
-API VRA/ANAC ─▶ GCS (raw) ──▶ Bronze ──▶ Silver ──┬──▶ Gold agg_*  ──▶ Looker Studio
+```text
+CSV VRA/ANAC ─▶ GCS (raw) ──▶ Bronze ──▶ Silver ──┬──▶ Gold agg_*  ──▶ Looker Studio
                                                    └──▶ Gold features ──▶ BigQuery ML
                                                                               │
                                                                      EXPORT MODEL
@@ -56,7 +57,7 @@ Diagrama completo em [`docs/PRD.md` § 6](docs/PRD.md#6-visão-da-solução-e-ar
 
 | Camada | Tecnologia |
 | --- | --- |
-| Fonte | API REST oficial do VRA (`sas.anac.gov.br/sas/vra_api`) — JSON, sem autenticação |
+| Fonte | CSVs mensais do VRA (`siros.anac.gov.br`) — um arquivo por mês, sem autenticação. |
 | Armazenamento bruto | Google Cloud Storage |
 | Data warehouse | BigQuery (Medallion: Bronze / Silver / Gold) |
 | Machine learning | BigQuery ML → Vertex AI Model Registry + Endpoint |
@@ -67,26 +68,33 @@ Diagrama completo em [`docs/PRD.md` § 6](docs/PRD.md#6-visão-da-solução-e-ar
 
 ## Os dados
 
-Verificado em 18/08/2026 contra 81.119 registros reais de junho/2026.
-
 | | |
 | --- | --- |
-| Acesso | `GET https://sas.anac.gov.br/sas/vra_api/vra?dt_referencia1=…&dt_referencia2=…` |
+| Acesso | `https://siros.anac.gov.br/siros/registros/diversos/vra/<ano>/VRA_<ano>_<mês>.csv` — um arquivo por mês |
 | Autenticação | Nenhuma |
-| Campos | 20, todos como string — a tipagem é trabalho da Silver |
-| Volume | ≈ 2.300–2.900 voos/dia · ≈ 81 mil/mês · ≈ 63 MB/mês |
-| Defasagem | ≈ 7 semanas entre o voo e a publicação |
-| Taxa de atraso > 15 min | 18,7% |
+| Formato | CSV `;`-separado, encoding Latin-1/CP1252 — **não** UTF-8 |
+| Schema | **Instável**: 20 ou 21 colunas conforme o mês (coluna extra `Codeshare` a partir de out/2022) e `dt_referencia` em dois formatos de data. Detalhe em [`docs/bronze_silver.md`](docs/bronze_silver.md) |
+| Recorte usado no T1 | 2022-2024 · 36 arquivos · ≈ 856 MB · ≈ 2,8 milhões de linhas |
+| Taxa de atraso > 15 min | 18,7% (medido em jun/2026 via API, [PRD § 10.4](docs/PRD.md#104-perfil-verificado-da-base)) |
 
-Duas ressalvas que moldaram o projeto:
+Ressalvas que moldaram o projeto:
 
-- **Os CSVs do portal `gov.br` não são baixáveis por script.** O portal está atrás
-  de um WAF que devolve um desafio JavaScript no lugar do arquivo. A API do
-  SAS/ANAC não tem essa barreira — e ainda traz 20 campos contra 11 do CSV.
-- **A API trunca respostas sem sinalizar erro.** A mesma chamada devolveu 841 e
-  depois 2.768 registros, ambas com HTTP 200. A ingestão valida a contagem de cada
-  lote antes de persistir; tratar HTTP 200 como sucesso levaria a treinar o modelo
-  sobre um mês incompleto, sem sintoma visível.
+- **Os CSVs do portal `gov.br` não são baixáveis por script.** Esse portal está
+  atrás de um WAF que devolve um desafio JavaScript no lugar do arquivo.
+  `siros.anac.gov.br` — de onde o T1 efetivamente baixa os dados — é um domínio
+  diferente, sem esse bloqueio: um `GET` simples por mês basta
+  (`baixar_dados.py`).
+- **O schema do CSV não é fixo.** Ao inspecionar os 36 arquivos do recorte
+  2022-2024, 15 trazem uma 21ª coluna (`Codeshare`) e 21 trazem só 20; a coluna
+  `dt_referencia` aparece em dois formatos de data diferentes conforme o mês.
+  Tratado na Bronze (`allow_jagged_rows`) e na Silver (parse com fallback).
+- **Nem HTTP 200 nem upload "concluído" são prova de dado completo.** A API do
+  SAS/ANAC (fonte planejada originalmente) já devolveu 841 e depois 2.768
+  registros para a mesma chamada, ambas com HTTP 200 — achado que motivou a
+  regra geral do projeto: **toda ingestão valida contagem antes de persistir**.
+  Para o CSV, a validação real é comparar tamanho e contagem de linhas do
+  arquivo local contra o que chegou no GCS
+  (`scripts/ingest_bronze_vra_to_gcs.py`).
 
 ## Documentação
 
@@ -95,26 +103,40 @@ Duas ressalvas que moldaram o projeto:
 | [`docs/PRD.md`](docs/PRD.md) | Documento de requisitos: escopo, requisitos funcionais e não funcionais, métricas-alvo, modelo de dados, glossário, riscos, cronograma e critérios de aceite |
 | [`docs/enunciados/`](docs/enunciados/) | Transcrição fiel dos três enunciados da disciplina |
 
+## Estado atual (T1)
+
+Implementado e versionado neste repositório:
+
+| Etapa | Onde |
+| --- | --- |
+| Download dos CSVs mensais do VRA | [`scripts/baixar_dados.py`](scripts/baixar_dados.py) → `vra/*.csv` (não versionado, 5,3 GB) |
+| Upload para o GCS com validação de contagem/tamanho | [`scripts/ingest_bronze_vra_to_gcs.py`](scripts/ingest_bronze_vra_to_gcs.py) |
+| Setup do dataset BigQuery | [`sql/setup/create_dataset.sql`](sql/setup/create_dataset.sql) |
+| Criação da Bronze (`external table`) | [`notebooks/raw_to_bronze_vra.ipynb`](notebooks/raw_to_bronze_vra.ipynb) · DDL equivalente em [`sql/bronze/`](sql/bronze/) |
+| Criação da Silver (tipagem, dedup, filtros) | [`notebooks/bronze_to_silver_vra.ipynb`](notebooks/bronze_to_silver_vra.ipynb) · SQL em [`sql/silver/`](sql/silver/) |
+| Gerenciamento de dependências Python | [`pyproject.toml`](pyproject.toml) / `uv.lock` — `uv run python <script>` |
+
+
 ## Estrutura planejada do repositório
 
-```
+```text
 terraform/                  # infraestrutura declarada, mínima
-ingestion/                  # batch: consome a API do VRA, valida, grava no GCS
+scripts/                    # ingestão batch: baixa CSV, valida, grava no GCS [implementado]
+notebooks/                  # notebooks de criação das tabelas por camada [implementado]
 streaming/
   producer/                 # simulador de eventos → Pub/Sub
   dataflow/                 # pipeline Beam
 sql/
-  00_setup/  10_bronze/  20_silver/  30_gold/  40_ml/
+  setup/  bronze/  silver/  gold/  ml/   # setup/bronze/silver implementados
 api/                        # FastAPI + Dockerfile (Cloud Run)
 orchestration/              # workflows n8n
 schemas/features.json       # contrato de features
 docs/
 ```
 
-O prefixo numérico nas pastas de SQL indica a ordem de execução.
-
-> **Estado atual:** apenas a documentação existe. As pastas de código serão
-> criadas conforme o cronograma do PRD.
+`sql/` tem uma pasta por camada Medallion (sem prefixo numérico) — a ordem de
+execução é a própria ordem das camadas: `bronze` → `silver` →
+`gold` → `ml`.
 
 ## Restrições que moldam o projeto
 
