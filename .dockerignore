@@ -1,0 +1,13 @@
+.git
+**/.venv
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+vra/
+manifests/
+notebooks/
+docs/
+terraform/
+**/.terraform
+**/*.tfstate*
+.env

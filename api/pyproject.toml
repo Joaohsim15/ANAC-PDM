@@ -1,0 +1,21 @@
+[project]
+name = "anac-api"
+version = "2.0.0"
+description = "API de predicao de atraso de partida servida no Cloud Run"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "pydantic>=2.7",
+    "google-cloud-aiplatform>=1.60",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "httpx>=0.27",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

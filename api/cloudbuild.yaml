@@ -1,0 +1,11 @@
+# Build da imagem da API com a raiz do repositorio como contexto
+# (o Dockerfile copia schemas/features.json). Chamado por scripts/t2/api_deploy.sh.
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args: ["build", "-f", "api/Dockerfile", "-t", "${_IMAGE}", "."]
+images:
+  - "${_IMAGE}"
+substitutions:
+  _IMAGE: ""
+options:
+  logging: CLOUD_LOGGING_ONLY
