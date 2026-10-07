@@ -132,8 +132,10 @@ demo. Como operar: [`docs/t2-operacao.md`](docs/t2-operacao.md).
    compartilhada pela tabela Gold, pelo `CREATE MODEL`, pelo payload da API e
    pelo `DoFn` do Dataflow. Alterações partem desse arquivo e propagam-se aos
    quatro.
-3. **Nunca versionar credenciais, chaves ou identificadores de projeto.** O
-   repositório é público. Tudo por variável de ambiente.
+3. **Nunca versionar credenciais, chaves de serviço ou tokens.** O repositório
+   é público; segredos ficam em variável de ambiente. O id do projeto GCP **pode**
+   aparecer em código e documentação (liberado em 07/10/2026) — não o trate como
+   segredo nem proponha removê-lo.
 4. **Nunca usar `SELECT *`** em query versionada. Toda tabela particionada e
    clusterizada — o BigQuery está no free tier.
 5. **Nenhuma etapa da demonstração pode depender de fonte externa.** Os eventos
