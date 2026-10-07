@@ -1,0 +1,10 @@
+setup.py
+anac_stream_pipeline.egg-info/PKG-INFO
+anac_stream_pipeline.egg-info/SOURCES.txt
+anac_stream_pipeline.egg-info/dependency_links.txt
+anac_stream_pipeline.egg-info/top_level.txt
+pipeline/__init__.py
+pipeline/run.py
+pipeline/transforms.py
+tests/test_pipeline_direct.py
+tests/test_transforms.py
