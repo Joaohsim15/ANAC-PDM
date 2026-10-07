@@ -1,4 +1,4 @@
-CREATE OR REPLACE EXTERNAL TABLE `pdm-bia-2026.tf_anac.tb_vra_bronze`
+CREATE OR REPLACE EXTERNAL TABLE `pdm-bia-2026.tf_anac.tb_anac_bronze`
 (
   sg_empresa_icao       STRING OPTIONS(description = 'Código ICAO da companhia operadora'),
   nm_empresa            STRING OPTIONS(description = 'Razão social da companhia'),
