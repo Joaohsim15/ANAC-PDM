@@ -53,6 +53,19 @@ Simulador ──▶ Pub/Sub ──▶ Dataflow ──▶ Cloud Run API ◀──
 
 Diagrama completo em [`docs/PRD.md` § 6](docs/PRD.md#6-visão-da-solução-e-arquitetura).
 
+### Trabalho 2 — streaming e API
+
+| Componente | Onde |
+| --- | --- |
+| Contrato de features (fonte única) | [`schemas/features.json`](schemas/features.json) |
+| API de predição (FastAPI, Cloud Run) | [`api/`](api/) |
+| Simulador de eventos → Pub/Sub | [`streaming/producer/`](streaming/producer/) |
+| Pipeline Pub/Sub → BigQuery (Beam, Dataflow) | [`streaming/dataflow/`](streaming/dataflow/) |
+| Infraestrutura (tópicos, repositório, bucket) | [`terraform/`](terraform/) |
+| Liga/desliga e comandos da demo | [`scripts/t2/`](scripts/t2/) |
+
+Como rodar, ligar e desligar: [`docs/t2-operacao.md`](docs/t2-operacao.md).
+
 ## Stack
 
 | Camada | Tecnologia |
