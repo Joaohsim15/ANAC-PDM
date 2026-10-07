@@ -131,7 +131,7 @@ cumprir o enunciado.
 | Schema | **Instável.** 20 ou 21 colunas conforme o mês (coluna extra `Codeshare` a partir de out/2022) e `dt_referencia` em dois formatos de data diferentes — ver `docs/bronze_silver.md` |
 | Granularidade | Um registro por etapa de voo (origem → destino) |
 | Periodicidade | Publicação mensal |
-| Volume (recorte 2022-2024 usado no T1) | 36 arquivos, ≈ 856 MB, ≈ 2,8 milhões de linhas |
+| Volume (recorte usado no modelo) | 2016-2024: 108 arquivos, ≈ 2,35 GB, ≈ 8,2 milhões de linhas na Bronze → 6,19 milhões de voos na Gold. 2025 (12 arquivos) ingerido no GCS e retido fora do treino. O primeiro lote carregado foi 2022-2024 (36 arquivos, ≈ 856 MB) |
 
 **Por que o CSV e não a API.** A v1.1 deste documento tinha decidido pela API
 REST oficial (`sas.anac.gov.br/sas/vra_api`) exatamente pelo bloqueio de WAF
@@ -643,8 +643,8 @@ roteiro de demonstração.
 > ⚠ **v1.2 (10/09/2026):** os nomes e semânticas de campo abaixo continuam
 > valendo como contrato — Bronze, Silver e Gold usam exatamente esses nomes.
 > Mas a implementação real do T1 lê CSV ([§3.3](#33-fonte-de-dados)), não a
-> API, e o CSV **não tem o schema fixo** que esta tabela documenta: 15 dos 36
-> arquivos do recorte 2022-2024 trazem uma 21ª coluna (`Codeshare`, sem
+> API, e o CSV **não tem o schema fixo** que esta tabela documenta: no primeiro
+> lote carregado (2022-2024), 15 dos 36 arquivos trazem uma 21ª coluna (`Codeshare`, sem
 > equivalente aqui) e `dt_referencia` aparece em dois formatos de data
 > diferentes conforme o mês do arquivo. Essa tabela não foi reescrita para o
 > CSV porque os nomes/semânticas batem posicionalmente com as 20 primeiras
