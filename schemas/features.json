@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "description": "Contrato de features do classificador de atraso de partida (> 15 min). Fonte unica para a Gold, o CREATE MODEL, o payload da API e o pipeline Dataflow. Toda feature e conhecida antes da decolagem.",
+  "label": "atrasou",
+  "forbidden_inputs": [
+    "dt_partida_real",
+    "dt_chegada_real",
+    "ds_situacao_voo",
+    "ds_justificativa",
+    "ds_situacao_partida",
+    "ds_situacao_chegada",
+    "atraso_partida_minutos"
+  ],
+  "features": [
+    {
+      "name": "sg_empresa_icao",
+      "type": "STRING",
+      "description": "Empresa aerea, codigo ICAO de 3 letras (ex.: GLO, TAM, AZU)",
+      "pattern": "^[A-Z0-9]{3}$"
+    },
+    {
+      "name": "sg_icao_origem",
+      "type": "STRING",
+      "description": "Aerodromo de origem, codigo ICAO de 4 caracteres (ex.: SBGO)",
+      "pattern": "^[A-Z0-9]{4}$"
+    },
+    {
+      "name": "sg_icao_destino",
+      "type": "STRING",
+      "description": "Aerodromo de destino, codigo ICAO de 4 caracteres (ex.: SBGR)",
+      "pattern": "^[A-Z0-9]{4}$"
+    },
+    {
+      "name": "cd_tipo_linha",
+      "type": "STRING",
+      "description": "Tipo de linha do VRA, uma letra (N nacional, I internacional, C cargueiro, entre outras). Codigos que o modelo nao viu no treino sao tratados por ele como ausentes",
+      "pattern": "^[A-Z]$"
+    },
+    {
+      "name": "sg_equipamento_icao",
+      "type": "STRING",
+      "description": "Modelo da aeronave, codigo ICAO de 2 a 4 caracteres (ex.: B738, A320). O historico tem codigos legados de 3 caracteres (ex.: ATP, F70)",
+      "pattern": "^[A-Z0-9]{2,4}$"
+    },
+    {
+      "name": "dia_semana",
+      "type": "STRING",
+      "description": "Dia da semana da partida prevista, 1 = domingo ... 7 = sabado (EXTRACT DAYOFWEEK)",
+      "enum": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ]
+    },
+    {
+      "name": "mes",
+      "type": "STRING",
+      "description": "Mes da partida prevista, 1 a 12, sem zero a esquerda",
+      "enum": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12"
+      ]
+    },
+    {
+      "name": "nr_assentos_ofertados",
+      "type": "INT64",
+      "description": "Assentos ofertados no voo, definidos na programacao",
+      "minimum": 0,
+      "maximum": 1000
+    },
+    {
+      "name": "hora_partida_prevista",
+      "type": "INT64",
+      "description": "Hora da partida prevista, 0 a 23",
+      "minimum": 0,
+      "maximum": 23
+    },
+    {
+      "name": "duracao_prevista_min",
+      "type": "INT64",
+      "description": "Duracao prevista do voo em minutos (chegada prevista - partida prevista)",
+      "minimum": 10,
+      "maximum": 1200
+    }
+  ]
+}

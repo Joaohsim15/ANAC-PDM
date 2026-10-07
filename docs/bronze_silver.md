@@ -9,20 +9,22 @@ mudar. Para o dicionário de dados e os requisitos formais, ver
 ## Pipeline e nomes reais
 
 ```text
-vra/*.csv (local, 36 arquivos, recorte 2022-2024)
+vra/*.csv (local; 4 lotes: 2022-2024, 2017-2021, 2016 e 2025 — 120 arquivos)
   → scripts/ingest_bronze_vra_to_gcs.py
-  → gs://dados-anac-vra/bronze/vra/raw/_ingested_at=2026-09-03/_batch_id=vra_2022_2024/*.csv
+  → gs://dados-anac-vra/bronze/vra/raw/_ingested_at=<data>/_batch_id=<lote>/*.csv
   → notebooks/raw_to_bronze_vra.ipynb
-  → pdm-bia-2026.tf_anac.tb_vra_bronze          (external table)
+  → <projeto>.tf_anac.tb_anac_bronze            (external table, os 4 lotes)
   → notebooks/bronze_to_silver_vra.ipynb
-  → pdm-bia-2026.tf_anac.tb_anac_silver         (tabela nativa)
+  → <projeto>.tf_anac.tb_anac_silver            (tabela nativa, 2016-2024)
 ```
 
-Projeto `pdm-bia-2026`, bucket `dados-anac-vra`, dataset `tf_anac`.
+Bucket `dados-anac-vra`, dataset `tf_anac`. A Silver recebe os lotes de 2016 a
+2024 (6,19 milhões de voos); o lote `vra_2025_2025` está na Bronze, mas fica
+retido fora da Silver e do treino.
 
 ---
 
-## Bronze — `tb_vra_bronze`
+## Bronze — `tb_anac_bronze`
 
 ### Por que external table, e não uma tabela nativa carregada
 

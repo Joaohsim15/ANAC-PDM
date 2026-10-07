@@ -31,7 +31,7 @@ WITH tipado AS (
     _ingested_at,
     _batch_id,
     _FILE_NAME AS _source_uri
-  FROM `pdm-bia-2026.tf_anac.tb_vra_bronze`
+  FROM `pdm-bia-2026.tf_anac.tb_anac_bronze`
   WHERE ds_situacao_voo = 'REALIZADO'
 ),
 deduplicado AS (

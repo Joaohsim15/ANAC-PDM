@@ -53,6 +53,19 @@ Simulador ──▶ Pub/Sub ──▶ Dataflow ──▶ Cloud Run API ◀──
 
 Diagrama completo em [`docs/PRD.md` § 6](docs/PRD.md#6-visão-da-solução-e-arquitetura).
 
+### Trabalho 2 — streaming e API
+
+| Componente | Onde |
+| --- | --- |
+| Contrato de features (fonte única) | [`schemas/features.json`](schemas/features.json) |
+| API de predição (FastAPI, Cloud Run) | [`api/`](api/) |
+| Simulador de eventos → Pub/Sub | [`streaming/producer/`](streaming/producer/) |
+| Pipeline Pub/Sub → BigQuery (Beam, Dataflow) | [`streaming/dataflow/`](streaming/dataflow/) |
+| Infraestrutura (tópicos, repositório, bucket) | [`terraform/`](terraform/) |
+| Liga/desliga e comandos da demo | [`scripts/t2/`](scripts/t2/) |
+
+Como rodar, ligar e desligar: [`docs/t2-operacao.md`](docs/t2-operacao.md).
+
 ## Stack
 
 | Camada | Tecnologia |
@@ -74,8 +87,8 @@ Diagrama completo em [`docs/PRD.md` § 6](docs/PRD.md#6-visão-da-solução-e-ar
 | Autenticação | Nenhuma |
 | Formato | CSV `;`-separado, encoding Latin-1/CP1252 — **não** UTF-8 |
 | Schema | **Instável**: 20 ou 21 colunas conforme o mês (coluna extra `Codeshare` a partir de out/2022) e `dt_referencia` em dois formatos de data. Detalhe em [`docs/bronze_silver.md`](docs/bronze_silver.md) |
-| Recorte usado no T1 | 2022-2024 · 36 arquivos · ≈ 856 MB · ≈ 2,8 milhões de linhas |
-| Taxa de atraso > 15 min | 18,7% (medido em jun/2026 via API, [PRD § 10.4](docs/PRD.md#104-perfil-verificado-da-base)) |
+| Recorte usado no modelo | 2016-2024 · 108 arquivos · ≈ 2,35 GB · ≈ 8,2 milhões de linhas na Bronze → 6,19 milhões de voos na Gold. 2025 (12 arquivos) está no GCS, retido fora do treino |
+| Taxa de atraso > 15 min | 17,4% na Gold 2016-2024 (varia de 11% em 2020 a 38% em 2017); 18,7% na amostra de jun/2026 via API |
 
 Ressalvas que moldaram o projeto:
 
@@ -84,8 +97,8 @@ Ressalvas que moldaram o projeto:
   `siros.anac.gov.br` — de onde o T1 efetivamente baixa os dados — é um domínio
   diferente, sem esse bloqueio: um `GET` simples por mês basta
   (`baixar_dados.py`).
-- **O schema do CSV não é fixo.** Ao inspecionar os 36 arquivos do recorte
-  2022-2024, 15 trazem uma 21ª coluna (`Codeshare`) e 21 trazem só 20; a coluna
+- **O schema do CSV não é fixo.** No primeiro lote carregado (36 arquivos,
+  2022-2024), 15 trazem uma 21ª coluna (`Codeshare`) e 21 trazem só 20; a coluna
   `dt_referencia` aparece em dois formatos de data diferentes conforme o mês.
   Tratado na Bronze (`allow_jagged_rows`) e na Silver (parse com fallback).
 - **Nem HTTP 200 nem upload "concluído" são prova de dado completo.** A API do

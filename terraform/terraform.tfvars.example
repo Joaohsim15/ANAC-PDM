@@ -1,0 +1,4 @@
+# Copie para terraform.tfvars (ignorado pelo Git) e preencha.
+project_id = "<ID_DO_PROJETO_GCP>"
+region     = "us-central1"
+manage_iam = false

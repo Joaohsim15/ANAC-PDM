@@ -60,17 +60,23 @@ flowchart LR
 - APIs habilitadas: Vertex AI, Artifact Registry, BigQuery, Cloud Build, Pub/Sub,
   Cloud Run e Storage.
 
-### Falta construir
+### Status em 07/10/2026
 
-- Pub/Sub próprio do trabalho.
-- API do **Dataflow** — ainda não habilitada.
-- Pipeline Dataflow.
-- Simulador de eventos.
-- Modelo no Vertex Model Registry e endpoint.
-- API no Cloud Run.
-- Repositório no Artifact Registry.
-- Service accounts dedicadas.
-- `schemas/features.json`.
+| Item | Situação |
+| --- | --- |
+| `schemas/features.json` | ✅ criado; aceita 99,97% da Gold real |
+| Pub/Sub próprio (`anac-voos`, `anac-voos-dlq`, assinaturas) | ✅ criado pelo Terraform |
+| API do Dataflow, Artifact Registry, bucket do Dataflow | ✅ criados pelo Terraform |
+| Tabela `tb_anac_stream_eventos` | ✅ criada (partição diária, cluster) |
+| Pipeline Dataflow | ✅ testado no GCP: 30/30 eventos gravados, lag médio de 3 s, inválido no dead-letter; job drenado |
+| Simulador | ✅ testado contra a Gold real |
+| Modelo no Vertex Model Registry | ✅ `anac_m1_boosted_tree` registrado direto do BigQuery ML |
+| Endpoint | ⏳ criado vazio; **implantar o modelo** (`scripts/t2/vertex_deploy.sh`) — cobrado por hora |
+| API no Cloud Run | ⏳ imagem publicada; deploy depende do endpoint (`scripts/t2/api_deploy.sh`) |
+| Service accounts dedicadas | ⏳ prontas no Terraform (`manage_iam = true`); exige o Owner do projeto |
+| Medição de p95 | ⏳ `scripts/t2/latency.sh`, após o deploy da API |
+
+Como operar cada peça: [`t2-operacao.md`](t2-operacao.md).
 
 ### Recursos de aula no mesmo projeto — não usar
 

@@ -3,3 +3,15 @@ __pycache__/
 .venv/
 manifests/
 vra/
+.pytest_cache/
+
+# Terraform: state, planos e variaveis com identificadores do projeto
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+terraform.tfvars
+crash.log
+
+# variaveis de ambiente locais (use .env.example como modelo)
+.env
