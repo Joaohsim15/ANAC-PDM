@@ -23,7 +23,11 @@ MIN_TREE_CHILD_WEIGHT     = 10,
 L2_REG                    = 1.0,
 EARLY_STOP                = TRUE,
 MIN_REL_PROGRESS          = 0.005,
-ENABLE_GLOBAL_EXPLAIN     = TRUE
+ENABLE_GLOBAL_EXPLAIN     = TRUE,
+-- o M1 e servido pelo Vertex AI; depois do primeiro registro, o BigQuery
+-- recusa recriar o modelo sem estas opcoes. Retreinar cria nova versao.
+MODEL_REGISTRY            = 'VERTEX_AI',
+VERTEX_AI_MODEL_ID        = 'anac_m1_boosted_tree'
 ) AS
 SELECT
 -- as 10 features do contrato + alvo binario
