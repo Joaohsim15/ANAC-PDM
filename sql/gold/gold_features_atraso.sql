@@ -65,9 +65,9 @@ WHERE b.duracao_prevista_min BETWEEN 10 AND 1200;
 -- Duas views sobre a MESMA tabela. Nao sao camadas novas: sao o corte de
 -- treino e o de avaliacao, com as 10 features do contrato enumeradas.
 --
--- Por que existem: o CREATE MODEL vira um SELECT * sobre a view, entao as
--- colunas pos-partida (atraso_partida_minutos, faixa_atraso) ficam
--- estruturalmente fora do vetor de features.
+-- Por que existem: o CREATE MODEL le so a view, entao as colunas
+-- pos-partida (atraso_partida_minutos, faixa_atraso) ficam estruturalmente
+-- fora do vetor de features.
 -- ============================================================================
 
 CREATE OR REPLACE VIEW `pdm-bia-2026.tf_anac.vw_anac_gold_treino_m1`

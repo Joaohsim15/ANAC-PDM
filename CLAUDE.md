@@ -17,7 +17,7 @@ apresentação ao vivo em produção:
 | T2 | 23/10/2026 | Pub/Sub + Dataflow → BigQuery; Vertex AI; API no Cloud Run | 🟡 em andamento — ver "Estado atual" |
 | TF | 04/12/2026 | Dataflow chama a API em tempo real, enriquece e persiste; orquestrado com n8n | ⚪ não iniciado |
 
-## Estado atual (07/10/2026)
+## Estado atual (09/10/2026)
 
 **Dados (T1).** A Gold `tb_anac_gold_features_atraso` cobre **2016-01-01 a
 2024-12-31: 6.187.534 voos**, com 17,4% de atraso > 15 min. O GCS tem 120 CSVs
@@ -30,15 +30,17 @@ medidos.
 
 **T2 — pronto e verificado no GCP:**
 - `schemas/features.json` existe e aceita 99,97% da Gold real.
-- `api/` (FastAPI): imagem publicada no Artifact Registry; o serviço Cloud Run
-  **ainda não foi publicado**.
+- `api/` (FastAPI): serviço Cloud Run `anac-api` publicado em 09/10, privado e
+  com `min-instances=0`. Testado ponta a ponta: paridade com o `ML.PREDICT`
+  (0,6077), 422 para payload inválido, 403 sem token, **p95 de 359 ms**.
 - `streaming/producer` (simulador) e `streaming/dataflow` (Beam): rodou no
   Dataflow com 30/30 eventos gravados e lag médio de 3 s; job drenado.
 - `terraform/`: 14 recursos aplicados. State no bucket `<projeto>-anac-tfstate`.
 - O M1 está registrado no Vertex Model Registry como `anac_m1_boosted_tree`.
-- O endpoint `anac-atraso-endpoint` existe **sem modelo implantado**.
+- O endpoint `anac-atraso-endpoint` foi testado com o M1 implantado em 09/10
+  (deploy de 33 min) e está de novo **sem modelo implantado**. Religar em 21/10.
 
-**T2 — falta:** implantar o modelo no endpoint, publicar a API, medir o p95,
+**T2 — falta:** reimplantar o modelo em 21/10 e publicar a API com `--demo`,
 ativar as service accounts dedicadas (exige o Owner do projeto) e ensaiar a
 demo. Como operar: [`docs/t2-operacao.md`](docs/t2-operacao.md).
 

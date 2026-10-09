@@ -18,7 +18,7 @@ if [[ -n "${DEPLOYED}" ]]; then
   exit 0
 fi
 
-log "implantando ${VERTEX_MODEL_ID} em ${ENDPOINT_ID} (${VERTEX_MACHINE_TYPE}, 1 replica; leva ~15 min)"
+log "implantando ${VERTEX_MODEL_ID} em ${ENDPOINT_ID} (${VERTEX_MACHINE_TYPE}, 1 replica; leva de 15 a 35 min)"
 gcloud ai endpoints deploy-model "${ENDPOINT_ID}" --project "${PROJECT_ID}" --region "${REGION}" \
   --model "${VERTEX_MODEL_ID}" --display-name "anac-m1" \
   --machine-type "${VERTEX_MACHINE_TYPE}" --min-replica-count 1 --max-replica-count 1 \

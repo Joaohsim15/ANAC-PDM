@@ -60,7 +60,7 @@ flowchart LR
 - APIs habilitadas: Vertex AI, Artifact Registry, BigQuery, Cloud Build, Pub/Sub,
   Cloud Run e Storage.
 
-### Status em 07/10/2026
+### Status em 09/10/2026
 
 | Item | Situação |
 | --- | --- |
@@ -71,10 +71,10 @@ flowchart LR
 | Pipeline Dataflow | ✅ testado no GCP: 30/30 eventos gravados, lag médio de 3 s, inválido no dead-letter; job drenado |
 | Simulador | ✅ testado contra a Gold real |
 | Modelo no Vertex Model Registry | ✅ `anac_m1_boosted_tree` registrado direto do BigQuery ML |
-| Endpoint | ⏳ criado vazio; **implantar o modelo** (`scripts/t2/vertex_deploy.sh`) — cobrado por hora |
-| API no Cloud Run | ⏳ imagem publicada; deploy depende do endpoint (`scripts/t2/api_deploy.sh`) |
+| Endpoint | ✅ testado em 09/10: implantado em 33 min, **paridade conferida** (0,60772 no Vertex contra 0,6077 no `ML.PREDICT`) e desimplantado no mesmo dia. Religar em 21/10 com `scripts/t2/vertex_deploy.sh` — cobrado por hora |
+| API no Cloud Run | ✅ publicada em 09/10 (`anac-api`, privada, `min-instances=0`): `/health` 200, voo válido 200 com `prob_atraso` 0,607721, payload inválido 422, chamada sem token 403 |
 | Service accounts dedicadas | ⏳ prontas no Terraform (`manage_iam = true`); exige o Owner do projeto |
-| Medição de p95 | ⏳ `scripts/t2/latency.sh`, após o deploy da API |
+| Medição de p95 | ✅ 09/10: 50/50 chamadas, p50 337 ms, **p95 359 ms** (meta ≤ 800 ms), máx. 416 ms |
 
 Como operar cada peça: [`t2-operacao.md`](t2-operacao.md).
 
@@ -287,15 +287,18 @@ console demorar ao vivo.
 
 ## 9. Checklist de entrega
 
-- [ ] Modelo visível no Vertex AI Model Registry
-- [ ] Endpoint ativo e respondendo, com paridade conferida contra o `ML.PREDICT`
-- [ ] `POST /predict` devolve probabilidade para payload válido
-- [ ] `POST /predict` devolve 422 para payload inválido
-- [ ] `GET /health` responde
-- [ ] Simulador publica com timestamp deslocado
-- [ ] Dataflow consome o tópico e grava no BigQuery
+Itens marcados foram verificados nos testes de 07/10 (streaming) e 09/10
+(predição). No dia da demo, todos se repetem.
+
+- [x] Modelo visível no Vertex AI Model Registry
+- [x] Endpoint ativo e respondendo, com paridade conferida contra o `ML.PREDICT`
+- [x] `POST /predict` devolve probabilidade para payload válido
+- [x] `POST /predict` devolve 422 para payload inválido
+- [x] `GET /health` responde
+- [x] Simulador publica com timestamp deslocado
+- [x] Dataflow consome o tópico e grava no BigQuery
 - [ ] Linhas chegam à tabela durante a demo
-- [ ] Latência p95 de `/predict` medida e dentro da meta
+- [x] Latência p95 de `/predict` medida e dentro da meta
 - [ ] Undeploy do endpoint e drain do Dataflow executados após a demo
 - [ ] Dois ensaios cronometrados ≤ 5 min
 - [ ] Tag `v2-streaming`, `.zip` do código e slides em PDF

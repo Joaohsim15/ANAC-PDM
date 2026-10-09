@@ -8,6 +8,7 @@ if [[ -n "$(active_job_id)" ]]; then
   exit 0
 fi
 
+# array vazio + set -u quebra no bash 3.2 (padrao do macOS): expandir com ${SA_FLAG[@]+...}
 SA_FLAG=()
 [[ -n "${DATAFLOW_SERVICE_ACCOUNT}" ]] && SA_FLAG=(--service_account_email "${DATAFLOW_SERVICE_ACCOUNT}")
 
@@ -28,6 +29,6 @@ uv run --no-project --python 3.12 --with-requirements requirements.txt \
   --machine_type e2-standard-2 --num_workers 1 --max_num_workers 2 \
   --enable_streaming_engine \
   --labels projeto=anac-pdm --labels entrega=t2 \
-  "${SA_FLAG[@]}"
+  ${SA_FLAG[@]+"${SA_FLAG[@]}"}
 
 log "acompanhe em https://console.cloud.google.com/dataflow/jobs?project=${PROJECT_ID}"

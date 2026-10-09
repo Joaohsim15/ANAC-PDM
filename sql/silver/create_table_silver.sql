@@ -35,17 +35,30 @@ WITH tipado AS (
   WHERE ds_situacao_voo = 'REALIZADO'
 ),
 deduplicado AS (
+  -- mantem a ingestao mais recente de cada voo; o filtro de par completo vem
+  -- depois, para nao trocar a versao mais nova por uma copia antiga
   SELECT
-    *,
-    ROW_NUMBER() OVER (
-      PARTITION BY sg_empresa_icao, nr_voo, dt_referencia, sg_icao_origem, dt_partida_prevista
-      ORDER BY _ingested_at DESC
-    ) AS rn
+    sg_empresa_icao, nm_empresa, nr_voo, cd_di, cd_tipo_linha,
+    sg_equipamento_icao, nr_assentos_ofertados,
+    sg_icao_origem, nm_aerodromo_origem, dt_partida_prevista, dt_partida_real,
+    sg_icao_destino, nm_aerodromo_destino, dt_chegada_prevista, dt_chegada_real,
+    ds_situacao_voo, ds_justificativa, dt_referencia,
+    ds_situacao_partida, ds_situacao_chegada, ds_codeshare,
+    _ingested_at, _batch_id, _source_uri
   FROM tipado
-  QUALIFY rn = 1
+  QUALIFY ROW_NUMBER() OVER (
+    PARTITION BY sg_empresa_icao, nr_voo, dt_referencia, sg_icao_origem, dt_partida_prevista
+    ORDER BY _ingested_at DESC
+  ) = 1
 )
 SELECT
-  * EXCEPT(rn),
+  sg_empresa_icao, nm_empresa, nr_voo, cd_di, cd_tipo_linha,
+  sg_equipamento_icao, nr_assentos_ofertados,
+  sg_icao_origem, nm_aerodromo_origem, dt_partida_prevista, dt_partida_real,
+  sg_icao_destino, nm_aerodromo_destino, dt_chegada_prevista, dt_chegada_real,
+  ds_situacao_voo, ds_justificativa, dt_referencia,
+  ds_situacao_partida, ds_situacao_chegada, ds_codeshare,
+  _ingested_at, _batch_id, _source_uri,
   DATETIME_DIFF(dt_partida_real, dt_partida_prevista, MINUTE) AS atraso_partida_minutos
 FROM deduplicado
 WHERE
