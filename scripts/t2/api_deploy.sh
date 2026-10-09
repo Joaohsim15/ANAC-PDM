@@ -18,12 +18,13 @@ log "build ${IMAGE}"
 gcloud builds submit "${ROOT_DIR}" --project "${PROJECT_ID}" --region "${REGION}" \
   --config "${ROOT_DIR}/api/cloudbuild.yaml" --substitutions "_IMAGE=${IMAGE}"
 
+# array vazio + set -u quebra no bash 3.2 (padrao do macOS): expandir com ${SA_FLAG[@]+...}
 SA_FLAG=()
 [[ -n "${API_SERVICE_ACCOUNT}" ]] && SA_FLAG=(--service-account "${API_SERVICE_ACCOUNT}")
 
 log "deploy ${API_SERVICE} (min-instances=${MIN_INSTANCES}, sem acesso publico)"
 gcloud run deploy "${API_SERVICE}" --project "${PROJECT_ID}" --region "${REGION}" \
-  --image "${IMAGE}" "${SA_FLAG[@]}" \
+  --image "${IMAGE}" ${SA_FLAG[@]+"${SA_FLAG[@]}"} \
   --no-allow-unauthenticated \
   --min-instances "${MIN_INSTANCES}" --max-instances 3 \
   --cpu 1 --memory 512Mi --concurrency 20 --timeout 30 \
