@@ -32,7 +32,10 @@ STRUCT(0.5 AS threshold)
 ORDER BY auc_roc DESC;
 
 -- ------------------------------------- 2. Matriz de confusao de M1 --------
-SELECT *
+SELECT
+expected_label AS real,
+_0             AS predito_0,
+_1             AS predito_1
 FROM ML.CONFUSION_MATRIX(
 MODEL `pdm-bia-2026.tf_anac.mdl_anac_m1_boosted_tree`,
 TABLE `pdm-bia-2026.tf_anac.vw_anac_gold_avaliacao_m1`,

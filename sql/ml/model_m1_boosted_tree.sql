@@ -25,4 +25,10 @@ EARLY_STOP                = TRUE,
 MIN_REL_PROGRESS          = 0.005,
 ENABLE_GLOBAL_EXPLAIN     = TRUE
 ) AS
-SELECT * FROM `pdm-bia-2026.tf_anac.vw_anac_gold_treino_m1`;
+SELECT
+-- as 10 features do contrato + alvo binario
+sg_empresa_icao, sg_icao_origem, sg_icao_destino, cd_tipo_linha,
+sg_equipamento_icao, dia_semana, mes,
+nr_assentos_ofertados, hora_partida_prevista, duracao_prevista_min,
+atrasou
+FROM `pdm-bia-2026.tf_anac.vw_anac_gold_treino_m1`;
