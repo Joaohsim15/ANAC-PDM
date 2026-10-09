@@ -77,7 +77,7 @@ e `DATAFLOW_SERVICE_ACCOUNT` no `.env`.
 
 | Recurso | Cobrança | Liga | Desliga |
 | --- | --- | --- | --- |
-| Modelo no endpoint do Vertex | **por hora implantado** (≈ US$ 0,10/h em `n1-standard-2`) | `vertex_deploy.sh` (~15 min) | `vertex_undeploy.sh` |
+| Modelo no endpoint do Vertex | **por hora implantado** (≈ US$ 0,10/h em `n1-standard-2`) | `vertex_deploy.sh` (15 a 35 min; 33 min em 09/10) | `vertex_undeploy.sh` |
 | Job Dataflow | **por hora ligado** | `dataflow_start.sh` (~4 min) | `dataflow_drain.sh` |
 | Cloud Run | por uso; escala a zero | `api_deploy.sh --demo` (1 instância quente) | `api_deploy.sh` (volta a zero) |
 | Pub/Sub, BigQuery, Artifact Registry | desprezível no volume da demo | — | — |
@@ -85,6 +85,8 @@ e `DATAFLOW_SERVICE_ACCOUNT` no `.env`.
 Regras:
 
 - O endpoint fica ligado **só de 21/10 até o fim da apresentação em 23/10**.
+- Desimplantar não apaga o endpoint: o id continua o mesmo, e a API já
+  publicada volta a responder assim que o modelo é reimplantado, sem novo deploy.
 - Todo teste com Dataflow termina com `dataflow_drain.sh`. O drain processa o
   que já chegou antes de encerrar, então nenhum evento se perde.
 - Ao fim de cada sessão de trabalho, confira o console: Vertex AI → Endpoints
@@ -97,7 +99,7 @@ Regras:
 Preparação (até 30 min antes):
 
 ```bash
-./scripts/t2/vertex_deploy.sh        # se ainda nao estiver implantado
+./scripts/t2/vertex_deploy.sh        # ja deve estar implantado desde 21/10 (leva ate ~35 min)
 ./scripts/t2/api_deploy.sh --demo    # min-instances=1: sem cold start
 ./scripts/t2/dataflow_start.sh       # espere o job ficar Running
 ./scripts/t2/predict.sh --health     # aquece a API
