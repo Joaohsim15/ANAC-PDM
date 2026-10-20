@@ -64,8 +64,8 @@ def contract_filters(contract: dict[str, Any]) -> list[str]:
     """Condicoes SQL equivalentes ao contrato, sobre as colunas da Silver.
 
     Ao contrario do simulador de voo, aqui ausencia e um valor legitimo
-    (estacao sem aquele sensor numa observacao, ou sem estacao no raio — ver
-    docs/PRD.md P-09): o filtro so recusa valor PREENCHIDO fora do
+    (estacao sem aquele sensor numa observacao, ou aerodromo sem estacao
+    meteorologica): o filtro so recusa valor PREENCHIDO fora do
     dominio/faixa do contrato, nunca a ausencia.
     """
     conditions = []

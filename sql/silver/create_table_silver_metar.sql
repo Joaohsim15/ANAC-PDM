@@ -31,7 +31,13 @@ WITH tipado AS (
 deduplicado AS (
   -- a IEM pode reenviar a mesma observacao se o backfill for rodado de novo;
   -- mantem a ingestao mais recente de cada (estacao, horario)
-  SELECT *
+  SELECT
+    sg_icao, dt_observacao_utc,
+    nr_temperatura_f, nr_ponto_orvalho_f, nr_umidade_relativa_pct,
+    nr_direcao_vento_graus, nr_velocidade_vento_nos, nr_rajada_vento_nos,
+    nr_visibilidade_milhas, nr_altimetro_inhg,
+    ds_cobertura_nuvens_1, nr_altura_nuvens_1_pes, ds_fenomenos, ds_metar_bruto,
+    _ingested_at, _batch_id, _source_uri
   FROM tipado
   QUALIFY ROW_NUMBER() OVER (
     PARTITION BY sg_icao, dt_observacao_utc
@@ -41,8 +47,7 @@ deduplicado AS (
 SELECT
   sg_icao,
   dt_observacao_utc,
-  -- unidades convertidas para metrico (regra do schemas/features.json quando
-  -- estas colunas entrarem no contrato, no Estagio 4 do plano de implementacao)
+  -- unidades convertidas para metrico, as mesmas de schemas/features.json
   (nr_temperatura_f - 32) / 1.8 AS nr_temperatura_c,
   (nr_ponto_orvalho_f - 32) / 1.8 AS nr_ponto_orvalho_c,
   nr_umidade_relativa_pct,

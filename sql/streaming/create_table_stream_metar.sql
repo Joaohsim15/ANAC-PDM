@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS `${PROJECT_ID}.tf_anac.tb_anac_stream_metar`
   dt_observacao_original DATETIME           OPTIONS (description = "Observacao no historico, antes do deslocamento"),
 
   -- features de clima do contrato (todas nullable: nem toda estacao reporta
-  -- tudo em toda observacao — ver docs/PRD.md P-09)
+  -- tudo em toda observacao)
   clima_temperatura_c         FLOAT64,
   clima_umidade_relativa_pct  FLOAT64,
   clima_velocidade_vento_kmh  FLOAT64,

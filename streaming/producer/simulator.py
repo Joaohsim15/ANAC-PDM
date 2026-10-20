@@ -35,7 +35,7 @@ def flight_feature_specs(contract: dict[str, Any]) -> list[dict[str, Any]]:
 
     O contrato (schemas/features.json) tambem carrega features de
     meteorologia (nullable=true) desde a v2, usadas pela API e pelo stream de
-    METAR (plano de implementacao, Estagio 6) — mas tb_anac_gold_features_atraso,
+    METAR — mas tb_anac_gold_features_atraso,
     de onde este simulador le, nunca teve essas colunas: e a Gold so de voo.
     """
     return [spec for spec in contract["features"] if not spec.get("nullable")]

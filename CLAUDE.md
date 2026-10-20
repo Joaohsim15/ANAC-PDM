@@ -93,8 +93,7 @@ clima **está em escopo do T2**, não do TF — risco de cronograma (8 dias até
 Mesonet (IEM)**, rede `BR__ASOS` (`mesonet.agron.iastate.edu`) — **não** a
 API-REDEMET/DECEA, cogitada primeiro mas abandonada porque o cadastro
 exigido não foi concluído; a IEM não exige cadastro nem chave. Detalhe em
-[`docs/PRD.md` §3.3.2](docs/PRD.md#332-fonte-de-dados-de-meteorologia-iem-asosmetar)
-e plano de implementação em `/Users/joaopedro/.claude/plans/nifty-rolling-blossom.md`.
+[`docs/PRD.md` §3.3.2](docs/PRD.md#332-fonte-de-dados-de-meteorologia-iem-asosmetar).
 **P-09 resolvida em 15/10/2026, com dados reais do projeto:**
 - **Fuso do VRA:** `dt_partida_prevista`/`dt_partida_real` estão em **horário
   de Brasília (UTC-3) para todos os aeródromos**, não hora local de cada um —
@@ -272,7 +271,7 @@ VRA (P-04) já foi resolvido. Situação das demais:
 | **Região GCP** | **Adotada na prática: `us-central1`.** Vertex, Dataflow, Cloud Run, Artifact Registry e Terraform já estão lá, e o dataset está em `US`. Falta registrar formalmente no PRD |
 | **Recorte do VRA em meses** | **Adotado na prática:** 2016–2024 na Gold; 2025 ingerido no GCS e retido fora da Silver. Falta o grupo ratificar e registrar |
 | **P-08 — cascata** | Em aberto (ver acima) |
-| ~~**P-09**~~ | ~~Meteorologia: fuso e cobertura~~ | ✅ **RESOLVIDA em 15/10/2026.** Fuso é horário de Brasília fixo (UTC-3), não local por aeródromo; cobertura real é 65/100 ICAO de origem da Gold, 92,9% do volume de voos. Ver `docs/PRD.md` §3.3.2 |
+| ~~**P-09 — meteorologia: fuso e cobertura**~~ | ✅ **RESOLVIDA em 15/10/2026.** Fuso é horário de Brasília fixo (UTC-3), não local por aeródromo; cobertura real é 65/100 ICAO de origem da Gold, 92,9% do volume de voos. Ver `docs/PRD.md` §3.3.2 |
 | Quem apresenta o T2 · rotação das contas de faturamento | Em aberto |
 
 Não assuma valores para as pendentes nem trate as "adotadas na prática" como

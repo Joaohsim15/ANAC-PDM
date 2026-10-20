@@ -86,8 +86,8 @@ def test_feature_faltando_levanta(feature):
 
 def test_feature_nullable_ausente_e_aceita():
     # EVENTO ja nao traz as features de clima — o evento de voo nao carrega
-    # meteorologia (isso fica pro stream de METAR, ver plano de implementacao,
-    # Estagio 6); precisam ser aceitas como ausentes aqui tambem
+    # meteorologia (isso fica pro stream de METAR); precisam ser aceitas como
+    # ausentes aqui tambem
     assert not set(CAMPOS_NULLABLE) & set(EVENTO)
     row = parse_event(_msg(EVENTO), CONTRACT, now=NOW)
     assert all(row[campo] is None for campo in CAMPOS_NULLABLE)

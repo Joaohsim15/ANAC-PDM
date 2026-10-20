@@ -1,3 +1,9 @@
+-- ============================================================================
+-- BigQuery ML - BASELINE: regressao logistica sobre o alvo binario
+-- Origem  : tf_anac.vw_anac_gold_treino_m1_clima
+-- Destino : tf_anac.mdl_anac_baseline_logreg
+-- ============================================================================
+
 CREATE OR REPLACE MODEL `pdm-bia-2026.tf_anac.mdl_anac_baseline_logreg`
 OPTIONS (
 MODEL_TYPE               = 'LOGISTIC_REG',

@@ -3,8 +3,8 @@
 Diferente do /predict (que serve via Vertex, rapido, no caminho critico da
 demo), isto roda a explicacao direto no BigQuery: ENABLE_GLOBAL_EXPLAIN no
 CREATE MODEL (sql/ml/model_m1_boosted_tree.sql) so da a importancia GERAL das
-features — foi o que usei para investigar por que o clima nao ajudou o AUC
-(ver docs/PRD.md P-09/revisao 1.4). ML.EXPLAIN_PREDICT e a contribuicao de
+features — foi o que mostrou que, das 9 de clima, so clima_fenomenos tem
+peso relevante. ML.EXPLAIN_PREDICT e a contribuicao de
 cada feature PARA ESSA PREVISAO especifica. Mais lento que o /predict (e uma
 query de BigQuery, nao uma chamada a um endpoint ja carregado) — por isso e
 um endpoint separado (/explain), nao uma opcao do /predict.

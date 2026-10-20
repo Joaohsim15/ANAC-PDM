@@ -125,7 +125,7 @@ def test_campo_faltando_retorna_422(client, campo):
 
 def test_campos_nullable_ausentes_sao_aceitos(client, fake):
     # VOO_VALIDO ja nao inclui as features de clima — precisam ser opcionais
-    # (aerodromo sem estacao meteorologica, ver docs/PRD.md P-09)
+    # (aerodromo sem estacao meteorologica)
     assert not set(CAMPOS_NULLABLE) & set(VOO_VALIDO)
     resp = client.post("/predict", json=VOO_VALIDO)
     assert resp.status_code == 200

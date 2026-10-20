@@ -34,7 +34,7 @@ def load_contract(path: str | os.PathLike[str] | None = None) -> dict[str, Any]:
 def _field_for(spec: dict[str, Any]) -> tuple[Any, Any]:
     description = spec.get("description")
     # nullable: feature pode faltar (ex.: clima sem estacao meteorologica
-    # proxima — ver schemas/features.json e docs/PRD.md P-09). Default e
+    # proxima — ver schemas/features.json). Default e
     # obrigatorio, como antes desta extensao.
     nullable = spec.get("nullable", False)
     default = None if nullable else ...

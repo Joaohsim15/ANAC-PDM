@@ -1,3 +1,9 @@
+-- ============================================================================
+-- BigQuery ML - Avaliacao de M1 e do baseline no split temporal
+-- Origem  : tf_anac.vw_anac_gold_avaliacao_m1_clima (is_eval = TRUE, ultimos 60 dias)
+-- ============================================================================
+
+-- ---------------------------------------------- 1. Placar comparado --------
 SELECT
 'baseline - LOGISTIC_REG'  AS modelo,
 ROUND(roc_auc,   4)        AS auc_roc,

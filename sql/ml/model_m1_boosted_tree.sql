@@ -3,10 +3,9 @@
 -- Origem  : tf_anac.vw_anac_gold_treino_m1_clima
 -- Destino : tf_anac.mdl_anac_m1_boosted_tree
 --
--- Promovido em 18/10/2026 com as features de meteorologia (METAR/IEM, ver
--- docs/PRD.md P-09): validado lado a lado em sql/ml/model_m1_boosted_tree_clima.sql
--- contra o M1 sem clima no mesmo split temporal (AUC 0,6532 vs 0,6527, ganho
--- de +0,0005 — marginal, mas atingiu o criterio >= definido). GLOBAL_EXPLAIN
+-- Promovido em 18/10/2026 com as features de meteorologia (METAR/IEM):
+-- validado lado a lado contra o M1 sem clima no mesmo split temporal (AUC
+-- 0,6532 vs 0,6527, ganho de +0,0005 — marginal, mas atingiu o criterio >= definido). GLOBAL_EXPLAIN
 -- mostrou sinal real em clima_fenomenos (6a feature mais importante); as
 -- demais features de clima contribuem pouco. Decisao de promover mesmo com
 -- ganho pequeno foi do grupo, nao automatica.

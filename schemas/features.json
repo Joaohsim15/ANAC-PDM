@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "description": "Contrato de features do classificador de atraso de partida (> 15 min). Fonte unica para a Gold, o CREATE MODEL, o payload da API e o pipeline Dataflow. Toda feature e conhecida antes da decolagem. v2 (15/10/2026) acrescenta features de meteorologia (METAR/IEM, rede BR__ASOS) ao lado das 10 originais do VRA; nullable=true porque so 65 dos 100 aerodromos de origem da Gold tem estacao meteorologica (92,9% do volume de voos — ver docs/PRD.md P-09) e o BOOSTED_TREE_CLASSIFIER trata ausencia nativamente.",
+  "description": "Contrato de features do classificador de atraso de partida (> 15 min). Fonte unica para a Gold, o CREATE MODEL, o payload da API e o pipeline Dataflow. Toda feature e conhecida antes da decolagem. v2 (15/10/2026) acrescenta features de meteorologia (METAR/IEM, rede BR__ASOS) ao lado das 10 originais do VRA; nullable=true porque so 65 dos 100 aerodromos de origem da Gold tem estacao meteorologica (92,9% do volume de voos) e o BOOSTED_TREE_CLASSIFIER trata ausencia nativamente.",
   "label": "atrasou",
   "forbidden_inputs": [
     "dt_partida_real",

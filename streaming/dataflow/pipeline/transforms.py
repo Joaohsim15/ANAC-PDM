@@ -54,7 +54,7 @@ class InvalidEvent(ValueError):
 def _check_feature(spec: dict[str, Any], value: Any) -> Any:
     name = spec["name"]
     # nullable: feature pode faltar (ex.: clima sem estacao meteorologica
-    # proxima — ver schemas/features.json e docs/PRD.md P-09)
+    # proxima — ver schemas/features.json)
     if value is None:
         if spec.get("nullable", False):
             return None
