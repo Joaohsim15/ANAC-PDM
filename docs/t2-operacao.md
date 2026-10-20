@@ -17,16 +17,18 @@ Pré-requisitos: `gcloud` autenticado (`gcloud auth login --update-adc`), `uv`,
 
 ```mermaid
 flowchart LR
-    subgraph stream["Streaming"]
-        SIM["Simulador<br/>streaming/producer"] --> TOP[("Pub/Sub<br/>anac-voos")]
-        TOP --> SUB["assinatura<br/>anac-voos-dataflow"]
-        SUB --> DF["Dataflow<br/>streaming/dataflow"]
-        DF --> BQ[("BigQuery<br/>tf_anac.tb_anac_stream_eventos")]
-        DF -->|fora do contrato| DLQ[("Pub/Sub<br/>anac-voos-dlq")]
+    subgraph stream["Streaming de METAR"]
+        SIM["Simulador<br/>streaming/producer/simulator_metar.py"] --> TOP[("Pub/Sub<br/>anac-metar")]
+        TOP --> SUB["assinatura<br/>anac-metar-dataflow"]
+        SUB --> DF["Dataflow --domain metar<br/>streaming/dataflow"]
+        DF --> BQ[("BigQuery<br/>tf_anac.tb_anac_stream_metar")]
+        DF -->|fora do contrato| DLQ[("Pub/Sub<br/>anac-metar-dlq")]
     end
     subgraph serving["Predição"]
         CLI["curl"] --> API["Cloud Run<br/>anac-api"]
-        API --> EP["Vertex AI Endpoint<br/>anac-atraso-endpoint"]
+        API -->|/predict| EP["Vertex AI Endpoint<br/>anac-atraso-endpoint"]
+        API -->|/explain| BQML
+        API -.->|log em segundo plano| LOG[("BigQuery<br/>tb_anac_predicoes_log")]
         BQML["BigQuery ML<br/>mdl_anac_m1_boosted_tree"] -->|registro direto| REG["Model Registry<br/>anac_m1_boosted_tree"]
         REG --> EP
     end
@@ -36,15 +38,21 @@ flowchart LR
 | --- | --- | --- |
 | Contrato de features | `schemas/features.json` | — |
 | Tópicos, assinaturas, repositório de imagens, bucket do Dataflow | `terraform/` | `terraform apply` (uma vez) |
-| Tabela de eventos | `sql/streaming/create_table_stream_eventos.sql` | `scripts/t2/stream_table.sh` (uma vez) |
-| Simulador | `streaming/producer/simulator.py` | — |
-| Pipeline Beam | `streaming/dataflow/pipeline/` | `scripts/t2/dataflow_start.sh` |
+| Tabela de observações de METAR | `sql/streaming/create_table_stream_metar.sql` | `scripts/t2/metar_table.sh` (uma vez) |
+| Tabela do log de predições | `sql/ml/create_table_predicoes_log.sql` | `bq query` (uma vez) |
+| Simulador de METAR | `streaming/producer/simulator_metar.py` | — |
+| Pipeline Beam | `streaming/dataflow/pipeline/` (`--domain metar`) | `scripts/t2/dataflow_start_metar.sh` |
 | Modelo no Vertex | `ALTER MODEL ... vertex_ai_model_id` | `scripts/t2/vertex_register.sh` (uma vez) |
 | Endpoint com o modelo implantado | — | `scripts/t2/vertex_deploy.sh` |
 | API | `api/` | `scripts/t2/api_deploy.sh` |
 
 O streaming e a API são **independentes** nesta entrega: o Dataflow não chama a
 API. Se um dos dois falhar na apresentação, o outro continua de pé.
+
+Os voos seguem em batch (Medallion do T1). A ingestão em streaming é a de
+observações meteorológicas (METAR). O streaming de voos (`anac-voos`,
+`dataflow_start.sh`, `simulate.sh`) continua no repositório e no Terraform, mas
+saiu da demo.
 
 ---
 
@@ -56,7 +64,9 @@ cp terraform.tfvars.example terraform.tfvars          # preencha project_id
 terraform init -backend-config="bucket=<PROJECT_ID>-anac-tfstate"
 terraform plan -out t2.tfplan && terraform apply t2.tfplan
 cd ..
-./scripts/t2/stream_table.sh
+./scripts/t2/metar_table.sh
+PROJECT_ID=<PROJECT_ID> envsubst '${PROJECT_ID}' < sql/ml/create_table_predicoes_log.sql \
+  | bq query --nouse_legacy_sql
 ./scripts/t2/vertex_register.sh
 ```
 
@@ -78,16 +88,20 @@ e `DATAFLOW_SERVICE_ACCOUNT` no `.env`.
 | Recurso | Cobrança | Liga | Desliga |
 | --- | --- | --- | --- |
 | Modelo no endpoint do Vertex | **por hora implantado** (≈ US$ 0,10/h em `n1-standard-2`) | `vertex_deploy.sh` (15 a 35 min; 33 min em 09/10) | `vertex_undeploy.sh` |
-| Job Dataflow | **por hora ligado** | `dataflow_start.sh` (~4 min) | `dataflow_drain.sh` |
+| Job Dataflow | **por hora ligado** | `dataflow_start_metar.sh` (~4 min) | `dataflow_drain_metar.sh` |
 | Cloud Run | por uso; escala a zero | `api_deploy.sh --demo` (1 instância quente) | `api_deploy.sh` (volta a zero) |
 | Pub/Sub, BigQuery, Artifact Registry | desprezível no volume da demo | — | — |
 
 Regras:
 
-- O endpoint fica ligado **só de 21/10 até o fim da apresentação em 23/10**.
+- O endpoint fica ligado **só na véspera da apresentação (22/10, à noite) até o
+  fim dela em 23/10**.
 - Desimplantar não apaga o endpoint: o id continua o mesmo, e a API já
   publicada volta a responder assim que o modelo é reimplantado, sem novo deploy.
-- Todo teste com Dataflow termina com `dataflow_drain.sh`. O drain processa o
+- `dataflow_start_metar.sh` não devolve o terminal: em streaming, o Beam fica
+  acompanhando o job. Quando o job aparecer `Running` no console, pode
+  interromper com Ctrl+C, que o job continua no Dataflow.
+- Todo teste com Dataflow termina com `dataflow_drain_metar.sh`. O drain processa o
   que já chegou antes de encerrar, então nenhum evento se perde.
 - Ao fim de cada sessão de trabalho, confira o console: Vertex AI → Endpoints
   (nenhum modelo implantado) e Dataflow → Jobs (nenhum `Running`).
@@ -96,12 +110,18 @@ Regras:
 
 ## 4. Roteiro da demo (5 min)
 
-Preparação (até 30 min antes):
+Preparação na véspera (22/10, à noite):
 
 ```bash
-./scripts/t2/vertex_deploy.sh        # ja deve estar implantado desde 21/10 (leva ate ~35 min)
+./scripts/t2/vertex_deploy.sh        # leva de 15 a 35 min
+./scripts/t2/predict.sh              # confere a paridade: 0,6136
+```
+
+Preparação no dia (até 30 min antes):
+
+```bash
 ./scripts/t2/api_deploy.sh --demo    # min-instances=1: sem cold start
-./scripts/t2/dataflow_start.sh       # espere o job ficar Running
+./scripts/t2/dataflow_start_metar.sh # espere o job ficar Running (~4 min), depois Ctrl+C
 ./scripts/t2/predict.sh --health     # aquece a API
 ```
 
@@ -109,17 +129,25 @@ Ao vivo:
 
 | Tempo | Comando | O que mostrar |
 | --- | --- | --- |
-| 0:45 | `./scripts/t2/simulate.sh --limite 100 --por-segundo 5` | eventos publicados |
-| 1:30 | consulta `sql/streaming/monitor_stream_eventos.sql` no console do BigQuery | contagem subindo, lag em segundos |
-| 2:15 | `./scripts/t2/simulate.sh --invalido` | evento com campo pós-partida vai para o dead-letter |
-| 2:45 | `./scripts/t2/predict.sh` | `prob_atraso` vinda do Vertex |
-| 3:15 | `./scripts/t2/predict.sh --invalido` | HTTP 422 |
-| 3:45 | `./scripts/t2/latency.sh` | p95 da API |
+| 0:45 | `./scripts/t2/simulate_metar.sh --limite 100 --por-segundo 5` | observações publicadas |
+| 1:30 | `sql/streaming/monitor_stream_metar.sql` no console do BigQuery | contagem subindo, lag em segundos |
+| 2:00 | `./scripts/t2/simulate_metar.sh --invalido` | valor fora do contrato vai para o dead-letter |
+| 2:30 | `./scripts/t2/predict.sh` | `prob_atraso` vinda do Vertex, com trovoada no METAR |
+| 2:50 | `./scripts/t2/predict.sh --sem-clima` | aeródromo sem estação: o modelo aceita campos de clima nulos |
+| 3:10 | `./scripts/t2/predict.sh --explain` | quanto cada feature pesou nesta previsão |
+| 3:40 | `./scripts/t2/predict.sh --invalido` | HTTP 422 |
+| 4:00 | `./scripts/t2/latency.sh 30` | p95 da API |
+
+Para conferir o dead-letter:
+
+```bash
+gcloud pubsub subscriptions pull anac-metar-dlq-inspecao --limit 5 --auto-ack
+```
 
 Depois da apresentação, no mesmo dia:
 
 ```bash
-./scripts/t2/dataflow_drain.sh
+./scripts/t2/dataflow_drain_metar.sh
 ./scripts/t2/vertex_undeploy.sh
 ./scripts/t2/api_deploy.sh           # volta a escalar a zero
 ```
@@ -148,7 +176,7 @@ deriva os filtros do próprio contrato. A demonstração do dead-letter é um pa
 explícito (`--invalido`), em vez de depender de uma linha suja aparecer por
 acaso.
 
-**Dead-letter dentro do pipeline.** O pipeline publica em `anac-voos-dlq`
+**Dead-letter dentro do pipeline.** O pipeline publica em `anac-metar-dlq`
 toda mensagem que viola o contrato, com o motivo e o payload original. A
 política de dead-letter nativa do Pub/Sub não é usada, porque exige conceder
 papéis à conta de serviço do Pub/Sub.
@@ -157,6 +185,11 @@ papéis à conta de serviço do Pub/Sub.
 converte colunas `DATETIME` em schema explícito. Os streaming inserts aceitam
 `DATETIME` e `TIMESTAMP` como texto ISO e gravam em segundos (lag medido de 3 s
 em média).
+
+**`/explain` fora do caminho crítico.** O `/predict` chama o Vertex. O
+`/explain` roda `ML.EXPLAIN_PREDICT` no BigQuery, leva de 1 a 3 s e fica num
+endpoint separado, para não pesar na latência medida. O log de cada predição em
+`tb_anac_predicoes_log` é gravado depois da resposta e não a atrasa.
 
 **API privada.** O Cloud Run não aceita chamadas anônimas; a demo usa o token
 de identidade do `gcloud` (`predict.sh`). O repositório é público e o endpoint
