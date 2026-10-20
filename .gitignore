@@ -12,6 +12,7 @@ vra/
 *.tfplan
 terraform.tfvars
 crash.log
+metar/
 
 # variaveis de ambiente locais (use .env.example como modelo)
 .env

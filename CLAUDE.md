@@ -22,17 +22,56 @@ apresentação ao vivo em produção:
 **Dados (T1).** A Gold `tb_anac_gold_features_atraso` cobre **2016-01-01 a
 2024-12-31: 6.187.534 voos**, com 17,4% de atraso > 15 min. O GCS tem 120 CSVs
 (2016–2025) em quatro lotes. O lote `vra_2025_2025` foi ingerido no GCS, mas
-**não está na Silver nem na Gold**: está retido fora do treino. Avaliação nos
-últimos 60 dias (151.469 voos): M1 AUC **0,6527** contra 0,6434 do baseline. A
+**não está na Silver nem na Gold**: está retido fora do treino. A
 documentação mais antiga (README, PRD, `docs/bronze_silver.md`, slides do T1)
-ainda fala em recorte 2022-2024 e ganho de 0,0167; os números acima são os
+ainda fala em recorte 2022-2024 e ganho de 0,0167; os números abaixo são os
 medidos.
 
+**M1 — promovido com clima em 18/10/2026.** O M1 de produção
+(`mdl_anac_m1_boosted_tree`) foi retreinado com as 10 features originais +
+as 9 de meteorologia (ver seção de METAR abaixo), sobre
+`tf_anac.vw_anac_gold_treino_m1_clima` (tabela
+`tf_anac.tb_anac_gold_features_atraso_clima`, separada da Gold de voo
+original). Avaliação nos últimos 60 dias (151.469 voos,
+`vw_anac_gold_avaliacao_m1_clima`): **AUC 0,6539** contra 0,6516 do baseline
+(ganho de 0,0022 sobre o baseline — nenhum dos dois atinge os alvos de
+0,70/0,02 do PRD, mas isso já era o caso antes do clima, não é regressão). A
+validação lado a lado antes de promover (mesmo split, M1 sem clima vs com
+clima) deu ganho de +0,0005 de AUC geral e +0,0013 restrito aos voos com
+clima preenchido (89,6% da avaliação) — marginal, mas o grupo decidiu
+promover mesmo assim. `ML.GLOBAL_EXPLAIN` mostra sinal real em
+`clima_fenomenos` (6ª feature mais importante, acima de
+`duracao_prevista_min`, `sg_equipamento_icao`, `dia_semana`); as demais 8
+features de clima contribuem pouco. `sql/ml/model_m1_boosted_tree_clima.sql`
+e `ml_evaluate_clima.sql` (modelo e avaliação de validação) foram removidos
+depois da promoção — a produção já carrega o conteúdo deles.
+
 **T2 — pronto e verificado no GCP:**
-- `schemas/features.json` existe e aceita 99,97% da Gold real.
+- `schemas/features.json` (v2, 19 features: 10 originais + 9 de clima
+  nullable) é a fonte única, propagada à Gold-clima, ao `CREATE MODEL`, à API
+  e ao Dataflow.
 - `api/` (FastAPI): serviço Cloud Run `anac-api` publicado em 09/10, privado e
-  com `min-instances=0`. Testado ponta a ponta: paridade com o `ML.PREDICT`
-  (0,6077), 422 para payload inválido, 403 sem token, **p95 de 359 ms**.
+  com `min-instances=0`. Testado ponta a ponta em 09/10, **antes da promoção
+  do M1 com clima** (paridade com o `ML.PREDICT` 0,6077, 422 para payload
+  inválido, 403 sem token, p95 de 359 ms) — reensaiar com o modelo novo e o
+  payload com os 9 campos de clima antes da apresentação.
+- **`/explain` e log de predições — diferencial, adicionado em 19/10/2026.**
+  `POST /explain` (mesmo payload do `/predict`) devolve, além da
+  probabilidade, a contribuição de cada feature para aquela previsão
+  específica (`ML.EXPLAIN_PREDICT`, direto no BigQuery — não é o Vertex, por
+  isso é mais lento e fica num endpoint separado do caminho crítico medido
+  em `/predict`). `/predict` passou a gravar (via `BackgroundTask`, sem
+  afetar a latência nem a resposta) toda predição em
+  `tf_anac.tb_anac_predicoes_log`; se o chamador informar `nr_voo`,
+  `dt_referencia` e `dt_partida_prevista` como query params (não são
+  features, só chave de reconciliação — o payload do `/predict` continua
+  autocontido), `sql/ml/reconciliar_predicoes.sql` compara depois a previsão
+  com o resultado real na Gold e mede acurácia **em produção**, não só na
+  avaliação offline. Testado de ponta a ponta contra o modelo e os dados
+  reais (voo GLO 9609 de 20/12/2024: previu sem atraso, resultado real foi
+  sem atraso, reconciliação bateu). Bug real encontrado e corrigido:
+  `ML.EXPLAIN_PREDICT` exige `top_k_features` como literal constante no
+  `STRUCT(...)`, não aceita parâmetro de query.
 - `streaming/producer` (simulador) e `streaming/dataflow` (Beam): rodou no
   Dataflow com 30/30 eventos gravados e lag médio de 3 s; job drenado.
 - `terraform/`: 14 recursos aplicados. State no bucket `<projeto>-anac-tfstate`.
@@ -43,6 +82,57 @@ medidos.
 **T2 — falta:** reimplantar o modelo em 21/10 e publicar a API com `--demo`,
 ativar as service accounts dedicadas (exige o Owner do projeto) e ensaiar a
 demo. Como operar: [`docs/t2-operacao.md`](docs/t2-operacao.md).
+
+**Meteorologia (IEM ASOS/METAR) — decidido em 15/10/2026, fonte trocada no
+mesmo dia.** O grupo decidiu enriquecer o modelo com observações
+meteorológicas. Isso **substitui** o streaming de voos no T2: voos continuam
+em **batch** (Medallion do T1, inalterado); meteorologia passa a ser a
+ingestão em **streaming** que cumpre o requisito do T2. O retreino do M1 com
+clima **está em escopo do T2**, não do TF — risco de cronograma (8 dias até
+23/10) sinalizado e aceito. A fonte escolhida é a **Iowa Environmental
+Mesonet (IEM)**, rede `BR__ASOS` (`mesonet.agron.iastate.edu`) — **não** a
+API-REDEMET/DECEA, cogitada primeiro mas abandonada porque o cadastro
+exigido não foi concluído; a IEM não exige cadastro nem chave. Detalhe em
+[`docs/PRD.md` §3.3.2](docs/PRD.md#332-fonte-de-dados-de-meteorologia-iem-asosmetar)
+e plano de implementação em `/Users/joaopedro/.claude/plans/nifty-rolling-blossom.md`.
+**P-09 resolvida em 15/10/2026, com dados reais do projeto:**
+- **Fuso do VRA:** `dt_partida_prevista`/`dt_partida_real` estão em **horário
+  de Brasília (UTC-3) para todos os aeródromos**, não hora local de cada um —
+  confirmado comparando `duracao_prevista_min` de rotas entre fusos
+  diferentes (SBGR↔SBRB, SBPA→SBEG) contra a duração real de voo conhecida;
+  se fosse hora local por aeródromo, a duração apareceria sistematicamente
+  menor pela diferença de fuso, o que não ocorre. Conversão para UTC (preciso
+  para casar com a IEM) é **`DATETIME_ADD(dt_partida_prevista, INTERVAL 3
+  HOUR)`, fixo** — não precisa do fuso IANA por estação que a IEM fornece.
+  Ressalva conhecida e não tratada: o Brasil teve horário de verão (UTC-2 em
+  parte do ano) até fevereiro/2019, então essa conversão fixa tem um erro de
+  ~1h em datas de verão anteriores a 2019 — aceito como aproximação.
+- **Cobertura real:** a Gold de produção tem **100 ICAO de origem
+  distintos** (não 175 — esse número do PRD §10.4 vem de uma amostra
+  diferente, da API, não da Gold final). Das 100, **65 têm estação na rede
+  `BR__ASOS`** da IEM, cobrindo **92,9% do volume de voos**. As 35 sem
+  estação são majoritariamente aeroportos **internacionais** (SAEZ, SCEL,
+  KMIA, LPPT, SABE, MPTO, SKBO, SPJC, SUMU, LEMD, EDDF, LFPG, EHAM, SGAS,
+  entre outros) — fora da rede `BR__ASOS` por definição; ficam com a feature
+  de clima nula. Não perseguir essa cobertura internacional por ora (dado o
+  prazo do T2) — ganho marginal de 7% do volume contra o custo de mapear a
+  rede ASOS certa em ~10 países diferentes.
+- **Join Gold+clima por desigualdade de tempo não escala.** A primeira versão
+  de `sql/gold/gold_features_atraso_clima.sql` casava voo e METAR só por
+  `sg_icao_origem = sg_icao` + `dt_observacao_utc` dentro da janela de 3h — o
+  BigQuery não tratou isso como hash join e o job ficou **mais de 3h RUNNING**
+  (cancelado em 18/10/2026, 0 bytes faturados). Reescrito para casar por
+  **igualdade de (aeródromo, hora truncada)** — a janela de 3h cabe em no
+  máximo 4 horas truncadas, geradas por voo via `UNNEST`, com as condições de
+  desigualdade originais mantidas no `ON` só para a correção final. Resultado:
+  **53 segundos** para os 9 anos completos (6.187.534 voos, confere exato com
+  a Gold de produção; **90,2% ficou com clima preenchido**, perto do estimado
+  por volume). Mesma armadilha vale para qualquer join tipo ASOF futuro no
+  BigQuery — preferir igualdade com bucket de tempo a desigualdade pura.
+
+Streaming de voos (Pub/Sub `anac-voos` → Dataflow → `tb_anac_stream_eventos`,
+já testado em 09/10) será desativado e substituído pelo equivalente de
+METAR; não reativar o de voos sem decisão do grupo.
 
 ## Ambiente GCP — leia antes de mexer
 
@@ -182,6 +272,7 @@ VRA (P-04) já foi resolvido. Situação das demais:
 | **Região GCP** | **Adotada na prática: `us-central1`.** Vertex, Dataflow, Cloud Run, Artifact Registry e Terraform já estão lá, e o dataset está em `US`. Falta registrar formalmente no PRD |
 | **Recorte do VRA em meses** | **Adotado na prática:** 2016–2024 na Gold; 2025 ingerido no GCS e retido fora da Silver. Falta o grupo ratificar e registrar |
 | **P-08 — cascata** | Em aberto (ver acima) |
+| ~~**P-09**~~ | ~~Meteorologia: fuso e cobertura~~ | ✅ **RESOLVIDA em 15/10/2026.** Fuso é horário de Brasília fixo (UTC-3), não local por aeródromo; cobertura real é 65/100 ICAO de origem da Gold, 92,9% do volume de voos. Ver `docs/PRD.md` §3.3.2 |
 | Quem apresenta o T2 · rotação das contas de faturamento | Em aberto |
 
 Não assuma valores para as pendentes nem trate as "adotadas na prática" como

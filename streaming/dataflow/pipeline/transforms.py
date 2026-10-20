@@ -1,7 +1,12 @@
-"""Transformacoes puras do pipeline: parse e validacao de um evento de voo.
+"""Transformacoes puras do pipeline: parse e validacao de um evento.
 
 Ficam separadas do pipeline para serem testadas sem Beam e sem GCP. A regra de
-validacao vem de schemas/features.json, a mesma fonte da API.
+validacao vem de schemas/features.json, a mesma fonte da API. `parse_event` e
+generico por dominio (voo ou METAR): cada dominio tem seus proprios metadados
+de evento (EVENT_FIELDS) e seu proprio recorte de features do contrato — os
+dois sets de constantes abaixo, mais `metar_feature_names`, sao o que
+distingue o streaming de voo do de METAR (ver streaming/producer/simulator.py
+e simulator_metar.py).
 """
 
 import json
@@ -9,7 +14,7 @@ import re
 from datetime import datetime, timezone
 from typing import Any
 
-# chaves e metadados do evento que nao sao features
+# chaves e metadados do evento de VOO que nao sao features do contrato
 EVENT_FIELDS = {
     "event_id": "STRING",
     "event_ts": "TIMESTAMP",
@@ -20,6 +25,27 @@ EVENT_FIELDS = {
 }
 REQUIRED_EVENT_FIELDS = ("event_id", "event_ts")
 
+# idem, para o evento de METAR: troca as chaves de voo por estacao/observacao.
+# As features de METAR sao o recorte nullable do contrato (clima_*) — ver
+# metar_feature_names abaixo
+METAR_EVENT_FIELDS = {
+    "event_id": "STRING",
+    "event_ts": "TIMESTAMP",
+    "sg_icao": "STRING",
+    "dt_observacao_utc": "DATETIME",
+    "dt_observacao_original": "DATETIME",
+    "simulation_run_id": "STRING",
+}
+METAR_REQUIRED_EVENT_FIELDS = ("event_id", "event_ts", "sg_icao")
+
+
+def metar_feature_names(contract: dict[str, Any]) -> set[str]:
+    """As features de METAR sao exatamente as nullable do contrato (clima_*).
+
+    Mesmo recorte usado por streaming/producer/simulator_metar.py.
+    """
+    return {spec["name"] for spec in contract["features"] if spec.get("nullable")}
+
 
 class InvalidEvent(ValueError):
     """Evento que nao respeita o contrato; vai para o dead-letter."""
@@ -27,6 +53,12 @@ class InvalidEvent(ValueError):
 
 def _check_feature(spec: dict[str, Any], value: Any) -> Any:
     name = spec["name"]
+    # nullable: feature pode faltar (ex.: clima sem estacao meteorologica
+    # proxima — ver schemas/features.json e docs/PRD.md P-09)
+    if value is None:
+        if spec.get("nullable", False):
+            return None
+        raise InvalidEvent(f"{name} e obrigatorio (nao nulo)")
     if spec["type"] == "STRING":
         if not isinstance(value, str):
             raise InvalidEvent(f"{name} deve ser texto")
@@ -39,6 +71,15 @@ def _check_feature(spec: dict[str, Any], value: Any) -> Any:
         # bool e subclasse de int em Python; nao e numero valido aqui
         if isinstance(value, bool) or not isinstance(value, int):
             raise InvalidEvent(f"{name} deve ser inteiro")
+        if "minimum" in spec and value < spec["minimum"]:
+            raise InvalidEvent(f"{name}={value} abaixo do minimo")
+        if "maximum" in spec and value > spec["maximum"]:
+            raise InvalidEvent(f"{name}={value} acima do maximo")
+        return value
+    if spec["type"] == "FLOAT64":
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            raise InvalidEvent(f"{name} deve ser numero")
+        value = float(value)
         if "minimum" in spec and value < spec["minimum"]:
             raise InvalidEvent(f"{name}={value} abaixo do minimo")
         if "maximum" in spec and value > spec["maximum"]:
@@ -76,12 +117,21 @@ def parse_event(
     contract: dict[str, Any],
     publish_ts: datetime | None = None,
     now: datetime | None = None,
+    event_fields: dict[str, str] = EVENT_FIELDS,
+    required_event_fields: tuple[str, ...] = REQUIRED_EVENT_FIELDS,
+    feature_names: set[str] | None = None,
 ) -> dict[str, Any]:
-    """Converte a mensagem do Pub/Sub numa linha de tb_anac_stream_eventos.
+    """Converte a mensagem do Pub/Sub numa linha da tabela de streaming.
 
-    Levanta InvalidEvent se o evento violar o contrato. Campos fora do contrato
-    e das chaves conhecidas sao recusados: e assim que um campo pos-partida
-    (ex.: ds_situacao_partida) nunca chega a tabela.
+    Levanta InvalidEvent se o evento violar o contrato. Campos fora do
+    contrato e das chaves conhecidas sao recusados: e assim que um campo
+    pos-partida (ex.: ds_situacao_partida) nunca chega a tabela.
+
+    `event_fields`/`required_event_fields` trocam os metadados esperados por
+    dominio (voo, por padrao, ou METAR_EVENT_FIELDS/METAR_REQUIRED_EVENT_FIELDS
+    para METAR). `feature_names`, se informado, restringe a validacao a esse
+    subconjunto do contrato (ex.: metar_feature_names(contract) para METAR);
+    por padrao valida todas as features do contrato, como no evento de voo.
     """
     try:
         data = json.loads(payload.decode("utf-8"))
@@ -90,28 +140,40 @@ def parse_event(
     if not isinstance(data, dict):
         raise InvalidEvent("mensagem deve ser um objeto JSON")
 
-    features = {spec["name"]: spec for spec in contract["features"]}
-    unknown = set(data) - set(features) - set(EVENT_FIELDS)
+    all_features = {spec["name"]: spec for spec in contract["features"]}
+    features = (
+        all_features
+        if feature_names is None
+        else {name: spec for name, spec in all_features.items() if name in feature_names}
+    )
+    unknown = set(data) - set(features) - set(event_fields)
     if unknown:
         raise InvalidEvent(f"campos fora do contrato: {sorted(unknown)}")
-    for name in REQUIRED_EVENT_FIELDS:
+    for name in required_event_fields:
         if not data.get(name):
             raise InvalidEvent(f"{name} obrigatorio")
-    missing = [name for name in features if name not in data]
+    # feature nullable pode vir ausente da mensagem (equivalente a null);
+    # as demais tem que estar presentes
+    missing = [name for name in features if name not in data and not features[name].get("nullable", False)]
     if missing:
         raise InvalidEvent(f"features faltando: {missing}")
 
-    row: dict[str, Any] = {name: _check_feature(spec, data[name]) for name, spec in features.items()}
+    row: dict[str, Any] = {
+        name: _check_feature(spec, data.get(name)) for name, spec in features.items()
+    }
     if not isinstance(data["event_id"], str):
         raise InvalidEvent("event_id deve ser texto")
     row["event_id"] = data["event_id"]
     row["event_ts"] = _parse_timestamp("event_ts", data["event_ts"])
-    row["nr_voo"] = data.get("nr_voo")
-    row["simulation_run_id"] = data.get("simulation_run_id")
-    row["dt_partida_prevista"] = _parse_datetime("dt_partida_prevista", data.get("dt_partida_prevista"))
-    row["dt_partida_prevista_original"] = _parse_datetime(
-        "dt_partida_prevista_original", data.get("dt_partida_prevista_original")
-    )
+    # demais metadados do evento: genericos por tipo declarado em event_fields
+    # (event_id/event_ts ja tratados acima, com parsing proprio)
+    for name, bq_type in event_fields.items():
+        if name in ("event_id", "event_ts"):
+            continue
+        if bq_type == "DATETIME":
+            row[name] = _parse_datetime(name, data.get(name))
+        else:
+            row[name] = data.get(name)
     row["publish_ts"] = publish_ts.astimezone(timezone.utc).isoformat() if publish_ts else None
     row["ingest_ts"] = (now or datetime.now(timezone.utc)).astimezone(timezone.utc).isoformat()
     return row

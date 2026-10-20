@@ -10,6 +10,18 @@ output "subscription" {
   value = google_pubsub_subscription.voos_dataflow.name
 }
 
+output "metar_topic" {
+  value = google_pubsub_topic.metar.name
+}
+
+output "metar_dead_letter_topic" {
+  value = google_pubsub_topic.metar_dlq.name
+}
+
+output "metar_subscription" {
+  value = google_pubsub_subscription.metar_dataflow.name
+}
+
 output "image_repository" {
   value = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.anac.repository_id}"
 }

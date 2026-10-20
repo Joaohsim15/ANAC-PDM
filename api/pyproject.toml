@@ -8,6 +8,10 @@ dependencies = [
     "uvicorn[standard]>=0.30",
     "pydantic>=2.7",
     "google-cloud-aiplatform>=1.60",
+    # /explain (ML.EXPLAIN_PREDICT) e o log de predicoes para reconciliacao
+    # (sql/ml/create_table_predicoes_log.sql) consultam o BigQuery direto, nao
+    # so o endpoint do Vertex
+    "google-cloud-bigquery>=3.38.0",
 ]
 
 [dependency-groups]

@@ -1,6 +1,6 @@
 {
-  "version": 1,
-  "description": "Contrato de features do classificador de atraso de partida (> 15 min). Fonte unica para a Gold, o CREATE MODEL, o payload da API e o pipeline Dataflow. Toda feature e conhecida antes da decolagem.",
+  "version": 2,
+  "description": "Contrato de features do classificador de atraso de partida (> 15 min). Fonte unica para a Gold, o CREATE MODEL, o payload da API e o pipeline Dataflow. Toda feature e conhecida antes da decolagem. v2 (15/10/2026) acrescenta features de meteorologia (METAR/IEM, rede BR__ASOS) ao lado das 10 originais do VRA; nullable=true porque so 65 dos 100 aerodromos de origem da Gold tem estacao meteorologica (92,9% do volume de voos — ver docs/PRD.md P-09) e o BOOSTED_TREE_CLASSIFIER trata ausencia nativamente.",
   "label": "atrasou",
   "forbidden_inputs": [
     "dt_partida_real",
@@ -95,6 +95,76 @@
       "description": "Duracao prevista do voo em minutos (chegada prevista - partida prevista)",
       "minimum": 10,
       "maximum": 1200
+    },
+    {
+      "name": "clima_temperatura_c",
+      "type": "FLOAT64",
+      "description": "Temperatura no aerodromo de origem, graus Celsius, na observacao METAR mais recente antes da partida prevista (IEM, rede BR__ASOS). Nulo se o aerodromo nao tiver estacao meteorologica",
+      "nullable": true,
+      "minimum": -20,
+      "maximum": 55
+    },
+    {
+      "name": "clima_umidade_relativa_pct",
+      "type": "FLOAT64",
+      "description": "Umidade relativa no aerodromo de origem, %, mesma observacao de clima_temperatura_c",
+      "nullable": true,
+      "minimum": 0,
+      "maximum": 100
+    },
+    {
+      "name": "clima_velocidade_vento_kmh",
+      "type": "FLOAT64",
+      "description": "Velocidade do vento no aerodromo de origem, km/h, mesma observacao de clima_temperatura_c",
+      "nullable": true,
+      "minimum": 0,
+      "maximum": 250
+    },
+    {
+      "name": "clima_rajada_vento_kmh",
+      "type": "FLOAT64",
+      "description": "Rajada de vento no aerodromo de origem, km/h, mesma observacao de clima_temperatura_c",
+      "nullable": true,
+      "minimum": 0,
+      "maximum": 350
+    },
+    {
+      "name": "clima_visibilidade_m",
+      "type": "FLOAT64",
+      "description": "Visibilidade horizontal no aerodromo de origem, metros, mesma observacao de clima_temperatura_c",
+      "nullable": true,
+      "minimum": 0,
+      "maximum": 20000
+    },
+    {
+      "name": "clima_pressao_hpa",
+      "type": "FLOAT64",
+      "description": "Pressao atmosferica (altimetro/QNH) no aerodromo de origem, hPa, mesma observacao de clima_temperatura_c. Nao e pressao ao nivel do mar: a IEM nao reporta esse campo fora dos EUA",
+      "nullable": true,
+      "minimum": 850,
+      "maximum": 1100
+    },
+    {
+      "name": "clima_cobertura_nuvens",
+      "type": "STRING",
+      "description": "Cobertura de nuvens da camada mais baixa no aerodromo de origem (ex.: FEW, SCT, BKN, OVC), mesma observacao de clima_temperatura_c",
+      "nullable": true,
+      "enum": ["SKC", "CLR", "FEW", "SCT", "BKN", "OVC", "VV"]
+    },
+    {
+      "name": "clima_altura_nuvens_m",
+      "type": "FLOAT64",
+      "description": "Altura da base da camada de nuvens mais baixa no aerodromo de origem, metros, mesma observacao de clima_temperatura_c",
+      "nullable": true,
+      "minimum": 0,
+      "maximum": 15000
+    },
+    {
+      "name": "clima_fenomenos",
+      "type": "STRING",
+      "description": "Fenomenos meteorologicos presentes no aerodromo de origem (ex.: RA chuva, TS trovoada, FG neblina), codigos METAR concatenados, mesma observacao de clima_temperatura_c",
+      "nullable": true,
+      "pattern": "^[A-Z+-]{0,16}$"
     }
   ]
 }

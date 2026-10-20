@@ -30,8 +30,19 @@ def load_contract(path: Path = CONTRACT_PATH) -> dict[str, Any]:
         return json.load(f)
 
 
+def flight_feature_specs(contract: dict[str, Any]) -> list[dict[str, Any]]:
+    """Features deste simulador: so as de voo, nunca as de clima.
+
+    O contrato (schemas/features.json) tambem carrega features de
+    meteorologia (nullable=true) desde a v2, usadas pela API e pelo stream de
+    METAR (plano de implementacao, Estagio 6) — mas tb_anac_gold_features_atraso,
+    de onde este simulador le, nunca teve essas colunas: e a Gold so de voo.
+    """
+    return [spec for spec in contract["features"] if not spec.get("nullable")]
+
+
 def load_feature_names(path: Path = CONTRACT_PATH) -> list[str]:
-    return [spec["name"] for spec in load_contract(path)["features"]]
+    return [spec["name"] for spec in flight_feature_specs(load_contract(path))]
 
 
 def contract_filters(contract: dict[str, Any]) -> list[str]:
@@ -42,7 +53,7 @@ def contract_filters(contract: dict[str, Any]) -> list[str]:
     para a demo nao depender do dead-letter disparar por acaso.
     """
     conditions = []
-    for spec in contract["features"]:
+    for spec in flight_feature_specs(contract):
         name = spec["name"]
         conditions.append(f"{name} IS NOT NULL")
         if "pattern" in spec:
@@ -58,7 +69,7 @@ def contract_filters(contract: dict[str, Any]) -> list[str]:
 
 
 def build_query(project: str, contract: dict[str, Any]) -> str:
-    feature_names = [spec["name"] for spec in contract["features"]]
+    feature_names = [spec["name"] for spec in flight_feature_specs(contract)]
     # colunas enumeradas a partir do contrato; nunca SELECT *
     columns = ",\n  ".join(["nr_voo", "dt_partida_prevista", *feature_names])
     filters = "\n  AND ".join(["dt_referencia = @data_referencia", *contract_filters(contract)])
@@ -161,7 +172,7 @@ def main(argv: list[str] | None = None) -> int:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     args = parse_args(argv)
     contract = load_contract()
-    feature_names = [spec["name"] for spec in contract["features"]]
+    feature_names = [spec["name"] for spec in flight_feature_specs(contract)]
     rows = fetch_rows(args.project, args.data_referencia, args.limite, contract)
     now = datetime.now(timezone.utc)
     offset = departure_offset(args.data_referencia, now.date())

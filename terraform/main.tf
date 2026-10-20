@@ -70,6 +70,50 @@ resource "google_pubsub_subscription" "voos_dlq_inspecao" {
   }
 }
 
+# Streaming de METAR: substitui o de voo como a demo de streaming do T2 (voo
+# continua em batch - ver CLAUDE.md). Os recursos de voo acima NAO sao
+# removidos (ficam ociosos, sem custo, como historico) - decisao de nao
+# reativa-los sem o grupo, nao de apagar o que ja existia.
+resource "google_pubsub_topic" "metar" {
+  name                       = "anac-metar"
+  message_retention_duration = "86400s" # 1 dia: permite reprocessar a demo
+  labels                     = var.labels
+
+  depends_on = [google_project_service.apis]
+}
+
+resource "google_pubsub_topic" "metar_dlq" {
+  name                       = "anac-metar-dlq"
+  message_retention_duration = "604800s"
+  labels                     = var.labels
+
+  depends_on = [google_project_service.apis]
+}
+
+resource "google_pubsub_subscription" "metar_dataflow" {
+  name                       = "anac-metar-dataflow"
+  topic                      = google_pubsub_topic.metar.id
+  ack_deadline_seconds       = 60
+  message_retention_duration = "86400s"
+  labels                     = var.labels
+
+  expiration_policy {
+    ttl = "" # nunca expira, mesmo parada entre as demos
+  }
+}
+
+resource "google_pubsub_subscription" "metar_dlq_inspecao" {
+  name                       = "anac-metar-dlq-inspecao"
+  topic                      = google_pubsub_topic.metar_dlq.id
+  ack_deadline_seconds       = 30
+  message_retention_duration = "604800s"
+  labels                     = var.labels
+
+  expiration_policy {
+    ttl = ""
+  }
+}
+
 # ------------------------------------------------------ Artifact Registry ---
 
 resource "google_artifact_registry_repository" "anac" {
