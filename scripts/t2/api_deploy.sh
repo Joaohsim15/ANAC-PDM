@@ -27,8 +27,8 @@ gcloud run deploy "${API_SERVICE}" --project "${PROJECT_ID}" --region "${REGION}
   --image "${IMAGE}" ${SA_FLAG[@]+"${SA_FLAG[@]}"} \
   --no-allow-unauthenticated \
   --min-instances "${MIN_INSTANCES}" --max-instances 3 \
-  --cpu 1 --memory 512Mi --concurrency 20 --timeout 30 \
-  --set-env-vars "GOOGLE_CLOUD_PROJECT=${PROJECT_ID},VERTEX_REGION=${REGION},VERTEX_ENDPOINT_ID=${ENDPOINT_ID}" \
+  --cpu 1 --memory 512Mi --concurrency 20 --timeout 60 \
+  --set-env-vars "GOOGLE_CLOUD_PROJECT=${PROJECT_ID},VERTEX_REGION=${REGION},VERTEX_ENDPOINT_ID=${ENDPOINT_ID},BQ_DATASET=${DATASET}" \
   --labels "projeto=anac-pdm,entrega=t2"
 
 gcloud run services describe "${API_SERVICE}" --project "${PROJECT_ID}" --region "${REGION}" \

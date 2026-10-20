@@ -8,7 +8,7 @@ N="${1:-50}"
 URL="$(gcloud run services describe "${API_SERVICE}" --project "${PROJECT_ID}" --region "${REGION}" \
   --format='value(status.url)')"
 TOKEN="$(gcloud auth print-identity-token)"
-VOO='{"sg_empresa_icao":"GLO","sg_icao_origem":"SBGO","sg_icao_destino":"SBGR","cd_tipo_linha":"N","sg_equipamento_icao":"B738","dia_semana":"6","mes":"12","nr_assentos_ofertados":186,"hora_partida_prevista":18,"duracao_prevista_min":75}'
+VOO='{"sg_empresa_icao":"GLO","sg_icao_origem":"SBGO","sg_icao_destino":"SBGR","cd_tipo_linha":"N","sg_equipamento_icao":"B738","dia_semana":"6","mes":"12","nr_assentos_ofertados":186,"hora_partida_prevista":18,"duracao_prevista_min":75,"clima_temperatura_c":27.0,"clima_umidade_relativa_pct":74.0,"clima_velocidade_vento_kmh":14.8,"clima_rajada_vento_kmh":null,"clima_visibilidade_m":9999.0,"clima_pressao_hpa":1012.0,"clima_cobertura_nuvens":"SCT","clima_altura_nuvens_m":900.0,"clima_fenomenos":"TS"}'
 
 log "aquecendo e medindo ${N} chamadas em ${URL}/predict"
 curl -sS -o /dev/null -H "Authorization: Bearer ${TOKEN}" "${URL}/health"
