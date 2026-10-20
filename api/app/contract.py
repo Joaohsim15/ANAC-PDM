@@ -7,7 +7,7 @@ importacao lendo o JSON, para que API e contrato nunca divirjam.
 import json
 import os
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, create_model
 
@@ -33,20 +33,44 @@ def load_contract(path: str | os.PathLike[str] | None = None) -> dict[str, Any]:
 
 def _field_for(spec: dict[str, Any]) -> tuple[Any, Any]:
     description = spec.get("description")
+    # nullable: feature pode faltar (ex.: clima sem estacao meteorologica
+    # proxima — ver schemas/features.json). Default e
+    # obrigatorio, como antes desta extensao.
+    nullable = spec.get("nullable", False)
+    default = None if nullable else ...
+
     if spec["type"] == "STRING":
         if "enum" in spec:
-            return Literal[tuple(spec["enum"])], Field(..., description=description)
-        return str, Field(..., description=description, pattern=spec.get("pattern"))
-    if spec["type"] == "INT64":
+            tipo: Any = Literal[tuple(spec["enum"])]
+            field = Field(default, description=description)
+        else:
+            tipo = str
+            field = Field(default, description=description, pattern=spec.get("pattern"))
+    elif spec["type"] == "INT64":
         # strict: recusa "18" (string) e 18.5 (float) em vez de converter calado
-        return int, Field(
-            ...,
+        tipo = int
+        field = Field(
+            default,
             description=description,
             ge=spec.get("minimum"),
             le=spec.get("maximum"),
             strict=True,
         )
-    raise ValueError(f"Tipo nao suportado no contrato: {spec['type']}")
+    elif spec["type"] == "FLOAT64":
+        tipo = float
+        field = Field(
+            default,
+            description=description,
+            ge=spec.get("minimum"),
+            le=spec.get("maximum"),
+            strict=True,
+        )
+    else:
+        raise ValueError(f"Tipo nao suportado no contrato: {spec['type']}")
+
+    if nullable:
+        tipo = Optional[tipo]
+    return tipo, field
 
 
 def build_features_model(contract: dict[str, Any]) -> type[BaseModel]:

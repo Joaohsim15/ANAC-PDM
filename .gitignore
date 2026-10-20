@@ -4,6 +4,9 @@ __pycache__/
 manifests/
 vra/
 .pytest_cache/
+# artefatos gerados pelo setup.py ao lancar o Dataflow
+build/
+*.egg-info/
 
 # Terraform: state, planos e variaveis com identificadores do projeto
 .terraform/
@@ -12,6 +15,7 @@ vra/
 *.tfplan
 terraform.tfvars
 crash.log
+metar/
 
 # variaveis de ambiente locais (use .env.example como modelo)
 .env

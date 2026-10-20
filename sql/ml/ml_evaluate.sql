@@ -1,6 +1,6 @@
 -- ============================================================================
 -- BigQuery ML - Avaliacao de M1 e do baseline no split temporal
--- Origem  : tf_anac.vw_anac_gold_avaliacao_m1 (is_eval = TRUE, ultimos 60 dias)
+-- Origem  : tf_anac.vw_anac_gold_avaliacao_m1_clima (is_eval = TRUE, ultimos 60 dias)
 -- ============================================================================
 
 -- ---------------------------------------------- 1. Placar comparado --------
@@ -13,7 +13,7 @@ ROUND(f1_score,  4)        AS f1,
 ROUND(accuracy,  4)        AS acuracia
 FROM ML.EVALUATE(
 MODEL `pdm-bia-2026.tf_anac.mdl_anac_baseline_logreg`,
-TABLE `pdm-bia-2026.tf_anac.vw_anac_gold_avaliacao_m1`,
+TABLE `pdm-bia-2026.tf_anac.vw_anac_gold_avaliacao_m1_clima`,
 STRUCT(0.5 AS threshold)
 )
 UNION ALL
@@ -26,7 +26,7 @@ ROUND(f1_score,  4),
 ROUND(accuracy,  4)
 FROM ML.EVALUATE(
 MODEL `pdm-bia-2026.tf_anac.mdl_anac_m1_boosted_tree`,
-TABLE `pdm-bia-2026.tf_anac.vw_anac_gold_avaliacao_m1`,
+TABLE `pdm-bia-2026.tf_anac.vw_anac_gold_avaliacao_m1_clima`,
 STRUCT(0.5 AS threshold)
 )
 ORDER BY auc_roc DESC;
@@ -38,7 +38,7 @@ _0             AS predito_0,
 _1             AS predito_1
 FROM ML.CONFUSION_MATRIX(
 MODEL `pdm-bia-2026.tf_anac.mdl_anac_m1_boosted_tree`,
-TABLE `pdm-bia-2026.tf_anac.vw_anac_gold_avaliacao_m1`,
+TABLE `pdm-bia-2026.tf_anac.vw_anac_gold_avaliacao_m1_clima`,
 STRUCT(0.5 AS threshold)
 );
 
@@ -50,7 +50,7 @@ ROUND(false_positive_rate, 4) AS taxa_falso_positivo,
 true_positives, false_positives, true_negatives, false_negatives
 FROM ML.ROC_CURVE(
 MODEL `pdm-bia-2026.tf_anac.mdl_anac_m1_boosted_tree`,
-TABLE `pdm-bia-2026.tf_anac.vw_anac_gold_avaliacao_m1`,
+TABLE `pdm-bia-2026.tf_anac.vw_anac_gold_avaliacao_m1_clima`,
 GENERATE_ARRAY(0.0, 1.0, 0.05)
 )
 ORDER BY limiar;
@@ -64,12 +64,12 @@ ORDER BY atribuicao DESC;
 WITH m1 AS (
 SELECT roc_auc FROM ML.EVALUATE(
 MODEL `pdm-bia-2026.tf_anac.mdl_anac_m1_boosted_tree`,
-TABLE `pdm-bia-2026.tf_anac.vw_anac_gold_avaliacao_m1`)
+TABLE `pdm-bia-2026.tf_anac.vw_anac_gold_avaliacao_m1_clima`)
 ),
 bl AS (
 SELECT roc_auc FROM ML.EVALUATE(
 MODEL `pdm-bia-2026.tf_anac.mdl_anac_baseline_logreg`,
-TABLE `pdm-bia-2026.tf_anac.vw_anac_gold_avaliacao_m1`)
+TABLE `pdm-bia-2026.tf_anac.vw_anac_gold_avaliacao_m1_clima`)
 )
 SELECT
 ROUND(m1.roc_auc, 4)              AS auc_m1,

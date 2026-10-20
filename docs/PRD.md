@@ -24,6 +24,8 @@
 | 1.0 | 18/08/2026 | Grupo | Versão inicial. Consolida decisões de arquitetura, requisitos das três entregas, métricas-alvo, glossário e dicionário de dados. |
 | 1.1 | 18/08/2026 | Grupo | Três blocos de mudança. **(a) Fonte de dados:** substituída a raspagem de CSV pela **API REST oficial do VRA** (`sas.anac.gov.br/sas/vra_api`), descoberta após o portal `gov.br` se mostrar inacessível a cliente automatizado — reescreve RF-001 e resolve **P-04**. **(b) Dicionário de dados:** a [§10.2](#102-dicionário-de-dados--vra-bruto) foi substituída pelo schema **verificado** de 20 campos; a versão 1.0 presumia 13 campos e estava incorreta. **(c) Predição de faixa:** especificado o **modelo em cascata** (binário + faixa) na nova [§6.5](#65-modelo-em-cascata--binário--faixa), **como proposta pendente de ratificação pelo grupo** — aberta em **P-08**. A exclusão de "segundo modelo" e "multiclasse" da [§5.2](#52-fora-de-escopo) está *suspensa*, não revogada; tudo que depende de M2 está marcado *(condicional a P-08)*. Correção associada: o limiar de 15 min **não** é o padrão ANAC, como afirmavam as §§3.1 e 11 — a ANAC considera pontual até 30 min. |
 | 1.2 | 10/09/2026 | Grupo | **Fonte de dados do T1 revertida para CSV.** A ingestão histórica do T1 passa a baixar os CSVs mensais do VRA publicados em `siros.anac.gov.br` (um arquivo por mês, via script, sem WAF) em vez de chamar a API REST — os arquivos já haviam sido baixados pelo grupo antes da carga da Bronze. Reescreve [§3.3](#33-fonte-de-dados), RF-001 e RF-001b. A API REST **não** foi removida do projeto: continua documentada em [§3.3.1](#331-endpoints) como alternativa não utilizada pela implementação atual — nenhuma outra entrega (T2/TF) dependia dela para a ingestão do VRA, então o escopo delas não muda. Efeito colateral descoberto na prática: os CSVs **não têm schema fixo** — 15 dos 36 arquivos do recorte 2022-2024 trazem uma 21ª coluna (`Codeshare`, ausente antes de out/2022) e `dt_referencia` aparece em dois formatos de data diferentes conforme o arquivo. Tratado na Bronze (`allow_jagged_rows`) e na Silver (`COALESCE` de dois parses) — detalhe completo em `docs/bronze_silver.md`, fora do PRD. |
+| 1.3 | 15/10/2026 | Grupo | **Meteorologia entra como fonte de dados, decidida para o T2.** O grupo decidiu enriquecer o modelo com observações meteorológicas, documentada na nova [§3.3.2](#332-fonte-de-dados-de-meteorologia-iem-asosmetar). A ingestão de voos permanece em **batch** (Medallion do T1, inalterada); a ingestão de meteorologia passa a ser o pipeline em **streaming** do T2, substituindo o replay de voos que já estava implementado e testado (RF-01x/RF-02x de streaming agora apontam para METAR, não para voos). O retreino do M1 com as novas features de clima **está em escopo do T2** (não do TF), decisão tomada com o risco de cronograma assinalado e aceito pelo grupo a 8 dias da apresentação de 23/10. A fonte cogitada primeiro foi a API-REDEMET (DECEA) — abandonada no mesmo dia porque o cadastro exigido para obter a chave não foi concluído — e substituída pela **Iowa Environmental Mesonet (IEM)**, que não exige cadastro. Dois pontos seguem como implementação a verificar, não decisões pendentes: o fuso horário efetivo de `dt_partida_prevista` (necessário para alinhar com a observação da IEM, sempre em UTC) e a cobertura real dos aeroportos de origem no backfill — ver P-09 na [§16](#16-decisões-pendentes). |
+| 1.4 | 18/10/2026 | Grupo | **M1 promovido com as features de meteorologia.** Validação lado a lado (mesmo split temporal de 60 dias) deu ganho de AUC de **+0,0005 geral / +0,0013 restrito aos voos com clima preenchido** (89,6% da avaliação) — marginal, mas dentro do critério de aceite definido (`auc_com_clima >= auc_producao`). O grupo decidiu promover mesmo com o ganho pequeno. `ML.GLOBAL_EXPLAIN` mostra sinal real em `clima_fenomenos` (6ª feature mais importante); as demais 8 features de clima contribuem pouco. Produção retreinada e reavaliada: **AUC 0,6539** contra 0,6516 do baseline (ambos com clima) — nenhum atinge os alvos de 0,70/0,02 da [§11](#11-métricas-de-sucesso), situação inalterada desde antes do clima. |
 
 ### 1.2 Convenções
 
@@ -175,6 +177,43 @@ dois formatos de data), tratado na Bronze e na Silver.
 > RF-001b: um download HTTP truncado silenciaria do mesmo jeito. A mitigação
 > real, implementada em `scripts/ingest_bronze_vra_to_gcs.py`, é comparar
 > tamanho e contagem de linhas do arquivo local contra o que chegou no GCS.
+
+#### 3.3.2 Fonte de dados de meteorologia (IEM ASOS/METAR)
+
+> ✅ **v1.3 (15/10/2026):** decisão nova, fora do escopo original do T1/T2
+> conforme especificado em v1.2. Registrada aqui porque passa a alimentar o
+> modelo e o pipeline de streaming do T2.
+>
+> **Por que a IEM e não a REDEMET.** A primeira escolha foi a API-REDEMET
+> (DECEA), por ser a fonte oficial brasileira de METAR. Ela exige cadastro
+> prévio para obter uma chave de acesso, e esse cadastro não foi concluído —
+> sem alternativa de contorno à vista, a fonte foi trocada no mesmo dia pela
+> **Iowa Environmental Mesonet (IEM)**, que replica o mesmo tipo de dado
+> (observações METAR de estações ASOS/AWOS) sem exigir cadastro. Testado
+> nesta revisão: uma chamada simples a
+> `https://mesonet.agron.iastate.edu/cgi-bin/request/asos.py?station=SBGR&data=all&...`
+> devolveu o histórico completo 2016–2024 de Guarulhos sem autenticação.
+> Trade-off aceito: a IEM depende de estações brasileiras cadastradas na
+> rede `BR__ASOS` (150 no total, nem todas ativas), que pode não coincidir
+> 1:1 com a cobertura da REDEMET — não há comparação feita entre as duas
+> fontes, só a confirmação de que a IEM funciona e está acessível.
+
+| Item | Valor |
+| --- | --- |
+| Conjunto | METAR/ASOS — observações de superfície em aeródromos |
+| Publicador | Iowa Environmental Mesonet (Iowa State University), agregando fontes como NOAA; estações brasileiras na rede `BR__ASOS` |
+| **Meio de acesso** | `https://mesonet.agron.iastate.edu/cgi-bin/request/asos.py?station=<ICAO>&data=all&year1=...&year2=...&tz=UTC&format=onlycomma` — uma chamada por estação já cobre o histórico inteiro pedido |
+| Autenticação | **Nenhuma.** Sem cadastro, sem chave. Throttle de 1 requisição/segundo por IP e teto de 1.000 "estação-anos" por requisição (irrelevante baixando uma estação por vez) |
+| Formato | CSV, já **decodificado** em colunas tipadas (temperatura, ponto de orvalho, vento, visibilidade, nuvens, fenômenos, mais o texto METAR bruto) — não é preciso decodificar grupos METAR manualmente |
+| Cobertura histórica | Varia por estação (`archive_begin`/`archive_end` nos metadados); testado para SBGR, cobre 2016–2024 integralmente |
+| Fuso horário | A API devolve no fuso pedido; pedindo `tz=UTC`, a observação sai sempre em **UTC**. **Confirmado em 15/10/2026** contra a Gold real: `dt_partida_prevista`/`dt_partida_real` estão em **horário de Brasília (UTC-3) para todos os aeródromos**, não hora local de cada um — comparando `duracao_prevista_min` de rotas entre fusos diferentes (SBGR↔SBRB, SBPA→SBEG) contra a duração real de voo conhecida (se fosse hora local por aeródromo, a duração apareceria sistematicamente menor pela diferença de fuso, o que não ocorre). Conversão para UTC: `DATETIME_ADD(dt_partida_prevista, INTERVAL 3 HOUR)`, fixo — a tabela de fuso IANA por estação da `BR__ASOS` não é necessária para isso. Ressalva aceita, não tratada: o Brasil teve horário de verão (UTC-2) até fevereiro/2019, então essa conversão tem erro de ~1h em datas de verão anteriores a 2019 |
+| Cobertura por aeródromo | **Medido em 15/10/2026 contra a Gold real** (não os 175 ICAO do §10.4, que vêm de uma amostra diferente, da API): a Gold de produção tem **100 ICAO de origem distintos**, dos quais **65 têm estação na rede `BR__ASOS`**, cobrindo **92,9% do volume de voos**. Os 35 sem estação são majoritariamente aeroportos internacionais (SAEZ, SCEL, KMIA, LPPT, SABE, MPTO, SKBO, SPJC, SUMU, LEMD, EDDF, LFPG, EHAM, SGAS, entre outros) — fora da `BR__ASOS` por definição. Voos sem estação ficam com as features de clima nulas; o `BOOSTED_TREE_CLASSIFIER` trata nulo nativamente. Cobertura internacional não perseguida por ora — ganho marginal de 7% do volume contra o custo de mapear a rede ASOS certa em ~10 países |
+| Volume do backfill | Como o download é rápido (~150 chamadas, ~2,5 min no throttle de 1/s), o plano é baixar **todas as estações da `BR__ASOS`** dentro do recorte, não um subconjunto — o teto é a cobertura da rede, não o tempo disponível |
+
+**Por que a demo não é afetada.** O histórico é baixado e persistido *antes*
+da apresentação (mesmo padrão do simulador de voos: relê histórico já
+baixado, nunca chama a fonte externa ao vivo). Isso preserva a regra 5 do
+`CLAUDE.md` — nenhuma etapa da demo depende de fonte externa.
 
 ---
 
@@ -984,6 +1023,7 @@ verificados. A verificação **DEVE** ocorrer no ambiente de produção, não lo
 | **P-06** | **Quem apresenta cada entrega** | Média | 1 semana antes de cada data | Apenas um integrante apresenta por trabalho |
 | **P-07** | **Identificador do projeto GCP** e convenção de nomes de dataset e bucket | Média | Em M0 | Definir junto com P-01 |
 | **P-08** | **Adotar o modelo em cascata?** — segundo modelo para prever a faixa de duração do atraso ([§6.5](#65-modelo-em-cascata--binário--faixa)) | **Alta** | **Antes de M1** — depois disso o rótulo já estará na Gold (R-16) | Decisão dos quatro integrantes. **A favor:** responde à pergunta que torna a predição acionável, agrega valor de portfólio e os cortes já vêm prontos e oficiais da ANAC, sem arbitragem. **Contra:** é um segundo modelo a treinar, exportar, registrar e servir — mais superfície de falha numa janela de 5 minutos, contra o princípio de que a demo vence a elegância. **Mitigado por:** chamada HTTP única, ausência de limiar entre os modelos e degradação graciosa ([§6.5.1](#651-riscos-da-cascata-e-como-estão-contidos)). **Nada a decidir sobre as faixas em si** — as bordas estão definidas e validadas. A pergunta é só: entra ou não |
+| ~~**P-09**~~ | ~~Cobertura real do backfill de METAR e fuso horário do VRA~~ | — | — | ✅ **RESOLVIDA em 15/10/2026.** Fuso confirmado como horário de Brasília fixo (UTC-3) para todos os aeródromos, não hora local — ver [§3.3.2](#332-fonte-de-dados-de-meteorologia-iem-asosmetar). Cobertura medida contra a Gold real: 65 dos 100 ICAO de origem distintos têm estação na `BR__ASOS`, cobrindo 92,9% do volume de voos; o resto (majoritariamente aeroportos internacionais) fica com feature nula |
 
 ---
 

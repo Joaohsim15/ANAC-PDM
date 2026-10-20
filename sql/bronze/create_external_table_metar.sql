@@ -1,0 +1,45 @@
+CREATE OR REPLACE EXTERNAL TABLE `${PROJECT_ID}.tf_anac.tb_anac_metar_bronze`
+(
+  station    STRING OPTIONS(description = 'Codigo ICAO da estacao (ex.: SBGR)'),
+  valid      STRING OPTIONS(description = 'Horario da observacao, UTC (pedido com tz=UTC no download)'),
+  tmpf       STRING OPTIONS(description = 'Temperatura, graus Fahrenheit — convertida na Silver'),
+  dwpf       STRING OPTIONS(description = 'Ponto de orvalho, graus Fahrenheit — convertido na Silver'),
+  relh       STRING OPTIONS(description = 'Umidade relativa, %'),
+  drct       STRING OPTIONS(description = 'Direcao do vento, graus'),
+  sknt       STRING OPTIONS(description = 'Velocidade do vento, nos — convertida na Silver'),
+  p01i       STRING OPTIONS(description = 'Precipitacao na ultima hora, polegadas — costuma faltar fora dos EUA'),
+  alti       STRING OPTIONS(description = 'Altimetro, polegadas de Hg — convertido na Silver'),
+  mslp       STRING OPTIONS(description = 'Pressao ao nivel do mar, hPa'),
+  vsby       STRING OPTIONS(description = 'Visibilidade, milhas — convertida na Silver'),
+  gust       STRING OPTIONS(description = 'Rajada de vento, nos'),
+  skyc1      STRING OPTIONS(description = 'Cobertura de nuvens, camada 1 (ex.: FEW, SCT, BKN, OVC)'),
+  skyc2      STRING OPTIONS(description = 'Cobertura de nuvens, camada 2'),
+  skyc3      STRING OPTIONS(description = 'Cobertura de nuvens, camada 3'),
+  skyc4      STRING OPTIONS(description = 'Cobertura de nuvens, camada 4'),
+  skyl1      STRING OPTIONS(description = 'Altura da base da camada 1, pes'),
+  skyl2      STRING OPTIONS(description = 'Altura da base da camada 2, pes'),
+  skyl3      STRING OPTIONS(description = 'Altura da base da camada 3, pes'),
+  skyl4      STRING OPTIONS(description = 'Altura da base da camada 4, pes'),
+  wxcodes    STRING OPTIONS(description = 'Fenomenos meteorologicos presentes (ex.: RA, TS, FG)'),
+  ice_accretion_1hr STRING OPTIONS(description = 'Acrescimo de gelo em 1h — raramente aplicavel no Brasil'),
+  ice_accretion_3hr STRING OPTIONS(description = 'Acrescimo de gelo em 3h — raramente aplicavel no Brasil'),
+  ice_accretion_6hr STRING OPTIONS(description = 'Acrescimo de gelo em 6h — raramente aplicavel no Brasil'),
+  peak_wind_gust    STRING OPTIONS(description = 'Rajada maxima registrada'),
+  peak_wind_drct    STRING OPTIONS(description = 'Direcao da rajada maxima'),
+  peak_wind_time    STRING OPTIONS(description = 'Horario da rajada maxima'),
+  feel       STRING OPTIONS(description = 'Sensacao termica, graus Fahrenheit'),
+  metar      STRING OPTIONS(description = 'Mensagem METAR bruta, para auditoria/depuracao — proibida como feature (regra 1 do CLAUDE.md nao se aplica aqui, mas usar os campos decodificados, nao o texto)'),
+  snowdepth  STRING OPTIONS(description = 'Profundidade de neve — nao aplicavel no Brasil, sempre nulo')
+)
+WITH PARTITION COLUMNS
+OPTIONS (
+  format = 'CSV',
+  uris = ['gs://dados-anac-vra/bronze/metar/raw/*'],
+  hive_partition_uri_prefix = 'gs://dados-anac-vra/bronze/metar/raw/',
+  require_hive_partition_filter = false,
+  field_delimiter = ',',
+  skip_leading_rows = 1,
+  encoding = 'UTF-8',
+  allow_jagged_rows = true,
+  description = 'Camada Bronze do METAR/ASOS (Iowa Environmental Mesonet, rede BR__ASOS). External table sobre o GCS, todos os campos STRING, append-only, um arquivo por estacao ICAO.'
+);
