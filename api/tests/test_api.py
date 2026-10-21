@@ -4,7 +4,7 @@ from fastapi.testclient import TestClient
 from app.contract import CONTRACT, FEATURE_NAMES
 from app.explainer import ExplainError, Explanation
 from app.main import create_app
-from app.predictor import PredictionError, extract_positive_proba
+from app.predictor import PredictionError, extract_positive_proba, impute_numeric_nulls
 
 VOO_VALIDO = {
     "sg_empresa_icao": "GLO",
@@ -287,3 +287,22 @@ def test_extract_positive_proba_pega_o_rotulo_1():
 def test_extract_positive_proba_recusa_formato_inesperado(pred):
     with pytest.raises(PredictionError):
         extract_positive_proba(pred)
+
+
+def test_impute_numeric_nulls_troca_nulo_numerico_pela_media():
+    # o container do Vertex recusa null numerico; o BigQuery ML imputa a media
+    # do treino, e a API reproduz isso para devolver a mesma probabilidade
+    medias = {"clima_temperatura_c": 23.5, "clima_rajada_vento_kmh": 44.6}
+    instancia = {"clima_temperatura_c": None, "clima_rajada_vento_kmh": 20.0, "clima_fenomenos": None}
+    assert impute_numeric_nulls(instancia, medias) == {
+        "clima_temperatura_c": 23.5,
+        "clima_rajada_vento_kmh": 20.0,
+        # string nula o container aceita: fica como esta
+        "clima_fenomenos": None,
+    }
+    assert instancia["clima_temperatura_c"] is None  # nao altera a entrada
+
+
+def test_impute_numeric_nulls_falha_sem_media():
+    with pytest.raises(PredictionError):
+        impute_numeric_nulls({"clima_temperatura_c": None}, {})
