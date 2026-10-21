@@ -25,6 +25,9 @@ resource "google_project_service" "apis" {
 
 # ---------------------------------------------------------------- Pub/Sub ---
 
+# Recursos do streaming de voos, que saiu do projeto (o streaming do T2 e o de
+# METAR, abaixo). Ficam ociosos e sem custo ate serem removidos num apply
+# planejado, fora da semana de apresentacao.
 resource "google_pubsub_topic" "voos" {
   name                       = "anac-voos"
   message_retention_duration = "86400s" # 1 dia: permite reprocessar a demo
@@ -70,10 +73,7 @@ resource "google_pubsub_subscription" "voos_dlq_inspecao" {
   }
 }
 
-# Streaming de METAR: substitui o de voo como a demo de streaming do T2 (voo
-# continua em batch - ver CLAUDE.md). Os recursos de voo acima NAO sao
-# removidos (ficam ociosos, sem custo, como historico) - decisao de nao
-# reativa-los sem o grupo, nao de apagar o que ja existia.
+# Streaming de METAR: a ingestao em streaming do T2 (os voos seguem em batch).
 resource "google_pubsub_topic" "metar" {
   name                       = "anac-metar"
   message_retention_duration = "86400s" # 1 dia: permite reprocessar a demo

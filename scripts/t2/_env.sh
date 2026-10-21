@@ -23,15 +23,7 @@ VERTEX_ENDPOINT_NAME="${VERTEX_ENDPOINT_NAME:-anac-atraso-endpoint}"
 VERTEX_MACHINE_TYPE="${VERTEX_MACHINE_TYPE:-n1-standard-2}"
 API_SERVICE="${API_SERVICE:-anac-api}"
 API_SERVICE_ACCOUNT="${API_SERVICE_ACCOUNT:-}"
-# streaming de voo (RETIRADO como demo do T2 - streaming agora e METAR, ver
-# abaixo; mantidos so para referencia/historico, nao reativar sem decisao do
-# grupo - ver CLAUDE.md)
-TOPIC="${TOPIC:-anac-voos}"
-DLQ_TOPIC="${DLQ_TOPIC:-anac-voos-dlq}"
-SUBSCRIPTION="${SUBSCRIPTION:-anac-voos-dataflow}"
-DATAFLOW_JOB="${DATAFLOW_JOB:-anac-stream-eventos}"
-
-# streaming de METAR: substitui o de voo como demo de streaming do T2
+# streaming de METAR (os voos seguem em batch, na Medallion do T1)
 METAR_TOPIC="${METAR_TOPIC:-anac-metar}"
 METAR_DLQ_TOPIC="${METAR_DLQ_TOPIC:-anac-metar-dlq}"
 METAR_SUBSCRIPTION="${METAR_SUBSCRIPTION:-anac-metar-dataflow}"
@@ -50,13 +42,7 @@ endpoint_id() {
     --filter="displayName=${VERTEX_ENDPOINT_NAME}" --format="value(name.basename())" 2>/dev/null | head -n1
 }
 
-# id do job Dataflow ativo pelo nome (vazio se nao houver)
-active_job_id() {
-  gcloud dataflow jobs list --project "${PROJECT_ID}" --region "${REGION}" --status=active \
-    --filter="name=${DATAFLOW_JOB}" --format="value(id)" 2>/dev/null | head -n1
-}
-
-# idem, pro job de METAR
+# id do job Dataflow de METAR ativo pelo nome (vazio se nao houver)
 metar_active_job_id() {
   gcloud dataflow jobs list --project "${PROJECT_ID}" --region "${REGION}" --status=active \
     --filter="name=${METAR_DATAFLOW_JOB}" --format="value(id)" 2>/dev/null | head -n1

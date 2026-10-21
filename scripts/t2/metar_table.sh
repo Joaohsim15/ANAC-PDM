@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Cria a tabela de destino do streaming de METAR a partir do DDL versionado.
-# Idempotente. Substitui stream_table.sh (voo) como demo de streaming do T2.
+# Idempotente.
 source "$(dirname "$0")/_env.sh"
 
 log "criando ${DATASET}.${METAR_STREAM_TABLE} (se nao existir)"

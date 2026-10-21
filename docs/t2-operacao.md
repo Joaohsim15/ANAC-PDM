@@ -50,9 +50,9 @@ O streaming e a API são **independentes** nesta entrega: o Dataflow não chama 
 API. Se um dos dois falhar na apresentação, o outro continua de pé.
 
 Os voos seguem em batch (Medallion do T1). A ingestão em streaming é a de
-observações meteorológicas (METAR). O streaming de voos (`anac-voos`,
-`dataflow_start.sh`, `simulate.sh`) continua no repositório e no Terraform, mas
-saiu da demo.
+observações meteorológicas (METAR). O streaming de voos foi removido do
+código; os tópicos `anac-voos*` ainda existem no Terraform, ociosos e sem custo,
+até um `apply` planejado depois da apresentação.
 
 ---
 

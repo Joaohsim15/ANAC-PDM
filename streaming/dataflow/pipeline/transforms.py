@@ -1,12 +1,10 @@
-"""Transformacoes puras do pipeline: parse e validacao de um evento.
+"""Transformacoes puras do pipeline: parse e validacao de um evento de METAR.
 
 Ficam separadas do pipeline para serem testadas sem Beam e sem GCP. A regra de
-validacao vem de schemas/features.json, a mesma fonte da API. `parse_event` e
-generico por dominio (voo ou METAR): cada dominio tem seus proprios metadados
-de evento (EVENT_FIELDS) e seu proprio recorte de features do contrato — os
-dois sets de constantes abaixo, mais `metar_feature_names`, sao o que
-distingue o streaming de voo do de METAR (ver streaming/producer/simulator.py
-e simulator_metar.py).
+validacao vem de schemas/features.json, a mesma fonte da API: o evento leva as
+features de clima do contrato (as nullable, clima_*) mais os metadados da
+observacao em METAR_EVENT_FIELDS. Quem publica e
+streaming/producer/simulator_metar.py.
 """
 
 import json
@@ -14,20 +12,8 @@ import re
 from datetime import datetime, timezone
 from typing import Any
 
-# chaves e metadados do evento de VOO que nao sao features do contrato
-EVENT_FIELDS = {
-    "event_id": "STRING",
-    "event_ts": "TIMESTAMP",
-    "nr_voo": "STRING",
-    "dt_partida_prevista": "DATETIME",
-    "dt_partida_prevista_original": "DATETIME",
-    "simulation_run_id": "STRING",
-}
-REQUIRED_EVENT_FIELDS = ("event_id", "event_ts")
-
-# idem, para o evento de METAR: troca as chaves de voo por estacao/observacao.
-# As features de METAR sao o recorte nullable do contrato (clima_*) — ver
-# metar_feature_names abaixo
+# chaves e metadados do evento de METAR que nao sao features do contrato. As
+# features sao o recorte nullable do contrato (clima_*), ver metar_feature_names
 METAR_EVENT_FIELDS = {
     "event_id": "STRING",
     "event_ts": "TIMESTAMP",
@@ -117,8 +103,8 @@ def parse_event(
     contract: dict[str, Any],
     publish_ts: datetime | None = None,
     now: datetime | None = None,
-    event_fields: dict[str, str] = EVENT_FIELDS,
-    required_event_fields: tuple[str, ...] = REQUIRED_EVENT_FIELDS,
+    event_fields: dict[str, str] = METAR_EVENT_FIELDS,
+    required_event_fields: tuple[str, ...] = METAR_REQUIRED_EVENT_FIELDS,
     feature_names: set[str] | None = None,
 ) -> dict[str, Any]:
     """Converte a mensagem do Pub/Sub numa linha da tabela de streaming.
@@ -127,11 +113,8 @@ def parse_event(
     contrato e das chaves conhecidas sao recusados: e assim que um campo
     pos-partida (ex.: ds_situacao_partida) nunca chega a tabela.
 
-    `event_fields`/`required_event_fields` trocam os metadados esperados por
-    dominio (voo, por padrao, ou METAR_EVENT_FIELDS/METAR_REQUIRED_EVENT_FIELDS
-    para METAR). `feature_names`, se informado, restringe a validacao a esse
-    subconjunto do contrato (ex.: metar_feature_names(contract) para METAR);
-    por padrao valida todas as features do contrato, como no evento de voo.
+    `feature_names` restringe a validacao a esse subconjunto do contrato; por
+    padrao usa metar_feature_names(contract), as features de clima.
     """
     try:
         data = json.loads(payload.decode("utf-8"))
@@ -140,12 +123,9 @@ def parse_event(
     if not isinstance(data, dict):
         raise InvalidEvent("mensagem deve ser um objeto JSON")
 
-    all_features = {spec["name"]: spec for spec in contract["features"]}
-    features = (
-        all_features
-        if feature_names is None
-        else {name: spec for name, spec in all_features.items() if name in feature_names}
-    )
+    if feature_names is None:
+        feature_names = metar_feature_names(contract)
+    features = {spec["name"]: spec for spec in contract["features"] if spec["name"] in feature_names}
     unknown = set(data) - set(features) - set(event_fields)
     if unknown:
         raise InvalidEvent(f"campos fora do contrato: {sorted(unknown)}")
