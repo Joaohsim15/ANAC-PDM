@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # LIGA o pipeline de streaming de METAR no Dataflow (cobrado por hora ligado).
 # Desligar ao fim de cada teste/demo com dataflow_drain_metar.sh.
+# Devolve o terminal assim que o job e submetido; ele leva ~4 min ate processar.
 source "$(dirname "$0")/_env.sh"
 
 if [[ -n "$(metar_active_job_id)" ]]; then
@@ -29,6 +30,7 @@ uv run --no-project --python 3.12 --with-requirements requirements.txt \
   --setup_file ./setup.py \
   --machine_type e2-standard-2 --num_workers 1 --max_num_workers 2 \
   --enable_streaming_engine \
+  --no_wait_until_finish \
   --labels projeto=anac-pdm --labels entrega=t2 --labels dominio=metar \
   ${SA_FLAG[@]+"${SA_FLAG[@]}"}
 
