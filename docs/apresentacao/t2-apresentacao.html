@@ -166,10 +166,6 @@ td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
 .rate-row.hi .fill { background: var(--accent); }
 .rate-row .val { font-family: var(--mono); font-size: 16px; font-variant-numeric: tabular-nums; text-align: right; }
 .rate-row.hi .val { color: var(--accent-dark); font-weight: 500; }
-.auc { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.auc > div { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; }
-.auc .k { font-size: 13px; color: var(--muted); }
-.auc .v { font-family: var(--mono); font-size: clamp(24px, 3vw, 32px); font-variant-numeric: tabular-nums; }
 @media (max-width: 480px) { .rate-row { grid-template-columns: 110px 1fr 54px; } }
 
 @media (max-width: 820px) {
@@ -201,13 +197,8 @@ td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
     <h2>O modelo do T1 só via o voo, mas o clima também atrasa voos</h2>
     <div class="cols">
       <div style="display:grid; gap:14px; align-content:start">
-        <p class="lede" style="font-size:18px">No T1 o modelo usava apenas dados do voo: companhia, rota, aeronave, horário e calendário. Com isso, a AUC ficou em 0,65, abaixo da meta de 0,70. Faltava uma causa conhecida de atraso: as condições do clima no aeroporto de origem.</p>
-        <div class="col-title" style="margin:6px 0 0">Mesmo modelo e mesmos 60 dias de avaliação</div>
-        <div class="auc">
-          <div><div class="k">AUC sem clima</div><div class="v">0,6527</div></div>
-          <div><div class="k">AUC com clima</div><div class="v">0,6532</div></div>
-        </div>
-        <p class="note">Ganho pequeno no total: trovoada e chuva aparecem em menos de 9% dos voos, e nos demais o clima não traz informação nova. Fenômenos como trovoada passaram a figurar entre as 6 variáveis de maior peso do modelo.</p>
+        <p class="lede" style="font-size:18px">No T1 o modelo usava apenas dados do voo: companhia, rota, aeronave, horário e calendário, e o desempenho ficou abaixo do esperado. Faltava uma causa conhecida de atraso: as condições do clima no aeroporto de origem.</p>
+        <p class="note">Com as variáveis de clima, o modelo teve uma pequena melhora. O ganho é limitado porque trovoada e chuva aparecem em menos de 9% dos voos; nos demais, o clima não traz informação nova. Fenômenos como trovoada passaram a figurar entre as 6 variáveis de maior peso do modelo.</p>
       </div>
       <div style="display:grid; gap:12px; align-content:start; min-width:0">
         <div class="col-title" style="margin:0">Voos que atrasaram mais de 15 min, por condição na origem</div>
