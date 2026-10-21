@@ -132,6 +132,46 @@ td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
 
 .note { font-size: 15px; color: var(--muted); border-left: 3px solid var(--accent); padding-left: 12px; max-width: 75ch; }
 
+
+/* separador de parte: "Parte A · Ingestao em tempo real" */
+.part { background: var(--accent-fill); }
+.part h2 { font-size: clamp(30px, 4.2vw, 46px); max-width: 22ch; }
+.part .lede { max-width: 56ch; }
+
+/* caminho da requisicao: passos em ordem */
+.path { margin: 0; padding: 0; list-style: none; counter-reset: passo; display: grid; gap: 10px; }
+.path li { counter-increment: passo; display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: start; }
+.path li::before {
+  content: counter(passo); font-family: var(--mono); font-size: 13px; font-weight: 500;
+  width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--accent); color: var(--panel); margin-top: 2px;
+}
+.path b { font-weight: 600; }
+
+.spec { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.spec > div { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; min-width: 0; }
+.spec .t { font-weight: 600; margin-bottom: 6px; }
+.spec ul { margin: 0; padding-left: 18px; font-size: 15px; color: var(--ink-2); display: grid; gap: 3px; }
+.spec code { font-family: var(--mono); font-size: 13px; }
+@media (max-width: 820px) { .spec { grid-template-columns: 1fr; } }
+
+
+/* taxa de atraso por condicao do tempo: barras horizontais */
+.rate { display: grid; gap: 10px; }
+.rate-row { display: grid; grid-template-columns: 170px 1fr 64px; gap: 12px; align-items: center; }
+.rate-row .lbl { font-size: 15px; }
+.rate-row .lbl small { display: block; font-size: 12.5px; color: var(--muted); }
+.rate-row .track { height: 22px; background: var(--line); border-radius: 3px; overflow: hidden; }
+.rate-row .fill { height: 100%; background: var(--muted); }
+.rate-row.hi .fill { background: var(--accent); }
+.rate-row .val { font-family: var(--mono); font-size: 16px; font-variant-numeric: tabular-nums; text-align: right; }
+.rate-row.hi .val { color: var(--accent-dark); font-weight: 500; }
+.auc { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.auc > div { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; }
+.auc .k { font-size: 13px; color: var(--muted); }
+.auc .v { font-family: var(--mono); font-size: clamp(24px, 3vw, 32px); font-variant-numeric: tabular-nums; }
+@media (max-width: 480px) { .rate-row { grid-template-columns: 110px 1fr 54px; } }
+
 @media (max-width: 820px) {
   .cols { grid-template-columns: 1fr; }
   .obs-row { grid-template-columns: 1fr; }
@@ -148,16 +188,51 @@ td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
 
 <section id="capa" aria-label="Capa">
   <div class="wrap">
-    <div class="meta">PDM_BIA · INF/UFG</div>
-    <div class="eyebrow">Streaming e serving</div>
+    <div class="meta">INF/UFG</div>
+    <div class="eyebrow">Ingestão em tempo real e deploy do modelo</div>
     <h1>Predição de atraso de voos com meteorologia em streaming</h1>
-    <p class="lede">Observações meteorológicas dos aeródromos entram em tempo real por Pub/Sub e Dataflow até o BigQuery. O modelo de atraso, retreinado com essas variáveis, é servido pelo Vertex AI através de uma API no Cloud Run.</p>
+    <p class="lede">Observações meteorológicas dos aeroportos entram em tempo real por Pub/Sub e Dataflow até o BigQuery. O modelo de atraso é servido por uma API no Cloud Run, que consulta o endpoint do Vertex AI.</p>
   </div>
 </section>
 
-<section id="fonte" aria-label="Fonte do streaming">
+<section id="motivacao" aria-label="Por que meteorologia">
   <div class="wrap">
-    <div class="eyebrow"><span class="n">01</span> Fonte do streaming</div>
+    <div class="eyebrow">Motivação</div>
+    <h2>O modelo do T1 só via o voo, mas o clima também atrasa voos</h2>
+    <div class="cols">
+      <div style="display:grid; gap:14px; align-content:start">
+        <p class="lede" style="font-size:18px">No T1 o modelo usava apenas dados do voo: companhia, rota, aeronave, horário e calendário. Com isso, a AUC ficou em 0,65, abaixo da meta de 0,70. Faltava uma causa conhecida de atraso: as condições do clima no aeroporto de origem.</p>
+        <div class="col-title" style="margin:6px 0 0">Mesmo modelo e mesmos 60 dias de avaliação</div>
+        <div class="auc">
+          <div><div class="k">AUC sem clima</div><div class="v">0,6527</div></div>
+          <div><div class="k">AUC com clima</div><div class="v">0,6532</div></div>
+        </div>
+        <p class="note">Ganho pequeno no total: trovoada e chuva aparecem em menos de 9% dos voos, e nos demais o clima não traz informação nova. Fenômenos como trovoada passaram a figurar entre as 6 variáveis de maior peso do modelo.</p>
+      </div>
+      <div style="display:grid; gap:12px; align-content:start; min-width:0">
+        <div class="col-title" style="margin:0">Voos que atrasaram mais de 15 min, por condição na origem</div>
+        <div class="rate" role="img" aria-label="Taxa de atraso: trovoada 30,3%; chuva 22,0%; sem fenômeno 15,8%">
+          <div class="rate-row hi"><div class="lbl">Trovoada<small>2,1% dos voos</small></div><div class="track"><div class="fill" style="width:100%"></div></div><div class="val">30,3%</div></div>
+          <div class="rate-row"><div class="lbl">Chuva<small>6,7% dos voos</small></div><div class="track"><div class="fill" style="width:72.6%"></div></div><div class="val">22,0%</div></div>
+          <div class="rate-row"><div class="lbl">Sem fenômeno<small>81,5% dos voos</small></div><div class="track"><div class="fill" style="width:52.1%"></div></div><div class="val">15,8%</div></div>
+        </div>
+        <p class="note">6,19 milhões de voos de 2016 a 2024. Com trovoada na origem, a taxa de atraso quase dobra.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="parte-a" class="part" aria-label="Parte A: ingestão em tempo real">
+  <div class="wrap">
+    <div class="eyebrow">Parte A</div>
+    <h2>Ingestão em tempo real</h2>
+    <p class="lede">De onde vêm os eventos, como cada mensagem é validada e o que acontece com as que violam o contrato.</p>
+  </div>
+</section>
+
+<section id="fonte" aria-label="Fonte dos eventos">
+  <div class="wrap">
+    <div class="eyebrow"><span class="n">A1</span> Fonte dos eventos</div>
     <h2>O clima no aeroporto muda de hora em hora, e cada mudança vira um evento</h2>
     <div class="cols">
       <div>
@@ -202,13 +277,13 @@ td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
         <div class="obs-raw">SBCF 202000Z 25006KT 7000 -TSRA SCT030 FEW040CB BKN100 21/18 Q1014</div>
       </article>
     </div>
-    <p class="note">Observações reais do histórico, em horário de Brasília. Cada boletim vira uma mensagem no Pub/Sub; o modelo usa a observação mais recente antes da partida prevista.</p>
+    <p class="note">Observações reais do histórico, em horário de Brasília. Na demonstração, um simulador relê esse histórico e publica cada boletim no Pub/Sub com o horário trazido para o presente.</p>
   </div>
 </section>
 
-<section id="pipeline" aria-label="Pipeline de streaming">
+<section id="pipeline" aria-label="Pipeline de ingestão">
   <div class="wrap">
-    <div class="eyebrow"><span class="n">02</span> Pipeline de streaming</div>
+    <div class="eyebrow"><span class="n">A2</span> Pipeline de ingestão</div>
     <h2>Pub/Sub → Dataflow → BigQuery, com dead-letter</h2>
     <div class="flow-wrap">
     <svg class="flow" viewBox="0 0 1000 210" role="img" aria-label="Simulador publica no Pub/Sub anac-metar; o Dataflow valida contra o contrato de features e grava no BigQuery; mensagens inválidas vão para o tópico anac-metar-dlq">
@@ -235,18 +310,38 @@ td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
       <path class="edge" d="M570,122 V94" marker-end="url(#ar)"/>
     </svg>
     </div>
-    <ul class="list">
-      <li>O Dataflow valida tipo, faixa e domínio de cada campo contra o mesmo contrato usado pelo modelo e pela API.</li>
-      <li>Campos fora do contrato são recusados, o que impede que um dado posterior à partida chegue à tabela.</li>
-      <li>Mensagens inválidas seguem para o dead-letter com o payload original e o motivo da recusa.</li>
-    </ul>
+    <div class="spec">
+      <div>
+        <div class="t">Pub/Sub</div>
+        <ul>
+          <li>Tópico <code>anac-metar</code>, retenção de 1 dia.</li>
+          <li>Assinatura pull lida pelo Dataflow.</li>
+        </ul>
+      </div>
+      <div>
+        <div class="t">Dataflow</div>
+        <ul>
+          <li>Apache Beam em modo streaming, Streaming Engine.</li>
+          <li>1 a 2 workers <code>e2-standard-2</code>.</li>
+          <li>Valida tipo, faixa e domínio pelo contrato.</li>
+        </ul>
+      </div>
+      <div>
+        <div class="t">BigQuery e dead-letter</div>
+        <ul>
+          <li>Streaming inserts, partição diária, cluster por aeroporto.</li>
+          <li>Inválidas vão para <code>anac-metar-dlq</code> com o motivo.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="note">O dead-letter é feito dentro do pipeline. Campos fora do contrato são recusados, o que impede que um dado posterior à partida chegue à tabela.</p>
   </div>
 </section>
 
-<section id="resultados" aria-label="Resultados do streaming">
+<section id="resultados" aria-label="Resultados da ingestão">
   <div class="wrap">
-    <div class="eyebrow"><span class="n">03</span> Resultados do streaming</div>
-    <h2>Execução no GCP: 100 observações de 59 aeródromos</h2>
+    <div class="eyebrow"><span class="n">A3</span> Resultados da ingestão</div>
+    <h2>Execução no GCP: 100 observações de 59 aeroportos</h2>
     <div class="cols">
       <div class="tbl-wrap">
       <table>
@@ -269,54 +364,132 @@ observacoes  estacoes  lag_medio_s
            fora do dominio",
  "payload": "{…\"sg_icao\":\"SBGO\"…}"}</pre>
     </div>
-    <p class="note">O simulador relê observações reais e desloca o horário para o presente. Nenhuma etapa da demonstração depende de fonte externa.</p>
   </div>
 </section>
 
-<section id="modelo" aria-label="Modelo e serving">
+<section id="parte-b" class="part" aria-label="Parte B: deploy da API do modelo">
   <div class="wrap">
-    <div class="eyebrow"><span class="n">04</span> Modelo e serving</div>
-    <h2>O modelo retreinado com clima é servido pelo Vertex AI</h2>
-    <div class="cols">
-      <ul class="list">
-        <li>Boosted tree (BigQuery ML) com 19 variáveis: 10 do voo e 9 meteorológicas.</li>
-        <li>Fenômenos como trovoada aparecem entre as 6 variáveis de maior peso.</li>
-        <li>API FastAPI no Cloud Run, privada, com validação pelo contrato e endpoint de explicabilidade.</li>
-        <li>Registro direto do BigQuery ML no Vertex Model Registry.</li>
-      </ul>
-      <div class="tbl-wrap">
-      <table>
-        <thead><tr><th>Teste da API</th><th>Resultado</th></tr></thead>
-        <tbody>
-          <tr><td>Voo com trovoada na origem</td><td class="num">0,6136</td></tr>
-          <tr><td>Aeródromo sem estação</td><td class="num">0,6026</td></tr>
-          <tr><td>Paridade com o BigQuery ML</td><td class="num">exata</td></tr>
-          <tr><td>Payload inválido / sem token</td><td class="num">422 / 403</td></tr>
-          <tr><td>Latência p95 (50 chamadas)</td><td class="num">729 ms</td></tr>
-        </tbody>
-      </table>
+    <div class="eyebrow">Parte B</div>
+    <h2>Arquitetura de deploy da API do modelo</h2>
+    <p class="lede">Como o modelo treinado no BigQuery ML chega a um endpoint, e como a API no Cloud Run atende uma requisição.</p>
+  </div>
+</section>
+
+<section id="deploy" aria-label="Do treino ao endpoint">
+  <div class="wrap">
+    <div class="eyebrow"><span class="n">B1</span> Do treino ao endpoint</div>
+    <h2>O modelo vai do BigQuery ML ao Vertex AI sem exportar arquivo</h2>
+    <div class="flow-wrap">
+    <svg class="flow" viewBox="0 0 1000 250" role="img" aria-label="Modelo no BigQuery ML registrado no Vertex Model Registry e implantado no endpoint; código da API vira imagem no Cloud Build, guardada no Artifact Registry e publicada no Cloud Run, que chama o endpoint">
+      <defs>
+        <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="arrow" d="M0,0 L10,5 L0,10 z"/></marker>
+      </defs>
+      <text class="sub" x="10" y="18">MODELO</text>
+      <rect class="node" x="10" y="28" width="210" height="62" rx="4"/>
+      <text x="24" y="54">BigQuery ML</text><text class="sub" x="24" y="74">boosted tree, 19 variáveis</text>
+      <rect class="node" x="270" y="28" width="210" height="62" rx="4"/>
+      <text x="284" y="54">Vertex Model Registry</text><text class="sub" x="284" y="74">registro direto, versão 2</text>
+      <rect class="node hot" x="530" y="28" width="210" height="62" rx="4"/>
+      <text x="544" y="54">Vertex AI Endpoint</text><text class="sub" x="544" y="74">n1-standard-2, 1 réplica</text>
+      <path class="edge" d="M220,59 H268" marker-end="url(#ar2)"/>
+      <path class="edge" d="M480,59 H528" marker-end="url(#ar2)"/>
+
+      <text class="sub" x="10" y="150">API</text>
+      <rect class="node" x="10" y="160" width="210" height="62" rx="4"/>
+      <text x="24" y="186">Código FastAPI</text><text class="sub" x="24" y="206">+ schemas/features.json</text>
+      <rect class="node" x="270" y="160" width="210" height="62" rx="4"/>
+      <text x="284" y="186">Cloud Build</text><text class="sub" x="284" y="206">imagem Docker</text>
+      <rect class="node" x="530" y="160" width="210" height="62" rx="4"/>
+      <text x="544" y="186">Artifact Registry</text><text class="sub" x="544" y="206">tag = commit do Git</text>
+      <rect class="node hot" x="790" y="160" width="200" height="62" rx="4"/>
+      <text x="804" y="186">Cloud Run</text><text class="sub" x="804" y="206">anac-api, privada</text>
+      <path class="edge" d="M220,191 H268" marker-end="url(#ar2)"/>
+      <path class="edge" d="M480,191 H528" marker-end="url(#ar2)"/>
+      <path class="edge" d="M740,191 H788" marker-end="url(#ar2)"/>
+      <path class="edge" d="M890,160 V59 H742" marker-end="url(#ar2)"/>
+      <text class="sub" x="900" y="112">/predict</text>
+    </svg>
+    </div>
+    <div class="spec">
+      <div>
+        <div class="t">Registro do modelo</div>
+        <ul>
+          <li><code>MODEL_REGISTRY = 'VERTEX_AI'</code> no próprio <code>CREATE MODEL</code>.</li>
+          <li>O endpoint serve o modelo vigente no BigQuery, sem cópia.</li>
+        </ul>
+      </div>
+      <div>
+        <div class="t">Imagem da API</div>
+        <ul>
+          <li><code>python:3.12-slim</code>, usuário sem privilégio.</li>
+          <li>Leva o contrato junto: API e modelo não divergem.</li>
+        </ul>
+      </div>
+      <div>
+        <div class="t">Cloud Run</div>
+        <ul>
+          <li>1 vCPU, 512 MiB, até 3 instâncias.</li>
+          <li>Escala a zero fora da demo; 1 instância quente na apresentação.</li>
+          <li>Sem acesso anônimo.</li>
+        </ul>
       </div>
     </div>
-    <p class="note">AUC de 0,6539 nos últimos 60 dias, com split temporal, contra 0,6516 da regressão logística de referência.</p>
+  </div>
+</section>
+
+<section id="requisicao" aria-label="Caminho de uma requisição">
+  <div class="wrap">
+    <div class="eyebrow"><span class="n">B2</span> Caminho de uma requisição</div>
+    <h2>Da chamada à probabilidade de atraso</h2>
+    <div class="cols">
+      <ol class="path">
+        <li><span>O cliente envia o voo e o clima da origem, com <b>token</b> de identidade. Sem token: HTTP 403.</span></li>
+        <li><span>A API <b>valida</b> o payload contra o contrato. Campo fora do contrato ou valor inválido: HTTP 422.</span></li>
+        <li><span>Campos de clima ausentes recebem a <b>média do treino</b>, o mesmo tratamento do BigQuery ML.</span></li>
+        <li><span>A API chama o <b>endpoint do Vertex</b> e devolve a probabilidade de atraso acima de 15 min.</span></li>
+        <li><span>Depois da resposta, a predição é <b>gravada</b> no BigQuery para comparar com o resultado real.</span></li>
+      </ol>
+      <div style="display:grid; gap:14px; align-content:start; min-width:0">
+        <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Teste no GCP</th><th>Resultado</th></tr></thead>
+          <tbody>
+            <tr><td>Voo com trovoada na origem</td><td class="num">0,6136</td></tr>
+            <tr><td>Aeroporto sem estação</td><td class="num">0,6026</td></tr>
+            <tr><td>Igual ao BigQuery ML</td><td class="num">sim</td></tr>
+            <tr><td>Payload inválido / sem token</td><td class="num">422 / 403</td></tr>
+            <tr><td>Latência p95, 50 chamadas</td><td class="num">729 ms</td></tr>
+          </tbody>
+        </table>
+        </div>
+        <p class="note">Rota separada <code>/explain</code>: mostra o peso de cada variável na previsão, consultando o BigQuery ML fora do caminho medido.</p>
+      </div>
+    </div>
   </div>
 </section>
 
 <section id="demo" aria-label="Demonstração">
   <div class="wrap">
-    <div class="eyebrow"><span class="n">05</span> Demonstração</div>
+    <div class="eyebrow">Demonstração</div>
     <h2>Em execução no console do GCP</h2>
     <div class="cols">
-      <ul class="list">
-        <li>Job de streaming ativo no Dataflow.</li>
-        <li>Publicação de observações no Pub/Sub.</li>
-        <li>Chegada dos dados no BigQuery.</li>
-        <li>Mensagem inválida retida no dead-letter.</li>
-      </ul>
-      <ul class="list">
-        <li>Modelo implantado no endpoint do Vertex AI.</li>
-        <li>Predição pela API no Cloud Run.</li>
-        <li>Explicação da previsão por variável.</li>
-      </ul>
+      <div>
+        <div class="col-title">Ingestão em tempo real</div>
+        <ul class="list">
+          <li>Job de streaming ativo no Dataflow.</li>
+          <li>Publicação de uma observação no Pub/Sub.</li>
+          <li>Chegada do dado no BigQuery.</li>
+          <li>Mensagem inválida retida no dead-letter.</li>
+        </ul>
+      </div>
+      <div>
+        <div class="col-title">Deploy da API</div>
+        <ul class="list">
+          <li>Modelo implantado no endpoint do Vertex AI.</li>
+          <li>Serviço e revisão no Cloud Run.</li>
+          <li>Predição e explicação pela API.</li>
+        </ul>
+      </div>
     </div>
   </div>
 </section>
