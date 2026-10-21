@@ -5,13 +5,17 @@ locals {
   api_roles = [
     "roles/aiplatform.user", # chamar o endpoint do Vertex
     "roles/logging.logWriter",
+    # /explain (ML.EXPLAIN_PREDICT), medias de ML.FEATURE_INFO no startup e
+    # gravacao em tb_anac_predicoes_log
+    "roles/bigquery.dataEditor",
+    "roles/bigquery.jobUser",
   ]
   dataflow_roles = [
     "roles/dataflow.worker",
-    "roles/pubsub.subscriber", # ler anac-voos-dataflow
+    "roles/pubsub.subscriber", # ler anac-metar-dataflow
     "roles/pubsub.publisher",  # escrever no dead-letter
     "roles/pubsub.viewer",
-    "roles/bigquery.dataEditor", # gravar em tb_anac_stream_eventos
+    "roles/bigquery.dataEditor", # gravar em tb_anac_stream_metar
     "roles/bigquery.jobUser",
     "roles/storage.objectAdmin", # temp e staging no bucket do Dataflow
   ]

@@ -4,9 +4,8 @@
 -- Destino : tf_anac.tb_anac_stream_metar
 -- ----------------------------------------------------------------------------
 -- Um registro por observacao meteorologica recebida. As colunas de feature
--- seguem o recorte nullable (clima_*) de schemas/features.json. Substitui
--- tb_anac_stream_eventos (voo) como a demo de streaming do T2 — voos
--- continuam em batch (Medallion do T1).
+-- seguem o recorte nullable (clima_*) de schemas/features.json. Os voos
+-- seguem em batch (Medallion do T1).
 -- Particionada pela data do evento: a contagem da demo varre so o dia corrente.
 -- ============================================================================
 

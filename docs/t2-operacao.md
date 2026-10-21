@@ -50,9 +50,9 @@ O streaming e a API são **independentes** nesta entrega: o Dataflow não chama 
 API. Se um dos dois falhar na apresentação, o outro continua de pé.
 
 Os voos seguem em batch (Medallion do T1). A ingestão em streaming é a de
-observações meteorológicas (METAR). O streaming de voos (`anac-voos`,
-`dataflow_start.sh`, `simulate.sh`) continua no repositório e no Terraform, mas
-saiu da demo.
+observações meteorológicas (METAR). O streaming de voos foi removido do
+código; os tópicos `anac-voos*` ainda existem no Terraform, ociosos e sem custo,
+até um `apply` planejado depois da apresentação.
 
 ---
 
@@ -98,9 +98,9 @@ Regras:
   fim dela em 23/10**.
 - Desimplantar não apaga o endpoint: o id continua o mesmo, e a API já
   publicada volta a responder assim que o modelo é reimplantado, sem novo deploy.
-- `dataflow_start_metar.sh` não devolve o terminal: em streaming, o Beam fica
-  acompanhando o job. Quando o job aparecer `Running` no console, pode
-  interromper com Ctrl+C, que o job continua no Dataflow.
+- `dataflow_start_metar.sh` devolve o terminal assim que o job é submetido. O
+  job ainda leva uns 4 min até o worker processar eventos: espere antes de
+  rodar o simulador.
 - Todo teste com Dataflow termina com `dataflow_drain_metar.sh`. O drain processa o
   que já chegou antes de encerrar, então nenhum evento se perde.
 - Ao fim de cada sessão de trabalho, confira o console: Vertex AI → Endpoints
@@ -121,7 +121,7 @@ Preparação no dia (até 30 min antes):
 
 ```bash
 ./scripts/t2/api_deploy.sh --demo    # min-instances=1: sem cold start
-./scripts/t2/dataflow_start_metar.sh # espere o job ficar Running (~4 min), depois Ctrl+C
+./scripts/t2/dataflow_start_metar.sh # o worker leva ~4 min para processar
 ./scripts/t2/predict.sh --health     # aquece a API
 ```
 

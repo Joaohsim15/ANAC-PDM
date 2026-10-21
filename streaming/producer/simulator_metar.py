@@ -2,9 +2,8 @@
 
 Le observacoes meteorologicas reais da Silver no BigQuery (nunca a IEM ao
 vivo), desloca o horario da observacao para o presente e publica um evento
-por observacao, no ritmo pedido. Mesmo padrao de streaming/producer/simulator.py
-(voo), mas e quem agora cumpre o requisito de streaming do T2: meteorologia
-em streaming, voos em batch (Medallion do T1, inalterado).
+por observacao, no ritmo pedido. Meteorologia entra em streaming; os voos
+seguem em batch (Medallion do T1).
 
 Uso:
     python -m simulator_metar --project $PROJECT --topic anac-metar \\
@@ -50,8 +49,7 @@ def load_contract(path: Path = CONTRACT_PATH) -> dict[str, Any]:
 def metar_feature_specs(contract: dict[str, Any]) -> list[dict[str, Any]]:
     """Features deste simulador: so as de clima (nullable no contrato).
 
-    Espelha flight_feature_specs() do simulador de voo, do lado contrario —
-    aqui so interessam as 9 features de meteorologia.
+    Das features do contrato, so as 9 de meteorologia vem do METAR.
     """
     return [spec for spec in contract["features"] if spec.get("nullable")]
 
@@ -63,7 +61,7 @@ def load_feature_names(path: Path = CONTRACT_PATH) -> list[str]:
 def contract_filters(contract: dict[str, Any]) -> list[str]:
     """Condicoes SQL equivalentes ao contrato, sobre as colunas da Silver.
 
-    Ao contrario do simulador de voo, aqui ausencia e um valor legitimo
+    Aqui ausencia e um valor legitimo
     (estacao sem aquele sensor numa observacao, ou aerodromo sem estacao
     meteorologica): o filtro so recusa valor PREENCHIDO fora do
     dominio/faixa do contrato, nunca a ausencia.
@@ -121,8 +119,7 @@ def to_event(row: dict[str, Any], feature_names: list[str], offset: timedelta, r
 def observation_offset(reference_day: date, today: date) -> timedelta:
     """Desloca o dia de referencia inteiro para hoje, mantendo a hora da observacao.
 
-    Mesma logica de departure_offset() do simulador de voo: so o dia muda, a
-    hora da observacao permanece a do historico.
+    So o dia muda; a hora da observacao permanece a do historico.
     """
     return datetime.combine(today, datetime.min.time()) - datetime.combine(reference_day, datetime.min.time())
 

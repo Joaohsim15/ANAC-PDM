@@ -17,7 +17,7 @@ apresentação ao vivo em produção:
 | T2 | 23/10/2026 | Pub/Sub + Dataflow → BigQuery; Vertex AI; API no Cloud Run | 🟡 em andamento — ver "Estado atual" |
 | TF | 04/12/2026 | Dataflow chama a API em tempo real, enriquece e persiste; orquestrado com n8n | ⚪ não iniciado |
 
-## Estado atual (09/10/2026)
+## Estado atual (21/10/2026)
 
 **Dados (T1).** A Gold `tb_anac_gold_features_atraso` cobre **2016-01-01 a
 2024-12-31: 6.187.534 voos**, com 17,4% de atraso > 15 min. O GCS tem 120 CSVs
@@ -51,10 +51,13 @@ depois da promoção — a produção já carrega o conteúdo deles.
   nullable) é a fonte única, propagada à Gold-clima, ao `CREATE MODEL`, à API
   e ao Dataflow.
 - `api/` (FastAPI): serviço Cloud Run `anac-api` publicado em 09/10, privado e
-  com `min-instances=0`. Testado ponta a ponta em 09/10, **antes da promoção
-  do M1 com clima** (paridade com o `ML.PREDICT` 0,6077, 422 para payload
-  inválido, 403 sem token, p95 de 359 ms) — reensaiar com o modelo novo e o
-  payload com os 9 campos de clima antes da apresentação.
+  com `min-instances=0`. Reensaiada em 21/10 com o M1 v2 (com clima):
+  paridade exata com o `ML.PREDICT` (0,613587 com clima, 0,602561 sem), 422
+  para payload inválido, 403 sem token, p95 de 729 ms. **O container do Vertex
+  para BQML não aceita `null` numérico** (`float(None)`), e `NaN` segue o ramo
+  de "ausente" da árvore, dando outra probabilidade. O `ML.PREDICT` imputa a
+  média do treino; a API faz o mesmo antes de chamar o endpoint, com as médias
+  de `ML.FEATURE_INFO` lidas uma vez por instância.
 - **`/explain` e log de predições — diferencial, adicionado em 19/10/2026.**
   `POST /explain` (mesmo payload do `/predict`) devolve, além da
   probabilidade, a contribuição de cada feature para aquela previsão
@@ -72,16 +75,22 @@ depois da promoção — a produção já carrega o conteúdo deles.
   sem atraso, reconciliação bateu). Bug real encontrado e corrigido:
   `ML.EXPLAIN_PREDICT` exige `top_k_features` como literal constante no
   `STRUCT(...)`, não aceita parâmetro de query.
-- `streaming/producer` (simulador) e `streaming/dataflow` (Beam): rodou no
-  Dataflow com 30/30 eventos gravados e lag médio de 3 s; job drenado.
+- Streaming de METAR (`streaming/producer/simulator_metar.py` →
+  `anac-metar` → Dataflow → `tb_anac_stream_metar`): rodou no Dataflow em
+  20/10 com 100/100 observações gravadas, lag médio de 1,75 s e o inválido no
+  `anac-metar-dlq`; job drenado. O streaming de voos foi **removido do código**
+  em 21/10; os tópicos `anac-voos*` seguem no Terraform, ociosos, até um
+  `apply` depois da apresentação.
 - `terraform/`: 14 recursos aplicados. State no bucket `<projeto>-anac-tfstate`.
 - O M1 está registrado no Vertex Model Registry como `anac_m1_boosted_tree`.
-- O endpoint `anac-atraso-endpoint` foi testado com o M1 implantado em 09/10
-  (deploy de 33 min) e está de novo **sem modelo implantado**. Religar em 21/10.
+- O endpoint `anac-atraso-endpoint` foi testado com o M1 v2 implantado em
+  20–21/10 e está **sem modelo implantado**. Religar na véspera (22/10, à
+  noite).
 
-**T2 — falta:** reimplantar o modelo em 21/10 e publicar a API com `--demo`,
-ativar as service accounts dedicadas (exige o Owner do projeto) e ensaiar a
-demo. Como operar: [`docs/t2-operacao.md`](docs/t2-operacao.md).
+**T2 — falta:** reimplantar o modelo em 22/10 à noite, publicar a API com
+`--demo` e ligar o Dataflow no dia. Ativar as service accounts dedicadas exige
+o Owner do projeto e fica para depois. Apresentam o Igor e um colega, 2,5 min
+cada. Como operar: [`docs/t2-operacao.md`](docs/t2-operacao.md).
 
 **Meteorologia (IEM ASOS/METAR) — decidido em 15/10/2026, fonte trocada no
 mesmo dia.** O grupo decidiu enriquecer o modelo com observações
@@ -129,9 +138,11 @@ exigido não foi concluído; a IEM não exige cadastro nem chave. Detalhe em
   por volume). Mesma armadilha vale para qualquer join tipo ASOF futuro no
   BigQuery — preferir igualdade com bucket de tempo a desigualdade pura.
 
-Streaming de voos (Pub/Sub `anac-voos` → Dataflow → `tb_anac_stream_eventos`,
-já testado em 09/10) será desativado e substituído pelo equivalente de
-METAR; não reativar o de voos sem decisão do grupo.
+O streaming de voos (Pub/Sub `anac-voos` → Dataflow → `tb_anac_stream_eventos`,
+testado em 09/10) foi removido do código em 21/10, substituído pelo de METAR.
+Não reativar sem decisão do grupo. Para o TF ("o Dataflow chama a API"), o
+desenho coerente é: a cada METAR novo, recalcular a probabilidade dos voos
+programados das próximas horas naquele aeródromo — ainda não combinado.
 
 ## Ambiente GCP — leia antes de mexer
 
@@ -272,7 +283,8 @@ VRA (P-04) já foi resolvido. Situação das demais:
 | **Recorte do VRA em meses** | **Adotado na prática:** 2016–2024 na Gold; 2025 ingerido no GCS e retido fora da Silver. Falta o grupo ratificar e registrar |
 | **P-08 — cascata** | Em aberto (ver acima) |
 | ~~**P-09 — meteorologia: fuso e cobertura**~~ | ✅ **RESOLVIDA em 15/10/2026.** Fuso é horário de Brasília fixo (UTC-3), não local por aeródromo; cobertura real é 65/100 ICAO de origem da Gold, 92,9% do volume de voos. Ver `docs/PRD.md` §3.3.2 |
-| Quem apresenta o T2 · rotação das contas de faturamento | Em aberto |
+| Quem apresenta o T2 | **Definido em 21/10:** o Igor e um colega, 2,5 min cada |
+| Rotação das contas de faturamento | Em aberto |
 
 Não assuma valores para as pendentes nem trate as "adotadas na prática" como
 ratificadas — pergunte.
