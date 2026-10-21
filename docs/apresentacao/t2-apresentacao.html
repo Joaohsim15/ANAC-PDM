@@ -143,6 +143,23 @@ p { margin: 0; }
 .steps p { color: var(--ink-2); font-size: 15.5px; }
 @media (max-width: 820px) { .steps { grid-template-columns: 1fr; } .steps li::after { display: none; } }
 
+
+/* tabela de particionamento */
+.tbl-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 15px; }
+th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--mono); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+td code { font-family: var(--mono); font-size: 13px; }
+td.why { color: var(--ink-2); }
+.lane-tag { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; padding: 1px 7px; border-radius: 3px; border: 1px solid var(--accent); color: var(--accent-dark); white-space: nowrap; }
+.lane-tag.s { background: var(--accent); color: var(--panel); }
+.roles { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.roles > div { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; min-width: 0; }
+.roles .t { font-weight: 600; margin-bottom: 4px; display: flex; gap: 8px; align-items: center; }
+.roles p { font-size: 15.5px; color: var(--ink-2); }
+.flow .lane { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; fill: var(--accent); }
+@media (max-width: 820px) { .roles { grid-template-columns: 1fr; } }
+
 @media (max-width: 820px) {
   .cols { grid-template-columns: 1fr; }
   .obs-row { grid-template-columns: 1fr; }
@@ -160,9 +177,9 @@ p { margin: 0; }
 <section id="capa" aria-label="Capa">
   <div class="wrap">
     <div class="meta">INF/UFG</div>
-    <div class="eyebrow">Ingestão em tempo real e deploy do modelo</div>
+    <div class="eyebrow">Batch, streaming e deploy do modelo</div>
     <h1>Predição de atraso de voos com meteorologia em streaming</h1>
-    <p class="lede">Observações meteorológicas dos aeroportos entram em tempo real por Pub/Sub e Dataflow até o BigQuery. O modelo de atraso é servido por uma API no Cloud Run, que consulta o endpoint do Vertex AI.</p>
+    <p class="lede">O histórico de voos é processado em batch e treina o modelo. Observações meteorológicas dos aeroportos entram em tempo real por Pub/Sub e Dataflow. O modelo é servido por uma API no Cloud Run, que consulta o endpoint do Vertex AI.</p>
   </div>
 </section>
 
@@ -184,6 +201,61 @@ p { margin: 0; }
         </div>
         <p class="note">6,19 milhões de voos de 2016 a 2024. Com trovoada na origem, a taxa de atraso quase dobra.</p>
       </div>
+    </div>
+  </div>
+</section>
+
+<section id="arquitetura" aria-label="Arquitetura de ponta a ponta">
+  <div class="wrap">
+    <div class="eyebrow">Arquitetura de ponta a ponta</div>
+    <h2>Dois pipelines que se encontram no modelo</h2>
+    <div class="flow-wrap">
+    <svg class="flow" viewBox="0 0 1000 330" role="img" aria-label="Batch: VRA e METAR históricos vão ao Cloud Storage, passam por Bronze, Silver e Gold no BigQuery e treinam o modelo no BigQuery ML, publicado no Vertex AI. Streaming: o gerador publica observações METAR no Pub/Sub, o Dataflow valida e grava na tabela de streaming do mesmo dataset, ao lado da Silver de METAR. A API no Cloud Run recebe o voo com o clima e consulta o Vertex AI.">
+      <defs>
+        <marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="arrow" d="M0,0 L10,5 L0,10 z"/></marker>
+      </defs>
+      <text class="lane" x="10" y="18">BATCH · HISTÓRICO 2016–2024</text>
+      <rect class="node" x="10" y="28" width="150" height="58" rx="4"/>
+      <text x="22" y="52">VRA + METAR</text><text class="sub" x="22" y="71">arquivos históricos</text>
+      <rect class="node" x="190" y="28" width="150" height="58" rx="4"/>
+      <text x="202" y="52">Cloud Storage</text><text class="sub" x="202" y="71">Bronze, por lote</text>
+      <rect class="node" x="370" y="28" width="200" height="58" rx="4"/>
+      <text x="382" y="52">Silver → Gold</text><text class="sub" x="382" y="71">BigQuery, SQL</text>
+      <rect class="node hot" x="600" y="28" width="170" height="58" rx="4"/>
+      <text x="612" y="52">BigQuery ML</text><text class="sub" x="612" y="71">treino do modelo</text>
+      <rect class="node hot" x="810" y="28" width="180" height="58" rx="4"/>
+      <text x="822" y="52">Vertex AI</text><text class="sub" x="822" y="71">endpoint do modelo</text>
+      <path class="edge" d="M160,57 H188" marker-end="url(#ar3)"/>
+      <path class="edge" d="M340,57 H368" marker-end="url(#ar3)"/>
+      <path class="edge" d="M570,57 H598" marker-end="url(#ar3)"/>
+      <path class="edge" d="M770,57 H808" marker-end="url(#ar3)"/>
+
+      <rect class="node" x="370" y="128" width="200" height="74" rx="4" stroke-dasharray="5 4"/>
+      <text x="382" y="150">Dataset tf_anac</text><text class="sub" x="382" y="169">Silver de METAR (batch)</text><text class="sub" x="382" y="186">+ tabela de streaming</text>
+      <path class="edge" d="M470,86 V126" marker-end="url(#ar3)"/>
+
+      <rect class="node hot" x="810" y="136" width="180" height="58" rx="4"/>
+      <text x="822" y="160">Cloud Run</text><text class="sub" x="822" y="179">API de predição</text>
+      <path class="edge" d="M900,136 V88" marker-end="url(#ar3)"/>
+      <rect class="node" x="600" y="136" width="170" height="58" rx="4"/>
+      <text x="612" y="160">Cliente</text><text class="sub" x="612" y="179">voo + clima, via HTTP</text>
+      <path class="edge" d="M770,165 H808" marker-end="url(#ar3)"/>
+
+      <text class="lane" x="10" y="250">STREAMING · TEMPO REAL</text>
+      <rect class="node" x="10" y="260" width="150" height="58" rx="4"/>
+      <text x="22" y="284">Gerador</text><text class="sub" x="22" y="303">observações METAR</text>
+      <rect class="node hot" x="190" y="260" width="150" height="58" rx="4"/>
+      <text x="202" y="284">Pub/Sub</text><text class="sub" x="202" y="303">fila de eventos</text>
+      <rect class="node hot" x="370" y="260" width="200" height="58" rx="4"/>
+      <text x="382" y="284">Dataflow</text><text class="sub" x="382" y="303">valida e grava</text>
+      <path class="edge" d="M160,289 H188" marker-end="url(#ar3)"/>
+      <path class="edge" d="M340,289 H368" marker-end="url(#ar3)"/>
+      <path class="edge" d="M470,260 V204" marker-end="url(#ar3)"/>
+    </svg>
+    </div>
+    <div class="roles">
+      <div><div class="t"><span class="lane-tag">Batch</span> Histórico e treino</div><p>Voos chegam uma vez por mês. O batch organiza 9 anos de voos e clima em camadas, junta a observação de cada voo e treina o modelo.</p></div>
+      <div><div class="t"><span class="lane-tag s">Streaming</span> Condição atual</div><p>O clima muda a cada hora. O streaming recebe cada observação nova, valida e grava no mesmo dataset do histórico, com o mesmo contrato de campos.</p></div>
     </div>
   </div>
 </section>
@@ -301,6 +373,32 @@ p { margin: 0; }
       </div>
     </div>
     <p class="note">O dead-letter é feito dentro do pipeline. Campos fora do contrato são recusados, o que impede que um dado posterior à partida chegue à tabela.</p>
+  </div>
+</section>
+
+<section id="particionamento" aria-label="Particionamento e processamento">
+  <div class="wrap">
+    <div class="eyebrow"><span class="n">A3</span> Particionamento e processamento</div>
+    <h2>Cada tabela é cortada pelo filtro que mais usa</h2>
+    <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Tabela</th><th>Pipeline</th><th>Partição</th><th>Cluster</th><th>Por quê</th></tr></thead>
+      <tbody>
+        <tr><td>Bronze (VRA e METAR)</td><td><span class="lane-tag">Batch</span></td><td>data de ingestão, no Cloud Storage</td><td>—</td><td class="why">Cada carga fica numa pasta própria: dá para reprocessar ou auditar um lote sem tocar nos outros.</td></tr>
+        <tr><td>Silver e Gold de voos</td><td><span class="lane-tag">Batch</span></td><td>dia do voo</td><td>companhia, aeroporto de origem</td><td class="why">As consultas e o corte de treino filtram por período; as análises agrupam por companhia e aeroporto.</td></tr>
+        <tr><td>Silver de METAR</td><td><span class="lane-tag">Batch</span></td><td>dia da observação</td><td>aeroporto</td><td class="why">O cruzamento com os voos busca um aeroporto numa janela de horas.</td></tr>
+        <tr><td>Tabela de streaming</td><td><span class="lane-tag s">Streaming</span></td><td>dia do evento</td><td>aeroporto</td><td class="why">O monitoramento olha só o dia corrente; o resto do histórico nem é lido.</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="cols">
+      <ul class="list">
+        <li><span><b>Dataflow</b> em vez de um script: escala sozinho, não perde mensagem se cair e separa o que é inválido.</span></li>
+        <li><span><b>Gravação contínua</b> no BigQuery: cada observação fica consultável em segundos.</span></li>
+        <li><span><b>Batch em SQL</b> no próprio BigQuery: o histórico é grande, mas muda só uma vez por mês.</span></li>
+      </ul>
+      <p class="note">Exemplo medido: buscar os voos de um aeroporto em um mês lê 1,1 MB. Sem a partição por dia, a mesma consulta lê 37 MB.</p>
+    </div>
   </div>
 </section>
 
