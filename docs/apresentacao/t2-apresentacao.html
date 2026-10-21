@@ -24,9 +24,6 @@
   --accent-fill: #E3EFF7;
   --ok: #1D7A4A;
   --warn: #A32A1E;
-  --code-bg: #1C2733;
-  --code-ink: #E8EBEE;
-  --code-dim: #8C99A6;
   --sans: "IBM Plex Sans", Arial, Helvetica, sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
 }
@@ -34,13 +31,13 @@
   :root:not([data-theme="light"]) {
     --bg: #10151A; --panel: #171D24; --ink: #E8EBEE; --ink-2: #B2BAC2; --muted: #869099; --line: #283038;
     --accent: #4FA6E0; --accent-dark: #7FBEE8; --accent-fill: #14242F; --ok: #4CC28A; --warn: #DC8072;
-    --code-bg: #0B1015; --code-ink: #E8EBEE; --code-dim: #7D8A96; color-scheme: dark;
+    color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #10151A; --panel: #171D24; --ink: #E8EBEE; --ink-2: #B2BAC2; --muted: #869099; --line: #283038;
   --accent: #4FA6E0; --accent-dark: #7FBEE8; --accent-fill: #14242F; --ok: #4CC28A; --warn: #DC8072;
-  --code-bg: #0B1015; --code-ink: #E8EBEE; --code-dim: #7D8A96; color-scheme: dark;
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -116,19 +113,12 @@ p { margin: 0; }
 .flow .arrow { fill: var(--muted); }
 .flow .arrow.warn { fill: var(--warn); }
 
-pre.term {
-  margin: 0; background: var(--code-bg); color: var(--code-ink); border-radius: 6px;
-  padding: 16px 18px; font-family: var(--mono); font-size: 13.5px; line-height: 1.6;
-  overflow-x: auto; white-space: pre;
-}
-pre.term .c { color: var(--code-dim); }
 
 .tbl-wrap { overflow-x: auto; }
 table { border-collapse: collapse; width: 100%; font-size: 16px; }
 th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); }
 th { font-family: var(--mono); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
 td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
-.pill { display: inline-block; font-family: var(--mono); font-size: 11.5px; padding: 1px 8px; border-radius: 10px; border: 1px solid currentColor; color: var(--ok); }
 
 .note { font-size: 15px; color: var(--muted); border-left: 3px solid var(--accent); padding-left: 12px; max-width: 75ch; }
 
@@ -326,35 +316,6 @@ td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
       </div>
     </div>
     <p class="note">O dead-letter é feito dentro do pipeline. Campos fora do contrato são recusados, o que impede que um dado posterior à partida chegue à tabela.</p>
-  </div>
-</section>
-
-<section id="resultados" aria-label="Resultados da ingestão">
-  <div class="wrap">
-    <div class="eyebrow"><span class="n">A3</span> Resultados da ingestão</div>
-    <h2>Execução no GCP: 100 observações de 59 aeroportos</h2>
-    <div class="cols">
-      <div class="tbl-wrap">
-      <table>
-        <thead><tr><th>Medida</th><th>Resultado</th><th></th></tr></thead>
-        <tbody>
-          <tr><td>Eventos publicados / gravados</td><td class="num">100 / 100</td><td><span class="pill">ok</span></td></tr>
-          <tr><td>Duplicatas na tabela</td><td class="num">0</td><td><span class="pill">ok</span></td></tr>
-          <tr><td>Lag médio (publicação → BigQuery)</td><td class="num">0,16 s</td><td><span class="pill">ok</span></td></tr>
-          <tr><td>Lag máximo</td><td class="num">1,63 s</td><td><span class="pill">ok</span></td></tr>
-          <tr><td>Evento inválido no dead-letter</td><td class="num">1 / 1</td><td><span class="pill">ok</span></td></tr>
-        </tbody>
-      </table>
-      </div>
-<pre class="term"><span class="c">-- monitor_stream_metar.sql</span>
-observacoes  estacoes  lag_medio_s
-        100        59         0.16
-
-<span class="c"># anac-metar-dlq</span>
-{"error": "clima_cobertura_nuvens='XXX'
-           fora do dominio",
- "payload": "{…\"sg_icao\":\"SBGO\"…}"}</pre>
-    </div>
   </div>
 </section>
 
