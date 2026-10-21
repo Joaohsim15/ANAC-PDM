@@ -1,40 +1,47 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Atraso de Voo T2</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: deck de slides 16:9 navegado por teclado; cada slide e um "painel de voo" com faixa de cabecalho no estilo de painel de aeroporto. */
+/* Layout: deck de 6 slides navegado por teclado, com faixa de cabecalho por slide.
+   Paleta e fontes do Modelo de Apresentacao do Instituto de Informatica, as mesmas
+   de t1-medallion.html: accent #0072B9 / #005CA1, dk1 #212121, lt2 #F9F9F9. */
 :root {
-  --bg: #eef2f5;
-  --panel: #ffffff;
-  --ink: #14212b;
-  --muted: #56687a;
-  --line: #d3dce4;
-  --accent: #0b6e8a;      /* azul de carta aeronautica */
-  --flap: #f2b705;        /* ambar de painel de partidas */
-  --flap-ink: #1a1400;
-  --ok: #1d7a4a;
-  --warn: #a8560c;
-  --code-bg: #14212b;
-  --code-ink: #e6edf2;
-  --code-dim: #8ea3b5;
-  --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
-  --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
-  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --bg: #F9F9F9;
+  --panel: #FFFFFF;
+  --ink: #212121;
+  --muted: #757575;
+  --line: #E0E3E6;
+  --accent: #0072B9;
+  --flap: #005CA1;        /* marcador da faixa de cabecalho */
+  --flap-ink: #FFFFFF;
+  --ok: #1D7A4A;
+  --warn: #A32A1E;        /* dead-letter */
+  --code-bg: #1C2733;
+  --code-ink: #E8EBEE;
+  --code-dim: #8C99A6;
+  --code-key: #7FBEE8;
+  --display: "IBM Plex Sans", Arial, Helvetica, sans-serif;
+  --body: "IBM Plex Sans", Arial, Helvetica, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0c141a; --panel: #121e27; --ink: #e3ebf1; --muted: #93a7b8; --line: #24343f;
-    --accent: #4fb8d6; --flap: #f2b705; --flap-ink: #1a1400; --ok: #4cc28a; --warn: #f0a050;
-    --code-bg: #070c10; --code-ink: #e6edf2; --code-dim: #7d93a5; color-scheme: dark;
+    --bg: #10151A; --panel: #171D24; --ink: #E8EBEE; --muted: #869099; --line: #283038;
+    --accent: #4FA6E0; --flap: #4FA6E0; --flap-ink: #0B1218; --ok: #4CC28A; --warn: #DC8072;
+    --code-bg: #0B1015; --code-ink: #E8EBEE; --code-dim: #7D8A96; --code-key: #7FBEE8; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0c141a; --panel: #121e27; --ink: #e3ebf1; --muted: #93a7b8; --line: #24343f;
-  --accent: #4fb8d6; --flap: #f2b705; --flap-ink: #1a1400; --ok: #4cc28a; --warn: #f0a050;
-  --code-bg: #070c10; --code-ink: #e6edf2; --code-dim: #7d93a5; color-scheme: dark;
+  --bg: #10151A; --panel: #171D24; --ink: #E8EBEE; --muted: #869099; --line: #283038;
+  --accent: #4FA6E0; --flap: #4FA6E0; --flap-ink: #0B1218; --ok: #4CC28A; --warn: #DC8072;
+  --code-bg: #0B1015; --code-ink: #E8EBEE; --code-dim: #7D8A96; --code-key: #7FBEE8; color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -51,102 +58,69 @@ body {
 .deck { width: min(100%, 1100px); flex: 1; display: flex; flex-direction: column; min-height: 0; }
 .slide {
   background: var(--panel); border: 1px solid var(--line); border-radius: 6px;
-  flex: 1; min-height: 0; max-width: 100%; width: 100%;
+  flex: 1; min-height: 0; width: 100%;
   display: flex; flex-direction: column; overflow: hidden;
 }
 .slide[hidden] { display: none !important; }
 
-/* faixa de cabecalho: lembra a linha de um painel de partidas */
 .band {
   display: flex; align-items: center; gap: 14px;
-  padding: 10px 22px; border-bottom: 1px solid var(--line);
+  padding: 10px 24px; border-bottom: 1px solid var(--line);
   font-family: var(--mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted);
 }
-.band .gate {
-  background: var(--flap); color: var(--flap-ink); font-weight: 600;
-  padding: 2px 8px; border-radius: 3px; letter-spacing: .08em;
-}
-.band .who { margin-left: auto; }
-.band .who b { color: var(--ink); font-weight: 600; }
+.band .gate { background: var(--flap); color: var(--flap-ink); font-weight: 600; padding: 2px 8px; border-radius: 3px; letter-spacing: .08em; }
+.band .right { margin-left: auto; }
 
-.body { flex: 1; min-height: 0; padding: 22px 28px 20px; display: flex; flex-direction: column; gap: 14px; overflow: auto; }
-h1, h2 { font-family: var(--display); font-weight: 700; margin: 0; text-wrap: balance; letter-spacing: .01em; }
-h1 { font-size: clamp(34px, 5.4vw, 60px); line-height: 1; }
-h2 { font-size: clamp(24px, 3.4vw, 38px); line-height: 1.05; }
-.lede { color: var(--muted); font-size: clamp(15px, 1.7vw, 19px); max-width: 62ch; margin: 0; }
+.body { flex: 1; min-height: 0; padding: 26px 32px 22px; display: flex; flex-direction: column; gap: 18px; overflow: auto; }
+h1, h2 { font-family: var(--display); font-weight: 600; margin: 0; text-wrap: balance; letter-spacing: .01em; }
+h1 { font-size: clamp(32px, 4.6vw, 52px); line-height: 1.1; letter-spacing: -.01em; }
+h2 { font-size: clamp(22px, 2.9vw, 32px); line-height: 1.15; letter-spacing: -.005em; }
 p { margin: 0; }
+.lede { color: var(--muted); font-size: clamp(15px, 1.8vw, 20px); max-width: 60ch; }
 .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+code { font-family: var(--mono); font-size: .88em; }
 
-.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; min-height: 0; }
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
 .cols > * { min-width: 0; }
-.list { margin: 0; padding: 0; list-style: none; display: grid; gap: 9px; }
-.list li { display: grid; grid-template-columns: 14px 1fr; gap: 8px; font-size: clamp(14px, 1.5vw, 17px); }
-.list li::before { content: ""; width: 8px; height: 8px; margin-top: .5em; background: var(--accent); border-radius: 1px; }
+.list { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.list li { display: grid; grid-template-columns: 14px 1fr; gap: 8px; font-size: clamp(15px, 1.6vw, 18px); }
+.list li::before { content: ""; width: 8px; height: 8px; margin-top: .55em; background: var(--accent); border-radius: 1px; }
 
-/* numeros-chave */
-.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
 .stat { border-top: 3px solid var(--accent); padding-top: 8px; min-width: 0; }
-.stat .v { font-family: var(--display); font-weight: 700; font-size: clamp(26px, 3.6vw, 42px); line-height: 1; font-variant-numeric: tabular-nums; }
+.stat .v { font-family: var(--display); font-weight: 600; font-size: clamp(28px, 3.8vw, 44px); line-height: 1; font-variant-numeric: tabular-nums; }
 .stat .k { font-size: 13px; color: var(--muted); }
 
-/* diagrama de fluxo */
 .flow-wrap { overflow-x: auto; }
-.flow { width: 100%; min-width: 640px; height: auto; display: block; }
-.flow text { font-family: var(--mono); font-size: 12px; fill: var(--ink); }
-.flow .sub { fill: var(--muted); font-size: 10.5px; }
+.flow { width: 100%; min-width: 660px; height: auto; display: block; }
+.flow text { font-family: var(--mono); font-size: 13px; fill: var(--ink); }
+.flow .sub { fill: var(--muted); font-size: 11px; }
 .flow .node { fill: var(--panel); stroke: var(--line); stroke-width: 1.5; }
 .flow .node.hot { stroke: var(--accent); stroke-width: 2; }
-.flow .node.dlq { stroke: var(--warn); }
+.flow .node.dlq { stroke: var(--warn); stroke-width: 1.5; }
 .flow .edge { stroke: var(--muted); stroke-width: 1.5; fill: none; }
 .flow .edge.warn { stroke: var(--warn); stroke-dasharray: 4 3; }
-.flow .lane { font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em; fill: var(--accent); }
+.flow .lane { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; fill: var(--accent); }
 .flow .arrow { fill: var(--muted); }
 .flow .arrow.warn { fill: var(--warn); }
 
-/* barras de importancia */
-.bars { display: grid; gap: 6px; }
-.bar { display: grid; grid-template-columns: 190px 1fr 56px; align-items: center; gap: 10px; font-size: 13px; }
-.bar .n { font-family: var(--mono); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.bar .t { height: 12px; background: var(--line); border-radius: 2px; overflow: hidden; }
-.bar .f { height: 100%; background: var(--muted); }
-.bar.clima .f { background: var(--flap); }
-.bar.clima .n { color: var(--ink); font-weight: 600; }
-.bar .x { font-family: var(--mono); font-size: 12px; text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
-
-/* tabela */
-.tbl-wrap { overflow-x: auto; }
-table { border-collapse: collapse; width: 100%; font-size: 14px; }
-th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); }
-th { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
-td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
-.pill { display: inline-block; font-family: var(--mono); font-size: 11px; padding: 1px 7px; border-radius: 10px; border: 1px solid currentColor; }
-.pill.ok { color: var(--ok); }
-.pill.warn { color: var(--warn); }
-
-/* terminal */
 pre.term {
   margin: 0; background: var(--code-bg); color: var(--code-ink); border-radius: 5px;
-  padding: 12px 14px; font-family: var(--mono); font-size: 12.5px; line-height: 1.55;
+  padding: 14px 16px; font-family: var(--mono); font-size: 13px; line-height: 1.55;
   overflow-x: auto; white-space: pre;
 }
 pre.term .c { color: var(--code-dim); }
-pre.term .p { color: var(--flap); }
+pre.term .k { color: var(--code-key); }
 
-.note { font-size: 13px; color: var(--muted); border-left: 3px solid var(--flap); padding-left: 10px; }
+.tbl-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 15px; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+th { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.pill { display: inline-block; font-family: var(--mono); font-size: 11px; padding: 1px 7px; border-radius: 10px; border: 1px solid currentColor; color: var(--ok); }
 
-/* roteiro */
-.steps { display: grid; gap: 7px; }
-.step { display: grid; grid-template-columns: 52px 1fr; gap: 12px; align-items: start; }
-.step.prep { grid-template-columns: 14px 1fr; }
-.step .t { font-family: var(--mono); font-size: 13px; font-weight: 600; color: var(--accent); font-variant-numeric: tabular-nums; padding-top: 2px; }
-.step code { font-family: var(--mono); font-size: 12.5px; background: var(--bg); border: 1px solid var(--line); padding: 1px 5px; border-radius: 3px; word-break: break-word; }
-.step .d { font-size: 14px; min-width: 0; }
-.step .d small { color: var(--muted); display: block; font-size: 12.5px; }
+.note { font-size: 14px; color: var(--muted); border-left: 3px solid var(--accent); padding-left: 10px; }
 
-.handoff { margin-top: auto; display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
-.handoff b { background: var(--flap); color: var(--flap-ink); padding: 2px 8px; border-radius: 3px; }
-
-/* controles */
 .controls { width: min(100%, 1100px); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .controls button {
   font-family: var(--mono); font-size: 13px; background: var(--panel); color: var(--ink);
@@ -157,284 +131,179 @@ pre.term .p { color: var(--flap); }
 .dots { display: flex; gap: 6px; flex-wrap: wrap; }
 .dots button { width: 26px; height: 6px; border-radius: 3px; border: 0; background: var(--line); cursor: pointer; padding: 0; }
 .dots button[aria-current="true"] { background: var(--accent); }
-.dots button.p2 { background: color-mix(in srgb, var(--flap) 40%, var(--line)); }
-.dots button.p2[aria-current="true"] { background: var(--flap); }
 .count { margin-left: auto; font-family: var(--mono); font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
 
 @media (max-width: 760px) {
   html, body { height: auto; }
   .slide { flex: none; }
-  .cols, .stats { grid-template-columns: 1fr; }
+  .cols { grid-template-columns: 1fr; }
   .stats { grid-template-columns: 1fr 1fr; }
-  .bar { grid-template-columns: 130px 1fr 44px; }
-  .body { padding: 16px; }
+  .body { padding: 18px 16px; }
 }
 @media (prefers-reduced-motion: no-preference) {
-  .slide:not([hidden]) { animation: in .22s ease-out; }
+  .slide:not([hidden]) { animation: in .2s ease-out; }
   @keyframes in { from { transform: translateY(4px); } to { transform: none; } }
 }
 </style>
-</head><body>
+</head>
+<body>
 
 <main class="deck" id="deck">
 
-<!-- 1. Capa -->
-<section class="slide" data-part="1" aria-label="Capa">
-  <div class="band"><span class="gate">T2</span> PDM_BIA · INF/UFG · 23/10/2026 <span class="who">Plataforma de atraso de voos</span></div>
-  <div class="body" style="justify-content:center; gap:18px">
-    <div class="eyebrow">Trabalho 2 · streaming e serving</div>
-    <h1>O tempo no aeroporto entra no modelo, e o modelo responde em menos de um segundo.</h1>
-    <p class="lede">Do Medallion do T1 a um sistema em produção no GCP: observações meteorológicas chegam em streaming pelo Pub/Sub e pelo Dataflow, e uma API no Cloud Run serve o modelo de atraso pelo Vertex AI.</p>
+<section class="slide" aria-label="Capa">
+  <div class="band"><span class="gate">T2</span> PDM_BIA · INF/UFG <span class="right">23/10/2026</span></div>
+  <div class="body" style="justify-content:center; gap:22px">
+    <div class="eyebrow">Trabalho 2 · Streaming e serving</div>
+    <h1>Predição de atraso de voos com meteorologia em streaming</h1>
+    <p class="lede">Observações meteorológicas dos aeródromos entram em tempo real por Pub/Sub e Dataflow até o BigQuery. O modelo de atraso, retreinado com essas variáveis, é servido pelo Vertex AI através de uma API no Cloud Run.</p>
     <div class="stats">
-      <div class="stat"><div class="v">6,19 mi</div><div class="k">voos na Gold (2016–2024)</div></div>
-      <div class="stat"><div class="v">6,47 mi</div><div class="k">observações METAR, 127 estações</div></div>
+      <div class="stat"><div class="v">6,47 mi</div><div class="k">observações METAR (2016–2024)</div></div>
+      <div class="stat"><div class="v">127</div><div class="k">estações meteorológicas</div></div>
       <div class="stat"><div class="v">0,16 s</div><div class="k">lag médio do streaming</div></div>
-      <div class="stat"><div class="v">729 ms</div><div class="k">p95 da API (meta: 800)</div></div>
+      <div class="stat"><div class="v">100%</div><div class="k">eventos válidos gravados no ensaio</div></div>
     </div>
-    <div class="handoff">Apresentam: <b>Parte 1 · Igor</b> <b>Parte 2 · colega</b></div>
   </div>
 </section>
 
-<!-- 2. Arquitetura -->
-<section class="slide" data-part="1" aria-label="Arquitetura">
-  <div class="band"><span class="gate">01</span> Arquitetura <span class="who">Parte 1 · <b>Igor</b></span></div>
+<section class="slide" aria-label="Fonte de dados">
+  <div class="band"><span class="gate">01</span> Fonte do streaming</div>
   <div class="body">
-    <h2>Dois caminhos independentes: se um falhar, o outro segue de pé</h2>
+    <h2>A meteorologia é o dado que nasce em fluxo contínuo</h2>
+    <div class="cols">
+      <div style="display:grid; gap:10px; align-content:start">
+        <div class="eyebrow">Voos · VRA/ANAC</div>
+        <ul class="list">
+          <li>Publicados mensalmente, após a realização dos voos.</li>
+          <li>Processados em batch, na arquitetura Medallion do T1.</li>
+        </ul>
+      </div>
+      <div style="display:grid; gap:10px; align-content:start">
+        <div class="eyebrow">Meteorologia · METAR</div>
+        <ul class="list">
+          <li>Boletim padrão da aviação, emitido de hora em hora por aeródromo.</li>
+          <li>Fonte: Iowa Environmental Mesonet, rede BR__ASOS.</li>
+          <li>Cobre 65 dos 100 aeródromos de origem e 92,9% dos voos.</li>
+        </ul>
+      </div>
+    </div>
+    <pre class="term"><span class="c"># exemplo: uma observação METAR e as features que ela gera</span>
+SBGO 201800Z 32008KT 9999 <span class="k">TS</span> SCT030 27/22 Q1012
+  clima_velocidade_vento_kmh=14.8  clima_visibilidade_m=9999  clima_fenomenos="TS"
+  clima_cobertura_nuvens="SCT"     clima_temperatura_c=27.0   clima_pressao_hpa=1012</pre>
+  </div>
+</section>
+
+<section class="slide" aria-label="Pipeline de streaming">
+  <div class="band"><span class="gate">02</span> Pipeline de streaming</div>
+  <div class="body">
+    <h2>Pub/Sub → Dataflow → BigQuery, com dead-letter</h2>
     <div class="flow-wrap">
-    <svg class="flow" viewBox="0 0 1000 300" role="img" aria-label="Fluxo: simulador METAR para Pub/Sub, Dataflow e BigQuery, com dead-letter; cliente para Cloud Run, que chama o Vertex AI no predict e o BigQuery ML no explain">
+    <svg class="flow" viewBox="0 0 1000 210" role="img" aria-label="Simulador publica no Pub/Sub anac-metar; o Dataflow valida contra o contrato de features e grava no BigQuery; mensagens invalidas vao para o topico anac-metar-dlq">
       <defs>
         <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="arrow" d="M0,0 L10,5 L0,10 z"/></marker>
         <marker id="arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="arrow warn" d="M0,0 L10,5 L0,10 z"/></marker>
       </defs>
-      <text class="lane" x="10" y="20">STREAMING · METAR</text>
-      <rect class="node" x="10" y="34" width="170" height="58" rx="4"/>
-      <text x="22" y="58">simulator_metar.py</text><text class="sub" x="22" y="77">relê o histórico</text>
-      <rect class="node hot" x="230" y="34" width="150" height="58" rx="4"/>
-      <text x="242" y="58">Pub/Sub</text><text class="sub" x="242" y="77">anac-metar</text>
-      <rect class="node hot" x="430" y="34" width="180" height="58" rx="4"/>
-      <text x="442" y="58">Dataflow (Beam)</text><text class="sub" x="442" y="77">valida contra o contrato</text>
-      <rect class="node" x="660" y="34" width="200" height="58" rx="4"/>
-      <text x="672" y="58">BigQuery</text><text class="sub" x="672" y="77">tb_anac_stream_metar</text>
-      <rect class="node dlq" x="660" y="108" width="200" height="44" rx="4"/>
-      <text x="672" y="128">anac-metar-dlq</text><text class="sub" x="672" y="143">payload + motivo</text>
-      <path class="edge" d="M180,63 H228" marker-end="url(#ar)"/>
-      <path class="edge" d="M380,63 H428" marker-end="url(#ar)"/>
-      <path class="edge" d="M610,63 H658" marker-end="url(#ar)"/>
-      <path class="edge warn" d="M520,92 V130 H658" marker-end="url(#arw)"/>
-
-      <text class="lane" x="10" y="188">PREDIÇÃO</text>
-      <rect class="node" x="10" y="202" width="170" height="58" rx="4"/>
-      <text x="22" y="226">curl + token</text><text class="sub" x="22" y="245">payload autocontido</text>
-      <rect class="node hot" x="230" y="202" width="150" height="58" rx="4"/>
-      <text x="242" y="226">Cloud Run</text><text class="sub" x="242" y="245">anac-api (FastAPI)</text>
-      <rect class="node hot" x="430" y="186" width="180" height="44" rx="4"/>
-      <text x="442" y="206">Vertex AI Endpoint</text><text class="sub" x="442" y="221">/predict</text>
-      <rect class="node" x="430" y="240" width="180" height="44" rx="4"/>
-      <text x="442" y="260">BigQuery ML</text><text class="sub" x="442" y="275">/explain</text>
-      <rect class="node" x="660" y="186" width="200" height="44" rx="4"/>
-      <text x="672" y="206">Model Registry</text><text class="sub" x="672" y="221">registro direto do BQML</text>
-      <path class="edge" d="M180,231 H228" marker-end="url(#ar)"/>
-      <path class="edge" d="M380,222 H428" marker-end="url(#ar)"/>
-      <path class="edge" d="M380,250 Q405,262 428,262" marker-end="url(#ar)"/>
-      <path class="edge" d="M658,208 H612" marker-end="url(#ar)"/>
-      <rect class="node" x="880" y="34" width="110" height="250" rx="4"/>
-      <text x="892" y="58">features</text><text x="892" y="74">.json</text>
-      <text class="sub" x="892" y="98">fonte única:</text><text class="sub" x="892" y="114">Gold, CREATE</text><text class="sub" x="892" y="130">MODEL, API e</text><text class="sub" x="892" y="146">Dataflow</text>
-      <text class="sub" x="892" y="178">19 features</text><text class="sub" x="892" y="194">10 de voo</text><text class="sub" x="892" y="210">9 de clima</text>
+      <rect class="node" x="10" y="30" width="190" height="62" rx="4"/>
+      <text x="24" y="56">Simulador</text><text class="sub" x="24" y="76">relê o histórico METAR</text>
+      <rect class="node hot" x="250" y="30" width="170" height="62" rx="4"/>
+      <text x="264" y="56">Pub/Sub</text><text class="sub" x="264" y="76">tópico anac-metar</text>
+      <rect class="node hot" x="470" y="30" width="200" height="62" rx="4"/>
+      <text x="484" y="56">Dataflow (Beam)</text><text class="sub" x="484" y="76">valida cada mensagem</text>
+      <rect class="node" x="720" y="30" width="270" height="62" rx="4"/>
+      <text x="734" y="56">BigQuery</text><text class="sub" x="734" y="76">tb_anac_stream_metar (particionada)</text>
+      <rect class="node dlq" x="720" y="122" width="270" height="62" rx="4"/>
+      <text x="734" y="148">Pub/Sub · dead-letter</text><text class="sub" x="734" y="168">anac-metar-dlq: payload + motivo</text>
+      <rect class="node" x="470" y="122" width="200" height="62" rx="4"/>
+      <text x="484" y="148">features.json</text><text class="sub" x="484" y="168">contrato único</text>
+      <path class="edge" d="M200,61 H248" marker-end="url(#ar)"/>
+      <path class="edge" d="M420,61 H468" marker-end="url(#ar)"/>
+      <path class="edge" d="M670,61 H718" marker-end="url(#ar)"/>
+      <path class="edge warn" d="M670,80 Q700,80 700,120 Q700,153 718,153" marker-end="url(#arw)"/>
+      <path class="edge" d="M570,122 V94" marker-end="url(#ar)"/>
     </svg>
     </div>
-    <p class="note">Infra mínima em Terraform (Pub/Sub, Artifact Registry, buckets). O que cobra por hora (endpoint, Dataflow, instância quente) liga e desliga por script.</p>
+    <ul class="list">
+      <li>O Dataflow valida tipo, faixa e domínio de cada campo contra o mesmo contrato usado pelo modelo e pela API.</li>
+      <li>Campos fora do contrato são recusados, o que impede que um dado posterior à partida chegue à tabela.</li>
+      <li>Mensagens inválidas seguem para o dead-letter com o payload original e o motivo da recusa.</li>
+    </ul>
   </div>
 </section>
 
-<!-- 3. Por que METAR -->
-<section class="slide" data-part="1" aria-label="Por que METAR">
-  <div class="band"><span class="gate">02</span> Fonte em streaming <span class="who">Parte 1 · <b>Igor</b></span></div>
+<section class="slide" aria-label="Resultados do streaming">
+  <div class="band"><span class="gate">03</span> Resultados do streaming</div>
   <div class="body">
-    <h2>Por que o streaming é de meteorologia, e não de voos</h2>
-    <div class="cols">
-      <div>
-        <div class="eyebrow">VRA / ANAC</div>
-        <ul class="list" style="margin-top:8px">
-          <li>Publicado <b>uma vez por mês</b>, depois que os voos aconteceram.</li>
-          <li>Não existe fonte de voo em tempo real: streaming seria só simulação.</li>
-          <li>Segue em <b>batch</b>, na Medallion do T1.</li>
-        </ul>
-      </div>
-      <div>
-        <div class="eyebrow">METAR</div>
-        <ul class="list" style="margin-top:8px">
-          <li>Boletim padrão da aviação, emitido <b>de hora em hora</b> por aeródromo.</li>
-          <li>Dado que nasce em fluxo contínuo. Exemplo: <code style="font-family:var(--mono);font-size:12px">SBGO 201800Z 32008KT 9999 TS SCT030</code></li>
-          <li>Fonte: Iowa Environmental Mesonet, rede BR__ASOS, sem cadastro.</li>
-        </ul>
-      </div>
-    </div>
-    <div class="stats">
-      <div class="stat"><div class="v">65 / 100</div><div class="k">aeródromos de origem com estação</div></div>
-      <div class="stat"><div class="v">92,9%</div><div class="k">do volume de voos coberto</div></div>
-      <div class="stat"><div class="v">3 h</div><div class="k">janela antes da partida prevista</div></div>
-      <div class="stat"><div class="v">53 s</div><div class="k">join voo × METAR, 9 anos</div></div>
-    </div>
-    <p class="note">Sem vazamento: o voo só recebe o METAR observado <b>antes</b> da partida prevista. O join por (aeródromo, hora truncada) caiu de mais de 3 h para 53 s.</p>
-  </div>
-</section>
-
-<!-- 4. Streaming ao vivo -->
-<section class="slide" data-part="1" aria-label="Streaming ao vivo">
-  <div class="band"><span class="gate">03</span> Ao vivo · streaming <span class="who">Parte 1 · <b>Igor</b></span></div>
-  <div class="body">
-    <h2>Observações chegando no BigQuery, e o lixo indo para o dead-letter</h2>
-    <div class="cols">
-<pre class="term"><span class="c"># 1. publica 100 observações reais de 20/12/2024</span>
-<span class="p">$</span> ./scripts/t2/simulate_metar.sh --limite 100
-run_id=sim-metar-… observacoes=100
-concluido: 100 eventos publicados
-
-<span class="c"># 2. no console do BigQuery</span>
-monitor_stream_metar.sql
-observacoes  estacoes  lag_medio_s
-        100        59         0.16
-
-<span class="c"># 3. valor fora do contrato</span>
-<span class="p">$</span> ./scripts/t2/simulate_metar.sh --invalido</pre>
-      <div style="display:grid; gap:12px; align-content:start; min-width:0">
-        <ul class="list">
-          <li>O Dataflow valida cada mensagem contra o <b>mesmo contrato</b> da API.</li>
-          <li>Campos fora do contrato são recusados: um campo pós-partida nunca chega à tabela.</li>
-          <li>O dead-letter guarda o payload original e o motivo.</li>
-        </ul>
-<pre class="term"><span class="c"># anac-metar-dlq-inspecao</span>
-{"error": "clima_cobertura_nuvens='XXX'
-           fora do dominio",
- "payload": "{…\"sg_icao\":\"SBGO\"…}"}</pre>
-      </div>
-    </div>
-    <div class="handoff">Passa a palavra · <b>Parte 2</b></div>
-  </div>
-</section>
-
-<!-- 5. Modelo com clima -->
-<section class="slide" data-part="2" aria-label="Modelo com clima">
-  <div class="band"><span class="gate">04</span> Modelo <span class="who">Parte 2 · <b>colega</b></span></div>
-  <div class="body">
-    <h2>O M1 foi retreinado com 9 features de clima: trovoada pesa, o resto quase nada</h2>
-    <div class="cols">
-      <div style="min-width:0">
-        <div class="eyebrow" style="margin-bottom:8px">Importância global (ML.GLOBAL_EXPLAIN)</div>
-        <div class="bars" id="bars"></div>
-      </div>
-      <div style="display:grid; gap:12px; align-content:start; min-width:0">
-        <div class="tbl-wrap">
-        <table>
-          <thead><tr><th>Últimos 60 dias</th><th>AUC</th><th>Precisão</th><th>Recall</th></tr></thead>
-          <tbody>
-            <tr><td>M1 boosted tree</td><td class="num"><b>0,6539</b></td><td class="num">0,326</td><td class="num">0,675</td></tr>
-            <tr><td>Baseline logística</td><td class="num">0,6516</td><td class="num">0,317</td><td class="num">0,721</td></tr>
-          </tbody>
-        </table>
-        </div>
-        <ul class="list">
-          <li>Alvo: partida &gt; 15 min após a prevista (OTP15). Saída: probabilidade.</li>
-          <li>Split temporal: os últimos 60 dias (151.469 voos) nunca entram no treino.</li>
-          <li>Ganho do clima: +0,0005 de AUC no geral, +0,0013 nos voos com clima preenchido.</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- 6. API e Vertex -->
-<section class="slide" data-part="2" aria-label="API e Vertex">
-  <div class="band"><span class="gate">05</span> Serving <span class="who">Parte 2 · <b>colega</b></span></div>
-  <div class="body">
-    <h2>Mesma probabilidade no BigQuery e no Vertex, até a sexta casa</h2>
+    <h2>Ensaio no GCP: 100 observações de 59 aeródromos</h2>
     <div class="cols">
       <div class="tbl-wrap">
       <table>
-        <thead><tr><th>Teste</th><th>Resultado</th><th></th></tr></thead>
+        <thead><tr><th>Medida</th><th>Resultado</th><th></th></tr></thead>
         <tbody>
-          <tr><td>Voo com clima (trovoada)</td><td class="num">0,613587</td><td><span class="pill ok">= ML.PREDICT</span></td></tr>
-          <tr><td>Voo sem estação (clima nulo)</td><td class="num">0,602561</td><td><span class="pill ok">= ML.PREDICT</span></td></tr>
-          <tr><td>Payload inválido</td><td class="num">HTTP 422</td><td><span class="pill ok">ok</span></td></tr>
-          <tr><td>Sem token</td><td class="num">HTTP 403</td><td><span class="pill ok">ok</span></td></tr>
-          <tr><td>Latência, 50 chamadas</td><td class="num">p95 729 ms</td><td><span class="pill ok">&lt; 800</span></td></tr>
-          <tr><td>Log de predições</td><td class="num">52 / 52</td><td><span class="pill ok">gravadas</span></td></tr>
+          <tr><td>Eventos publicados / gravados</td><td class="num">100 / 100</td><td><span class="pill">ok</span></td></tr>
+          <tr><td>Duplicatas na tabela</td><td class="num">0</td><td><span class="pill">ok</span></td></tr>
+          <tr><td>Lag médio (publicação → BigQuery)</td><td class="num">0,16 s</td><td><span class="pill">ok</span></td></tr>
+          <tr><td>Lag máximo</td><td class="num">1,63 s</td><td><span class="pill">ok</span></td></tr>
+          <tr><td>Evento inválido no dead-letter</td><td class="num">1 / 1</td><td><span class="pill">ok</span></td></tr>
         </tbody>
       </table>
       </div>
-      <div style="display:grid; gap:10px; align-content:start; min-width:0">
-        <div class="eyebrow">Bug encontrado no ensaio</div>
-        <p style="font-size:15px">Com o modelo novo, todo <code style="font-family:var(--mono);font-size:13px">/predict</code> dava 502. O container do Vertex recusa <code style="font-family:var(--mono);font-size:13px">null</code> numérico, e <code style="font-family:var(--mono);font-size:13px">NaN</code> dá outra probabilidade (0,6072).</p>
-        <p style="font-size:15px">O BigQuery ML troca o nulo pela <b>média do treino</b>. A API agora faz o mesmo antes de chamar o endpoint, com as médias lidas de <code style="font-family:var(--mono);font-size:13px">ML.FEATURE_INFO</code>.</p>
-        <p class="note">O modelo é servido pelo registro direto BQML → Vertex, sem exportar artefato: o que está no endpoint é o modelo vigente no BigQuery.</p>
-      </div>
+<pre class="term"><span class="c">-- monitor_stream_metar.sql</span>
+observacoes  estacoes  lag_medio_s
+        100        59         0.16
+
+<span class="c"># anac-metar-dlq</span>
+{"error": "clima_cobertura_nuvens='XXX'
+           fora do dominio",
+ "payload": "{…\"sg_icao\":\"SBGO\"…}"}</pre>
     </div>
+    <p class="note">O simulador relê observações reais e desloca o horário para o presente. Nenhuma etapa da demonstração depende de fonte externa.</p>
   </div>
 </section>
 
-<!-- 7. Predição ao vivo -->
-<section class="slide" data-part="2" aria-label="Predição ao vivo">
-  <div class="band"><span class="gate">06</span> Ao vivo · predição <span class="who">Parte 2 · <b>colega</b></span></div>
+<section class="slide" aria-label="Modelo e serving">
+  <div class="band"><span class="gate">04</span> Modelo e serving</div>
   <div class="body">
-    <h2>Voo GLO de Goiânia para Guarulhos, sexta, 18 h, com trovoada</h2>
+    <h2>O modelo retreinado com clima é servido pelo Vertex AI</h2>
     <div class="cols">
-<pre class="term"><span class="p">$</span> ./scripts/t2/predict.sh
-{"prob_atraso": 0.613587,
- "modelo": "vertex:7635840523822956544",
- "contrato_versao": 2}
-
-<span class="p">$</span> ./scripts/t2/predict.sh --sem-clima
-{"prob_atraso": 0.602561, …}
-
-<span class="p">$</span> ./scripts/t2/predict.sh --invalido
-HTTP 422
-
-<span class="p">$</span> ./scripts/t2/latency.sh 30
-p50=395 ms  p95=729 ms</pre>
-<pre class="term"><span class="p">$</span> ./scripts/t2/predict.sh --explain
-<span class="c"># por que 61%? base do modelo: 50%</span>
-mes                     +0.091
-hora_partida_prevista   +0.067
-sg_empresa_icao         +0.061
-clima_fenomenos (TS)    +0.042
-cd_tipo_linha           -0.019
-
-<span class="c"># ML.EXPLAIN_PREDICT no BigQuery,
-# fora do caminho medido do /predict</span></pre>
+      <ul class="list">
+        <li>Boosted tree (BigQuery ML) com 19 variáveis: 10 do voo e 9 meteorológicas.</li>
+        <li>Fenômenos como trovoada aparecem entre as 6 variáveis de maior peso.</li>
+        <li>API FastAPI no Cloud Run, privada, com validação pelo contrato e endpoint de explicabilidade.</li>
+        <li>Registro direto do BigQuery ML no Vertex Model Registry.</li>
+      </ul>
+      <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Teste da API</th><th>Resultado</th></tr></thead>
+        <tbody>
+          <tr><td>Voo com trovoada na origem</td><td class="num">0,6136</td></tr>
+          <tr><td>Aeródromo sem estação</td><td class="num">0,6026</td></tr>
+          <tr><td>Paridade com o BigQuery ML</td><td class="num">exata</td></tr>
+          <tr><td>Payload inválido / sem token</td><td class="num">422 / 403</td></tr>
+          <tr><td>Latência p95 (50 chamadas)</td><td class="num">729 ms</td></tr>
+        </tbody>
+      </table>
+      </div>
     </div>
-    <p class="note">Cada <code style="font-family:var(--mono);font-size:12px">/predict</code> fica registrado em tb_anac_predicoes_log, depois da resposta. Com o número do voo, dá para comparar com o resultado real e medir a acurácia em produção.</p>
+    <p class="note">AUC de 0,6539 nos últimos 60 dias, com split temporal, contra 0,6516 da regressão logística de referência.</p>
   </div>
 </section>
 
-<!-- 8. Roteiro -->
-<section class="slide" data-part="0" aria-label="Roteiro da demo">
-  <div class="band"><span class="gate">RUN</span> Roteiro de operação · não projetar <span class="who">2,5 min + 2,5 min</span></div>
-  <div class="body">
+<section class="slide" aria-label="Demonstração">
+  <div class="band"><span class="gate">05</span> Demonstração</div>
+  <div class="body" style="justify-content:center">
+    <h2>Em execução no console do GCP</h2>
     <div class="cols">
-      <div class="steps">
-        <div class="eyebrow">Véspera · qui 22/10, à noite</div>
-        <div class="step prep"><span class="t">·</span><div class="d"><code>gcloud config configurations activate anac</code> e <code>gcloud auth login --update-adc</code></div></div>
-        <div class="step prep"><span class="t">·</span><div class="d"><code>./scripts/t2/vertex_deploy.sh</code><small>15 a 35 min. Cobra ≈ US$ 0,10/h a partir daqui.</small></div></div>
-        <div class="step prep"><span class="t">·</span><div class="d"><code>./scripts/t2/predict.sh</code><small>tem que dar 0,613587</small></div></div>
-        <div class="eyebrow" style="margin-top:6px">Dia · até 30 min antes</div>
-        <div class="step prep"><span class="t">·</span><div class="d"><code>gcloud auth login --update-adc</code><small>renova a sessão perto da hora</small></div></div>
-        <div class="step prep"><span class="t">·</span><div class="d"><code>./scripts/t2/api_deploy.sh --demo</code><small>instância quente, sem cold start</small></div></div>
-        <div class="step prep"><span class="t">·</span><div class="d"><code>./scripts/t2/dataflow_start_metar.sh</code><small>volta em ~16 s; o worker leva ~4 min</small></div></div>
-        <div class="step prep"><span class="t">·</span><div class="d"><code>./scripts/t2/predict.sh --health</code> e um <code>simulate_metar.sh --limite 5</code> de aquecimento</div></div>
-      </div>
-      <div class="steps">
-        <div class="eyebrow">Ao vivo</div>
-        <div class="step"><span class="t">0:30</span><div class="d"><code>./scripts/t2/simulate_metar.sh --limite 100</code></div></div>
-        <div class="step"><span class="t">1:10</span><div class="d">Console do BigQuery: <code>monitor_stream_metar.sql</code><small>já aberto numa aba; contagem e lag</small></div></div>
-        <div class="step"><span class="t">1:45</span><div class="d"><code>./scripts/t2/simulate_metar.sh --invalido</code>, depois o pull do DLQ<small>o pull consome a mensagem: mostrar uma vez só</small></div></div>
-        <div class="step"><span class="t">3:00</span><div class="d"><code>./scripts/t2/predict.sh</code> e <code>--sem-clima</code></div></div>
-        <div class="step"><span class="t">3:30</span><div class="d"><code>./scripts/t2/predict.sh --explain</code></div></div>
-        <div class="step"><span class="t">4:00</span><div class="d"><code>./scripts/t2/predict.sh --invalido</code></div></div>
-        <div class="step"><span class="t">4:20</span><div class="d"><code>./scripts/t2/latency.sh 20</code><small>20 chamadas cabem em ~10 s</small></div></div>
-        <div class="eyebrow" style="margin-top:6px">Depois · no mesmo dia</div>
-        <div class="step prep"><span class="t">·</span><div class="d"><code>dataflow_drain_metar.sh</code>, <code>vertex_undeploy.sh</code>, <code>api_deploy.sh</code></div></div>
-      </div>
+      <ul class="list">
+        <li>Job de streaming ativo no Dataflow.</li>
+        <li>Publicação de observações no Pub/Sub.</li>
+        <li>Chegada dos dados no BigQuery.</li>
+        <li>Mensagem inválida retida no dead-letter.</li>
+      </ul>
+      <ul class="list">
+        <li>Modelo implantado no endpoint do Vertex AI.</li>
+        <li>Predição pela API no Cloud Run.</li>
+        <li>Explicação da previsão por variável.</li>
+      </ul>
     </div>
   </div>
 </section>
@@ -450,24 +319,6 @@ cd_tipo_linha           -0.019
 
 <script>
 (function () {
-  // importancia global medida em 21/10/2026 (ML.GLOBAL_EXPLAIN do M1 de producao)
-  var imp = [
-    ["sg_empresa_icao", 0.0595], ["hora_partida_prevista", 0.0542], ["cd_tipo_linha", 0.0386],
-    ["mes", 0.0312], ["nr_assentos_ofertados", 0.0209], ["clima_fenomenos", 0.0127],
-    ["duracao_prevista_min", 0.0080], ["sg_equipamento_icao", 0.0080], ["dia_semana", 0.0077],
-    ["sg_icao_origem", 0.0063], ["clima_umidade_relativa_pct", 0.0044], ["clima_visibilidade_m", 0.0029]
-  ];
-  var max = imp[0][1], bars = document.getElementById("bars");
-  imp.forEach(function (r) {
-    var row = document.createElement("div");
-    row.className = "bar" + (r[0].indexOf("clima_") === 0 ? " clima" : "");
-    row.innerHTML = '<span class="n"></span><span class="t"><span class="f"></span></span><span class="x"></span>';
-    row.querySelector(".n").textContent = r[0];
-    row.querySelector(".f").style.width = (r[1] / max * 100).toFixed(1) + "%";
-    row.querySelector(".x").textContent = r[1].toFixed(4).replace(".", ",");
-    bars.appendChild(row);
-  });
-
   var slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
   var dots = document.getElementById("dots"), count = document.getElementById("count");
   var i = 0;
@@ -476,7 +327,6 @@ cd_tipo_linha           -0.019
     var b = document.createElement("button");
     b.type = "button";
     b.setAttribute("aria-label", "Ir ao slide " + (k + 1) + ": " + s.getAttribute("aria-label"));
-    if (s.dataset.part === "2") b.className = "p2";
     b.addEventListener("click", function () { go(k); });
     dots.appendChild(b);
   });
@@ -498,4 +348,5 @@ cd_tipo_linha           -0.019
   go(i);
 })();
 </script>
-</body></html>
+</body>
+</html>

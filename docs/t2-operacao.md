@@ -110,39 +110,62 @@ Regras:
 
 ## 4. Roteiro da demo (5 min)
 
-Preparação na véspera (22/10, à noite):
+A demonstração é feita pelo console do GCP. Duas peças não sobem pelo console e
+ficam ligadas antes, por terminal: o job do Dataflow (o pipeline é Python) e o
+modelo no endpoint do Vertex.
+
+Na véspera (22/10, à noite):
 
 ```bash
 ./scripts/t2/vertex_deploy.sh        # leva de 15 a 35 min
-./scripts/t2/predict.sh              # confere a paridade: 0,6136
+./scripts/t2/predict.sh              # confere a paridade: 0,613587
 ```
 
-Preparação no dia (até 30 min antes):
+No dia (até 30 min antes):
 
 ```bash
 ./scripts/t2/api_deploy.sh --demo    # min-instances=1: sem cold start
-./scripts/t2/dataflow_start_metar.sh # o worker leva ~4 min para processar
-./scripts/t2/predict.sh --health     # aquece a API
+./scripts/t2/dataflow_start_metar.sh # volta em ~16 s; o worker leva ~4 min
+./scripts/t2/simulate_metar.sh --limite 100 --por-segundo 5   # carga inicial
 ```
 
-Ao vivo:
-
-| Tempo | Comando | O que mostrar |
-| --- | --- | --- |
-| 0:45 | `./scripts/t2/simulate_metar.sh --limite 100 --por-segundo 5` | observações publicadas |
-| 1:30 | `sql/streaming/monitor_stream_metar.sql` no console do BigQuery | contagem subindo, lag em segundos |
-| 2:00 | `./scripts/t2/simulate_metar.sh --invalido` | valor fora do contrato vai para o dead-letter |
-| 2:30 | `./scripts/t2/predict.sh` | `prob_atraso` vinda do Vertex, com trovoada no METAR |
-| 2:50 | `./scripts/t2/predict.sh --sem-clima` | aeródromo sem estação: o modelo aceita campos de clima nulos |
-| 3:10 | `./scripts/t2/predict.sh --explain` | quanto cada feature pesou nesta previsão |
-| 3:40 | `./scripts/t2/predict.sh --invalido` | HTTP 422 |
-| 4:00 | `./scripts/t2/latency.sh 30` | p95 da API |
-
-Para conferir o dead-letter:
+Para abrir a API privada no navegador, no Cloud Shell:
 
 ```bash
-gcloud pubsub subscriptions pull anac-metar-dlq-inspecao --limit 5 --auto-ack
+gcloud run services proxy anac-api --project <PROJECT_ID> --region us-central1 --port 8080
 ```
+
+Depois, *Visualização na Web → porta 8080* e `/docs` no fim do endereço. As
+rotas `/predict` e `/explain` trazem exemplos prontos (`com_trovoada`,
+`sem_estacao`, `invalido`).
+
+Ao vivo, pelo console:
+
+| Onde | Ação | O que mostrar |
+| --- | --- | --- |
+| Dataflow → `anac-stream-metar` | abrir o job | pipeline em execução |
+| Pub/Sub → `anac-metar` → Mensagens | publicar a mensagem válida abaixo | observação entrando no tópico |
+| BigQuery | rodar `sql/streaming/monitor_stream_metar.sql` | contagem e lag em segundos |
+| Pub/Sub → `anac-metar` → Mensagens | publicar a mensagem inválida abaixo | valor fora do contrato |
+| Pub/Sub → `anac-metar-dlq-inspecao` → Mensagens | Pull | a mensagem recusada, com o motivo |
+| Vertex AI → Endpoints | abrir `anac-atraso-endpoint` | modelo versão 2 implantado |
+| `/docs` da API | `/predict` com `com_trovoada` e `sem_estacao` | 0,6136 e 0,6026 |
+| `/docs` da API | `/explain` com `com_trovoada` | peso de cada variável |
+| `/docs` da API | `/predict` com `invalido` | HTTP 422 |
+
+Mensagem válida:
+
+```json
+{"event_id":"demo-ui-1","event_ts":"2026-10-23T14:00:00Z","sg_icao":"SBGO","dt_observacao_utc":"2026-10-23T13:00:00","clima_temperatura_c":27.0,"clima_umidade_relativa_pct":74.0,"clima_velocidade_vento_kmh":14.8,"clima_visibilidade_m":9999.0,"clima_pressao_hpa":1012.0,"clima_cobertura_nuvens":"SCT","clima_altura_nuvens_m":900.0,"clima_fenomenos":"TS"}
+```
+
+Mensagem inválida (vai para o dead-letter):
+
+```json
+{"event_id":"demo-ui-2","event_ts":"2026-10-23T14:00:00Z","sg_icao":"SBGO","clima_cobertura_nuvens":"XXX"}
+```
+
+O Pull da assinatura de dead-letter consome a mensagem: ela aparece uma vez só.
 
 Depois da apresentação, no mesmo dia:
 

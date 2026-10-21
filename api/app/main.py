@@ -13,7 +13,9 @@ import time
 from contextlib import asynccontextmanager
 from datetime import date, datetime, timezone
 
-from fastapi import BackgroundTasks, FastAPI, HTTPException, Request
+from typing import Annotated
+
+from fastapi import BackgroundTasks, Body, FastAPI, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from .contract import CONTRACT, FlightFeatures
@@ -25,6 +27,35 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s %(message
 logger = logging.getLogger("anac-api")
 
 FEATURE_TYPES: dict[str, str] = {spec["name"]: spec["type"] for spec in CONTRACT["features"]}
+
+# exemplos prontos na pagina /docs, para testar a API pelo navegador sem montar
+# o JSON a mao: voo GLO Goiania -> Guarulhos, sexta, 18 h
+_VOO_EXEMPLO = {
+    "sg_empresa_icao": "GLO", "sg_icao_origem": "SBGO", "sg_icao_destino": "SBGR",
+    "cd_tipo_linha": "N", "sg_equipamento_icao": "B738", "dia_semana": "6", "mes": "12",
+    "nr_assentos_ofertados": 186, "hora_partida_prevista": 18, "duracao_prevista_min": 75,
+}
+EXEMPLOS = {
+    "com_trovoada": {
+        "summary": "Com METAR: trovoada (TS) na origem",
+        "value": {
+            **_VOO_EXEMPLO,
+            "clima_temperatura_c": 27.0, "clima_umidade_relativa_pct": 74.0,
+            "clima_velocidade_vento_kmh": 14.8, "clima_rajada_vento_kmh": None,
+            "clima_visibilidade_m": 9999.0, "clima_pressao_hpa": 1012.0,
+            "clima_cobertura_nuvens": "SCT", "clima_altura_nuvens_m": 900.0,
+            "clima_fenomenos": "TS",
+        },
+    },
+    "sem_estacao": {
+        "summary": "Sem METAR: aerodromo sem estacao, clima nulo",
+        "value": dict(_VOO_EXEMPLO),
+    },
+    "invalido": {
+        "summary": "Invalido: mes com zero a esquerda e campo pos-partida (422)",
+        "value": {**_VOO_EXEMPLO, "mes": "012", "ds_situacao_partida": "Atraso 30-60"},
+    },
+}
 
 
 class PredictionResponse(BaseModel):
@@ -121,7 +152,7 @@ def create_app(
 
     @app.post("/predict", response_model=PredictionResponse)
     def predict(
-        features: FlightFeatures,  # type: ignore[valid-type]
+        features: Annotated[FlightFeatures, Body(openapi_examples=EXEMPLOS)],  # type: ignore[valid-type]
         request: Request,
         background_tasks: BackgroundTasks,
         nr_voo: str | None = None,
@@ -159,7 +190,10 @@ def create_app(
         )
 
     @app.post("/explain", response_model=ExplanationResponse)
-    def explain(features: FlightFeatures, request: Request) -> ExplanationResponse:  # type: ignore[valid-type]
+    def explain(
+        features: Annotated[FlightFeatures, Body(openapi_examples=EXEMPLOS)],  # type: ignore[valid-type]
+        request: Request,
+    ) -> ExplanationResponse:
         model: Explainer = request.app.state.explainer
         started = time.perf_counter()
         try:
