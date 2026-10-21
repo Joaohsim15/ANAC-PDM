@@ -9,87 +9,100 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: deck de 6 slides navegado por teclado, com faixa de cabecalho por slide.
+/* Layout: pagina unica de rolagem; cada secao ocupa uma tela, com fio azul no topo.
    Paleta e fontes do Modelo de Apresentacao do Instituto de Informatica, as mesmas
    de t1-medallion.html: accent #0072B9 / #005CA1, dk1 #212121, lt2 #F9F9F9. */
 :root {
   --bg: #F9F9F9;
   --panel: #FFFFFF;
   --ink: #212121;
+  --ink-2: #474747;
   --muted: #757575;
   --line: #E0E3E6;
   --accent: #0072B9;
-  --flap: #005CA1;        /* marcador da faixa de cabecalho */
-  --flap-ink: #FFFFFF;
+  --accent-dark: #005CA1;
+  --accent-fill: #E3EFF7;
   --ok: #1D7A4A;
-  --warn: #A32A1E;        /* dead-letter */
+  --warn: #A32A1E;
   --code-bg: #1C2733;
   --code-ink: #E8EBEE;
   --code-dim: #8C99A6;
-  --code-key: #7FBEE8;
-  --display: "IBM Plex Sans", Arial, Helvetica, sans-serif;
-  --body: "IBM Plex Sans", Arial, Helvetica, sans-serif;
+  --sans: "IBM Plex Sans", Arial, Helvetica, sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #10151A; --panel: #171D24; --ink: #E8EBEE; --muted: #869099; --line: #283038;
-    --accent: #4FA6E0; --flap: #4FA6E0; --flap-ink: #0B1218; --ok: #4CC28A; --warn: #DC8072;
-    --code-bg: #0B1015; --code-ink: #E8EBEE; --code-dim: #7D8A96; --code-key: #7FBEE8; color-scheme: dark;
+    --bg: #10151A; --panel: #171D24; --ink: #E8EBEE; --ink-2: #B2BAC2; --muted: #869099; --line: #283038;
+    --accent: #4FA6E0; --accent-dark: #7FBEE8; --accent-fill: #14242F; --ok: #4CC28A; --warn: #DC8072;
+    --code-bg: #0B1015; --code-ink: #E8EBEE; --code-dim: #7D8A96; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #10151A; --panel: #171D24; --ink: #E8EBEE; --muted: #869099; --line: #283038;
-  --accent: #4FA6E0; --flap: #4FA6E0; --flap-ink: #0B1218; --ok: #4CC28A; --warn: #DC8072;
-  --code-bg: #0B1015; --code-ink: #E8EBEE; --code-dim: #7D8A96; --code-key: #7FBEE8; color-scheme: dark;
+  --bg: #10151A; --panel: #171D24; --ink: #E8EBEE; --ink-2: #B2BAC2; --muted: #869099; --line: #283038;
+  --accent: #4FA6E0; --accent-dark: #7FBEE8; --accent-fill: #14242F; --ok: #4CC28A; --warn: #DC8072;
+  --code-bg: #0B1015; --code-ink: #E8EBEE; --code-dim: #7D8A96; color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
-html, body { height: 100%; }
+html { scroll-behavior: smooth; background: var(--bg); }
+@media (min-width: 780px) and (min-height: 620px) { html { scroll-snap-type: y proximity; } }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 body {
   margin: 0; background: var(--bg); color: var(--ink);
-  font-family: var(--body); font-size: 16px; line-height: 1.45;
-  padding-left: max(16px, env(safe-area-inset-left, 0px));
-  padding-right: max(16px, env(safe-area-inset-right, 0px));
-  padding-block: 16px;
-  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  font-family: var(--sans); font-size: 17px; line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
 }
 
-.deck { width: min(100%, 1100px); flex: 1; display: flex; flex-direction: column; min-height: 0; }
-.slide {
-  background: var(--panel); border: 1px solid var(--line); border-radius: 6px;
-  flex: 1; min-height: 0; width: 100%;
-  display: flex; flex-direction: column; overflow: hidden;
+section {
+  scroll-snap-align: start;
+  min-height: 100svh;
+  display: flex; flex-direction: column; justify-content: center;
+  padding-block: 64px;
+  padding-left: max(24px, env(safe-area-inset-left, 0px));
+  padding-right: max(24px, env(safe-area-inset-right, 0px));
+  border-bottom: 1px solid var(--line);
+  position: relative;
 }
-.slide[hidden] { display: none !important; }
+section::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 3px; background: var(--accent); }
+.wrap { width: 100%; max-width: 1100px; margin-inline: auto; display: flex; flex-direction: column; gap: 24px; }
 
-.band {
-  display: flex; align-items: center; gap: 14px;
-  padding: 10px 24px; border-bottom: 1px solid var(--line);
-  font-family: var(--mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted);
+.eyebrow {
+  display: flex; align-items: baseline; gap: 14px;
+  font-family: var(--mono); font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent);
 }
-.band .gate { background: var(--flap); color: var(--flap-ink); font-weight: 600; padding: 2px 8px; border-radius: 3px; letter-spacing: .08em; }
-.band .right { margin-left: auto; }
-
-.body { flex: 1; min-height: 0; padding: 26px 32px 22px; display: flex; flex-direction: column; gap: 18px; overflow: auto; }
-h1, h2 { font-family: var(--display); font-weight: 600; margin: 0; text-wrap: balance; letter-spacing: .01em; }
-h1 { font-size: clamp(32px, 4.6vw, 52px); line-height: 1.1; letter-spacing: -.01em; }
-h2 { font-size: clamp(22px, 2.9vw, 32px); line-height: 1.15; letter-spacing: -.005em; }
+.eyebrow .n { color: var(--muted); }
+h1, h2 { margin: 0; font-weight: 600; text-wrap: balance; }
+h1 { font-size: clamp(34px, 5vw, 56px); line-height: 1.08; letter-spacing: -.015em; max-width: 20ch; }
+h2 { font-size: clamp(26px, 3.4vw, 38px); line-height: 1.15; letter-spacing: -.01em; max-width: 28ch; }
 p { margin: 0; }
-.lede { color: var(--muted); font-size: clamp(15px, 1.8vw, 20px); max-width: 60ch; }
-.eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
-code { font-family: var(--mono); font-size: .88em; }
+.lede { color: var(--ink-2); font-size: clamp(17px, 1.9vw, 21px); max-width: 60ch; }
+.meta { font-family: var(--mono); font-size: 13px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
 
-.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
 .cols > * { min-width: 0; }
+.col-title { font-family: var(--mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
 .list { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
-.list li { display: grid; grid-template-columns: 14px 1fr; gap: 8px; font-size: clamp(15px, 1.6vw, 18px); }
-.list li::before { content: ""; width: 8px; height: 8px; margin-top: .55em; background: var(--accent); border-radius: 1px; }
+.list li { display: grid; grid-template-columns: 14px 1fr; gap: 8px; }
+.list li::before { content: ""; width: 8px; height: 8px; margin-top: .6em; background: var(--accent); border-radius: 1px; }
 
-.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
-.stat { border-top: 3px solid var(--accent); padding-top: 8px; min-width: 0; }
-.stat .v { font-family: var(--display); font-weight: 600; font-size: clamp(28px, 3.8vw, 44px); line-height: 1; font-variant-numeric: tabular-nums; }
-.stat .k { font-size: 13px; color: var(--muted); }
+/* exemplo de METAR: duas observacoes seguidas do mesmo aerodromo */
+.obs-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: 18px; align-items: stretch; }
+.obs { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.obs.alert { border-color: var(--accent); box-shadow: inset 0 3px 0 var(--accent); }
+.obs-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.obs-place { font-weight: 600; font-size: 18px; }
+.obs-time { font-family: var(--mono); font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.obs-sky { font-size: clamp(20px, 2.4vw, 26px); font-weight: 600; line-height: 1.2; }
+.obs.alert .obs-sky { color: var(--accent-dark); }
+.obs-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px 14px; }
+.obs-grid div { min-width: 0; }
+.obs-grid .k { font-size: 12.5px; color: var(--muted); }
+.obs-grid .v { font-family: var(--mono); font-size: 16px; font-variant-numeric: tabular-nums; }
+.obs-grid .v.changed { color: var(--accent-dark); font-weight: 500; }
+.obs-raw { font-family: var(--mono); font-size: 11.5px; color: var(--muted); border-top: 1px dashed var(--line); padding-top: 10px; overflow-wrap: anywhere; }
+.obs-arrow { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.obs-arrow svg { width: 34px; height: 16px; }
+.obs-arrow path { stroke: var(--accent); stroke-width: 2; fill: none; }
 
 .flow-wrap { overflow-x: auto; }
 .flow { width: 100%; min-width: 660px; height: auto; display: block; }
@@ -100,99 +113,105 @@ code { font-family: var(--mono); font-size: .88em; }
 .flow .node.dlq { stroke: var(--warn); stroke-width: 1.5; }
 .flow .edge { stroke: var(--muted); stroke-width: 1.5; fill: none; }
 .flow .edge.warn { stroke: var(--warn); stroke-dasharray: 4 3; }
-.flow .lane { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; fill: var(--accent); }
 .flow .arrow { fill: var(--muted); }
 .flow .arrow.warn { fill: var(--warn); }
 
 pre.term {
-  margin: 0; background: var(--code-bg); color: var(--code-ink); border-radius: 5px;
-  padding: 14px 16px; font-family: var(--mono); font-size: 13px; line-height: 1.55;
+  margin: 0; background: var(--code-bg); color: var(--code-ink); border-radius: 6px;
+  padding: 16px 18px; font-family: var(--mono); font-size: 13.5px; line-height: 1.6;
   overflow-x: auto; white-space: pre;
 }
 pre.term .c { color: var(--code-dim); }
-pre.term .k { color: var(--code-key); }
 
 .tbl-wrap { overflow-x: auto; }
-table { border-collapse: collapse; width: 100%; font-size: 15px; }
-th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
-th { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+table { border-collapse: collapse; width: 100%; font-size: 16px; }
+th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); }
+th { font-family: var(--mono); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
 td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
-.pill { display: inline-block; font-family: var(--mono); font-size: 11px; padding: 1px 7px; border-radius: 10px; border: 1px solid currentColor; color: var(--ok); }
+.pill { display: inline-block; font-family: var(--mono); font-size: 11.5px; padding: 1px 8px; border-radius: 10px; border: 1px solid currentColor; color: var(--ok); }
 
-.note { font-size: 14px; color: var(--muted); border-left: 3px solid var(--accent); padding-left: 10px; }
+.note { font-size: 15px; color: var(--muted); border-left: 3px solid var(--accent); padding-left: 12px; max-width: 75ch; }
 
-.controls { width: min(100%, 1100px); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.controls button {
-  font-family: var(--mono); font-size: 13px; background: var(--panel); color: var(--ink);
-  border: 1px solid var(--line); border-radius: 4px; padding: 6px 12px; cursor: pointer;
-}
-.controls button:hover { border-color: var(--accent); }
-.controls button:focus-visible, .dots button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.dots { display: flex; gap: 6px; flex-wrap: wrap; }
-.dots button { width: 26px; height: 6px; border-radius: 3px; border: 0; background: var(--line); cursor: pointer; padding: 0; }
-.dots button[aria-current="true"] { background: var(--accent); }
-.count { margin-left: auto; font-family: var(--mono); font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
-
-@media (max-width: 760px) {
-  html, body { height: auto; }
-  .slide { flex: none; }
+@media (max-width: 820px) {
   .cols { grid-template-columns: 1fr; }
-  .stats { grid-template-columns: 1fr 1fr; }
-  .body { padding: 18px 16px; }
+  .obs-row { grid-template-columns: 1fr; }
+  .obs-arrow { flex-direction: row; }
+  .obs-arrow svg { transform: rotate(90deg); }
+  section { min-height: auto; padding-block: 48px; }
 }
-@media (prefers-reduced-motion: no-preference) {
-  .slide:not([hidden]) { animation: in .2s ease-out; }
-  @keyframes in { from { transform: translateY(4px); } to { transform: none; } }
+@media (max-width: 480px) {
+  .obs-grid { grid-template-columns: repeat(2, 1fr); }
 }
 </style>
 </head>
 <body>
 
-<main class="deck" id="deck">
-
-<section class="slide" aria-label="Capa">
-  <div class="band"><span class="gate">T2</span> PDM_BIA · INF/UFG</div>
-  <div class="body" style="justify-content:center; gap:22px">
+<section id="capa" aria-label="Capa">
+  <div class="wrap">
+    <div class="meta">PDM_BIA · INF/UFG</div>
     <div class="eyebrow">Streaming e serving</div>
     <h1>Predição de atraso de voos com meteorologia em streaming</h1>
     <p class="lede">Observações meteorológicas dos aeródromos entram em tempo real por Pub/Sub e Dataflow até o BigQuery. O modelo de atraso, retreinado com essas variáveis, é servido pelo Vertex AI através de uma API no Cloud Run.</p>
   </div>
 </section>
 
-<section class="slide" aria-label="Fonte de dados">
-  <div class="band"><span class="gate">01</span> Fonte do streaming</div>
-  <div class="body">
-    <h2>A meteorologia é o dado que nasce em fluxo contínuo</h2>
+<section id="fonte" aria-label="Fonte do streaming">
+  <div class="wrap">
+    <div class="eyebrow"><span class="n">01</span> Fonte do streaming</div>
+    <h2>O clima no aeroporto muda de hora em hora, e cada mudança vira um evento</h2>
     <div class="cols">
-      <div style="display:grid; gap:10px; align-content:start">
-        <div class="eyebrow">Voos · VRA/ANAC</div>
+      <div>
+        <div class="col-title">Voos · VRA/ANAC</div>
         <ul class="list">
-          <li>Publicados mensalmente, após a realização dos voos.</li>
+          <li>Publicados uma vez por mês, depois que os voos acontecem.</li>
           <li>Processados em batch, na arquitetura Medallion do T1.</li>
         </ul>
       </div>
-      <div style="display:grid; gap:10px; align-content:start">
-        <div class="eyebrow">Meteorologia · METAR</div>
+      <div>
+        <div class="col-title">Meteorologia · METAR</div>
         <ul class="list">
-          <li>Boletim padrão da aviação, emitido de hora em hora por aeródromo.</li>
-          <li>Fonte: Iowa Environmental Mesonet, rede BR__ASOS.</li>
-          <li>Cobre 65 dos 100 aeródromos de origem e 92,9% dos voos.</li>
+          <li>Boletim que cada aeroporto emite a cada hora, com vento, visibilidade, nuvens e fenômenos como chuva e trovoada.</li>
+          <li>Cobre 65 dos 100 aeroportos de origem, que somam 92,9% dos voos.</li>
         </ul>
       </div>
     </div>
-    <pre class="term"><span class="c"># exemplo: uma observação METAR e as features que ela gera</span>
-SBGO 201800Z 32008KT 9999 <span class="k">TS</span> SCT030 27/22 Q1012
-  clima_velocidade_vento_kmh=14.8  clima_visibilidade_m=9999  clima_fenomenos="TS"
-  clima_cobertura_nuvens="SCT"     clima_temperatura_c=27.0   clima_pressao_hpa=1012</pre>
+
+    <div class="obs-row" role="group" aria-label="Exemplo real: duas observações seguidas do aeroporto de Confins">
+      <article class="obs">
+        <div class="obs-head"><span class="obs-place">Confins (BH)</span><span class="obs-time">20/12/2024 · 16:00</span></div>
+        <div class="obs-sky">Pancadas por perto, sem chuva no aeroporto</div>
+        <div class="obs-grid">
+          <div><div class="k">Temperatura</div><div class="v">26 °C</div></div>
+          <div><div class="k">Vento</div><div class="v">17 km/h</div></div>
+          <div><div class="k">Visibilidade</div><div class="v">10 km</div></div>
+        </div>
+        <div class="obs-raw">SBCF 201900Z 03009KT 9999 VCSH BKN040 FEW045TCU SCT100 26/17 Q1013</div>
+      </article>
+      <div class="obs-arrow" aria-hidden="true">
+        <svg viewBox="0 0 34 16"><path d="M1 8 H30 M24 2 L31 8 L24 14"/></svg>
+        1 hora
+      </div>
+      <article class="obs alert">
+        <div class="obs-head"><span class="obs-place">Confins (BH)</span><span class="obs-time">20/12/2024 · 17:00</span></div>
+        <div class="obs-sky">Trovoada com chuva leve</div>
+        <div class="obs-grid">
+          <div><div class="k">Temperatura</div><div class="v changed">21 °C</div></div>
+          <div><div class="k">Vento</div><div class="v">11 km/h</div></div>
+          <div><div class="k">Visibilidade</div><div class="v changed">7 km</div></div>
+        </div>
+        <div class="obs-raw">SBCF 202000Z 25006KT 7000 -TSRA SCT030 FEW040CB BKN100 21/18 Q1014</div>
+      </article>
+    </div>
+    <p class="note">Observações reais do histórico, em horário de Brasília. Cada boletim vira uma mensagem no Pub/Sub; o modelo usa a observação mais recente antes da partida prevista.</p>
   </div>
 </section>
 
-<section class="slide" aria-label="Pipeline de streaming">
-  <div class="band"><span class="gate">02</span> Pipeline de streaming</div>
-  <div class="body">
+<section id="pipeline" aria-label="Pipeline de streaming">
+  <div class="wrap">
+    <div class="eyebrow"><span class="n">02</span> Pipeline de streaming</div>
     <h2>Pub/Sub → Dataflow → BigQuery, com dead-letter</h2>
     <div class="flow-wrap">
-    <svg class="flow" viewBox="0 0 1000 210" role="img" aria-label="Simulador publica no Pub/Sub anac-metar; o Dataflow valida contra o contrato de features e grava no BigQuery; mensagens invalidas vao para o topico anac-metar-dlq">
+    <svg class="flow" viewBox="0 0 1000 210" role="img" aria-label="Simulador publica no Pub/Sub anac-metar; o Dataflow valida contra o contrato de features e grava no BigQuery; mensagens inválidas vão para o tópico anac-metar-dlq">
       <defs>
         <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="arrow" d="M0,0 L10,5 L0,10 z"/></marker>
         <marker id="arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="arrow warn" d="M0,0 L10,5 L0,10 z"/></marker>
@@ -224,9 +243,9 @@ SBGO 201800Z 32008KT 9999 <span class="k">TS</span> SCT030 27/22 Q1012
   </div>
 </section>
 
-<section class="slide" aria-label="Resultados do streaming">
-  <div class="band"><span class="gate">03</span> Resultados do streaming</div>
-  <div class="body">
+<section id="resultados" aria-label="Resultados do streaming">
+  <div class="wrap">
+    <div class="eyebrow"><span class="n">03</span> Resultados do streaming</div>
     <h2>Execução no GCP: 100 observações de 59 aeródromos</h2>
     <div class="cols">
       <div class="tbl-wrap">
@@ -254,9 +273,9 @@ observacoes  estacoes  lag_medio_s
   </div>
 </section>
 
-<section class="slide" aria-label="Modelo e serving">
-  <div class="band"><span class="gate">04</span> Modelo e serving</div>
-  <div class="body">
+<section id="modelo" aria-label="Modelo e serving">
+  <div class="wrap">
+    <div class="eyebrow"><span class="n">04</span> Modelo e serving</div>
     <h2>O modelo retreinado com clima é servido pelo Vertex AI</h2>
     <div class="cols">
       <ul class="list">
@@ -282,9 +301,9 @@ observacoes  estacoes  lag_medio_s
   </div>
 </section>
 
-<section class="slide" aria-label="Demonstração">
-  <div class="band"><span class="gate">05</span> Demonstração</div>
-  <div class="body" style="justify-content:center">
+<section id="demo" aria-label="Demonstração">
+  <div class="wrap">
+    <div class="eyebrow"><span class="n">05</span> Demonstração</div>
     <h2>Em execução no console do GCP</h2>
     <div class="cols">
       <ul class="list">
@@ -302,45 +321,5 @@ observacoes  estacoes  lag_medio_s
   </div>
 </section>
 
-</main>
-
-<nav class="controls" aria-label="Navegação dos slides">
-  <button type="button" id="prev" aria-label="Slide anterior">← anterior</button>
-  <button type="button" id="next" aria-label="Próximo slide">próximo →</button>
-  <div class="dots" id="dots"></div>
-  <span class="count" id="count"></span>
-</nav>
-
-<script>
-(function () {
-  var slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
-  var dots = document.getElementById("dots"), count = document.getElementById("count");
-  var i = 0;
-  try { var saved = parseInt(localStorage.getItem("t2-slide"), 10); if (saved >= 0 && saved < slides.length) i = saved; } catch (e) {}
-  slides.forEach(function (s, k) {
-    var b = document.createElement("button");
-    b.type = "button";
-    b.setAttribute("aria-label", "Ir ao slide " + (k + 1) + ": " + s.getAttribute("aria-label"));
-    b.addEventListener("click", function () { go(k); });
-    dots.appendChild(b);
-  });
-  function go(k) {
-    i = Math.max(0, Math.min(slides.length - 1, k));
-    slides.forEach(function (s, n) { s.hidden = n !== i; });
-    Array.prototype.forEach.call(dots.children, function (d, n) { d.setAttribute("aria-current", n === i ? "true" : "false"); });
-    count.textContent = (i + 1) + " / " + slides.length;
-    try { localStorage.setItem("t2-slide", String(i)); } catch (e) {}
-  }
-  document.getElementById("prev").addEventListener("click", function () { go(i - 1); });
-  document.getElementById("next").addEventListener("click", function () { go(i + 1); });
-  document.addEventListener("keydown", function (e) {
-    if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " ") { e.preventDefault(); go(i + 1); }
-    if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); go(i - 1); }
-    if (e.key === "Home") go(0);
-    if (e.key === "End") go(slides.length - 1);
-  });
-  go(i);
-})();
-</script>
 </body>
 </html>
