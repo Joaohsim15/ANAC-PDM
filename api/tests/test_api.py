@@ -306,3 +306,15 @@ def test_impute_numeric_nulls_troca_nulo_numerico_pela_media():
 def test_impute_numeric_nulls_falha_sem_media():
     with pytest.raises(PredictionError):
         impute_numeric_nulls({"clima_temperatura_c": None}, {})
+
+
+def test_docs_traz_exemplos_prontos_que_passam_no_contrato(client):
+    # a demo e feita pela pagina /docs: os exemplos tem que estar la e serem validos
+    spec = client.get("/openapi.json").json()
+    for rota in ("/predict", "/explain"):
+        exemplos = spec["paths"][rota]["post"]["requestBody"]["content"]["application/json"]["examples"]
+        assert {"com_trovoada", "sem_estacao"} <= set(exemplos)
+        for nome in ("com_trovoada", "sem_estacao"):
+            assert client.post(rota, json=exemplos[nome]["value"]).status_code == 200
+    invalido = spec["paths"]["/predict"]["post"]["requestBody"]["content"]["application/json"]["examples"]["invalido"]
+    assert client.post("/predict", json=invalido["value"]).status_code == 422
