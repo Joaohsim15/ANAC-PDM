@@ -151,17 +151,11 @@ td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
 <main class="deck" id="deck">
 
 <section class="slide" aria-label="Capa">
-  <div class="band"><span class="gate">T2</span> PDM_BIA · INF/UFG <span class="right">23/10/2026</span></div>
+  <div class="band"><span class="gate">T2</span> PDM_BIA · INF/UFG</div>
   <div class="body" style="justify-content:center; gap:22px">
-    <div class="eyebrow">Trabalho 2 · Streaming e serving</div>
+    <div class="eyebrow">Streaming e serving</div>
     <h1>Predição de atraso de voos com meteorologia em streaming</h1>
     <p class="lede">Observações meteorológicas dos aeródromos entram em tempo real por Pub/Sub e Dataflow até o BigQuery. O modelo de atraso, retreinado com essas variáveis, é servido pelo Vertex AI através de uma API no Cloud Run.</p>
-    <div class="stats">
-      <div class="stat"><div class="v">6,47 mi</div><div class="k">observações METAR (2016–2024)</div></div>
-      <div class="stat"><div class="v">127</div><div class="k">estações meteorológicas</div></div>
-      <div class="stat"><div class="v">0,16 s</div><div class="k">lag médio do streaming</div></div>
-      <div class="stat"><div class="v">100%</div><div class="k">eventos válidos gravados no ensaio</div></div>
-    </div>
   </div>
 </section>
 
@@ -233,7 +227,7 @@ SBGO 201800Z 32008KT 9999 <span class="k">TS</span> SCT030 27/22 Q1012
 <section class="slide" aria-label="Resultados do streaming">
   <div class="band"><span class="gate">03</span> Resultados do streaming</div>
   <div class="body">
-    <h2>Ensaio no GCP: 100 observações de 59 aeródromos</h2>
+    <h2>Execução no GCP: 100 observações de 59 aeródromos</h2>
     <div class="cols">
       <div class="tbl-wrap">
       <table>
