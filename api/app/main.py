@@ -18,7 +18,7 @@ from pydantic import BaseModel, Field
 
 from .contract import CONTRACT, FlightFeatures
 from .explainer import BigQueryExplainer, ExplainError, Explainer
-from .predictor import PredictionError, Predictor, VertexPredictor
+from .predictor import PredictionError, Predictor, VertexPredictor, load_training_means
 from .prediction_log import BigQueryPredictionLogger, PredictionLogger
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s %(message)s")
@@ -54,7 +54,13 @@ def build_predictor() -> Predictor:
     project = os.environ["GOOGLE_CLOUD_PROJECT"]
     region = os.environ.get("VERTEX_REGION", "us-central1")
     endpoint_id = os.environ["VERTEX_ENDPOINT_ID"]
-    return VertexPredictor(project=project, region=region, endpoint_id=endpoint_id)
+    # lido uma vez por instancia: e metadado do modelo, nao dado de voo
+    means = load_training_means(
+        project=project,
+        dataset=os.environ.get("BQ_DATASET", "tf_anac"),
+        model=os.environ.get("BQML_MODEL_ID", "mdl_anac_m1_boosted_tree"),
+    )
+    return VertexPredictor(project=project, region=region, endpoint_id=endpoint_id, training_means=means)
 
 
 def build_explainer() -> Explainer:
