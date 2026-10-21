@@ -2,10 +2,16 @@
 
 Plataforma de dados e MLOps na Google Cloud que prediz, **antes da decolagem**, a
 probabilidade de um voo comercial brasileiro partir com mais de 15 minutos de
-atraso. Construída sobre o **VRA (Voo Regular Ativo)** da ANAC — a carga
-histórica do T1 usa os **CSVs mensais** publicados em `siros.anac.gov.br`.
+atraso. Usa o histórico de voos do **VRA (Voo Regular Ativo)** da ANAC e
+observações meteorológicas **METAR** dos aeroportos.
 
 > Projeto da disciplina **PDM_BIA — Processamento de Dados Massivos** · INF/UFG · 2026.
+
+| | |
+| --- | --- |
+| Apresentação do T2 | <https://joaohsim15.github.io/ANAC-PDM/docs/apresentacao/t2-apresentacao.html> |
+| API no Cloud Run | <https://anac-api-67210160247.us-central1.run.app> — **privada**, ver [Chamar a API](#chamar-a-api) |
+| Versão entregue no T2 | tag [`v2-streaming`](https://github.com/Joaohsim15/ANAC-PDM/tree/v2-streaming) |
 
 ---
 
@@ -14,158 +20,180 @@ histórica do T1 usa os **CSVs mensais** publicados em `siros.anac.gov.br`.
 > *Este voo vai atrasar mais de 15 minutos na partida?*
 
 Saída do modelo: **probabilidade**, não a classe. O limiar de 15 minutos é o
-padrão internacional de pontualidade (OTP15) — e não o corte da própria ANAC, que
-considera pontual todo voo com até 30 minutos de atraso. Na base real, 15 minutos
-deixa **18,7%** dos voos na classe positiva; 30 minutos deixaria 9,6%.
-
-Há uma segunda pergunta proposta, ainda **em decisão pelo grupo**: *se atrasar, de
-quanto será?* Seria respondida por um segundo modelo em cascata, sobre as faixas
-oficiais da ANAC. Ver [P-08](docs/PRD.md#16-decisões-pendentes).
+padrão internacional de pontualidade (OTP15), e não o corte da própria ANAC, que
+considera pontual todo voo com até 30 minutos de atraso.
 
 ## As três entregas
 
-O projeto é **um único sistema** construído em três incrementos, e não três
-trabalhos independentes.
+O projeto é **um único sistema** construído em três incrementos.
 
 | Entrega | Data | Incremento | Tag |
 | --- | --- | --- | --- |
-| [Trabalho 1](docs/enunciados/trabalho-1.md) | 11/09/2026 | Arquitetura Medallion no BigQuery + modelo em BigQuery ML (SQL puro) | `v1-medallion` |
-| [Trabalho 2](docs/enunciados/trabalho-2.md) | 23/10/2026 | Pub/Sub + Dataflow → BigQuery; modelo no Vertex AI; API REST no Cloud Run | `v2-streaming` |
-| [Trabalho Final](docs/enunciados/trabalho-final.md) | 04/12/2026 | Dataflow consulta a API em tempo real, enriquece o evento e persiste; tudo orquestrado com n8n | `v3-final` |
+| [Trabalho 1](docs/enunciados/trabalho-1.md) | 11/09/2026 | Arquitetura Medallion no BigQuery + modelo em BigQuery ML | `v1-medallion` |
+| [Trabalho 2](docs/enunciados/trabalho-2.md) | 23/10/2026 | Arquitetura híbrida: METAR em streaming (Pub/Sub + Dataflow); modelo no Vertex AI; API REST no Cloud Run | `v2-streaming` |
+| [Trabalho Final](docs/enunciados/trabalho-final.md) | 04/12/2026 | Dataflow chama a API em tempo real e enriquece o evento; orquestração | `v3-final` |
 
-## Arquitetura
+## Arquitetura (T2)
+
+Dois pipelines que se encontram no modelo:
 
 ```text
-CSV VRA/ANAC ─▶ GCS (raw) ──▶ Bronze ──▶ Silver ──┬──▶ Gold agg_*  ──▶ Looker Studio
-                                                   └──▶ Gold features ──▶ BigQuery ML
-                                                                              │
-                                                                     EXPORT MODEL
-                                                                              ▼
-Simulador ──▶ Pub/Sub ──▶ Dataflow ──▶ Cloud Run API ◀── Vertex AI Endpoint
-                              │              │
-                              │        (probabilidade)
-                              ▼              │
-                       BigQuery ◀────────────┘
-                       (evento enriquecido)
+BATCH · histórico 2016–2024 (muda uma vez por mês)
 
-                     n8n no Cloud Run orquestra o fluxo
+  CSV VRA + METAR ─▶ Cloud Storage ─▶ Bronze ─▶ Silver ─▶ Gold ─▶ BigQuery ML ─▶ Vertex AI
+                     (por lote)       (external) (tipada) (features   (treino)     Model Registry
+                                                           + clima)                 + Endpoint
+                                                                                        ▲
+STREAMING · tempo real (uma observação por hora por aeroporto)                         │
+                                                                                        │
+  Gerador METAR ─▶ Pub/Sub ─▶ Dataflow ─▶ BigQuery: tb_anac_stream_metar               │
+                  anac-metar  (valida)    (mesmo dataset da Silver de METAR)            │
+                                 │                                                      │
+                                 └─▶ anac-metar-dlq  (inválidas, com o motivo)          │
+                                                                                        │
+SERVING                                                                                 │
+                                                                                        │
+  Cliente ── HTTP POST (voo + clima) ──▶ Cloud Run: anac-api ── /predict ───────────────┘
+                                                             └─ /explain ─▶ BigQuery ML
 ```
 
-Diagrama completo em [`docs/PRD.md` § 6](docs/PRD.md#6-visão-da-solução-e-arquitetura).
+- **Batch** organiza 9 anos de voos e clima em camadas Medallion, junta a
+  observação METAR mais recente antes de cada partida e treina o modelo.
+- **Streaming** recebe cada observação nova, valida contra o contrato de
+  features e grava no mesmo dataset do histórico. Mensagens fora do contrato vão
+  para um tópico de dead-letter, com o payload original e o motivo.
+- **Serving**: a API valida o pedido, consulta o endpoint do Vertex AI e devolve
+  a probabilidade. O modelo é registrado direto do BigQuery ML no Vertex, sem
+  exportar arquivo.
 
-### Trabalho 2 — streaming e API
+[`schemas/features.json`](schemas/features.json) é o contrato único de features,
+usado pela Gold, pelo `CREATE MODEL`, pela API e pelo Dataflow: 10 variáveis do
+voo e 9 de clima.
 
-| Componente | Onde |
-| --- | --- |
-| Contrato de features (fonte única) | [`schemas/features.json`](schemas/features.json) |
-| API de predição (FastAPI, Cloud Run) | [`api/`](api/) |
-| Simulador de eventos → Pub/Sub | [`streaming/producer/`](streaming/producer/) |
-| Pipeline Pub/Sub → BigQuery (Beam, Dataflow) | [`streaming/dataflow/`](streaming/dataflow/) |
-| Infraestrutura (tópicos, repositório, bucket) | [`terraform/`](terraform/) |
-| Liga/desliga e comandos da demo | [`scripts/t2/`](scripts/t2/) |
+### Particionamento
 
-Como rodar, ligar e desligar: [`docs/t2-operacao.md`](docs/t2-operacao.md).
+| Tabela | Partição | Cluster | Por quê |
+| --- | --- | --- | --- |
+| Bronze (VRA, METAR) | data de ingestão (pasta no GCS) | — | cada lote é reprocessável isoladamente |
+| Silver e Gold de voos | dia do voo | companhia, aeroporto de origem | consultas e corte de treino filtram por período |
+| Silver de METAR | dia da observação | aeroporto | o cruzamento com voos busca um aeroporto numa janela de horas |
+| `tb_anac_stream_metar` | dia do evento | aeroporto | o monitoramento lê só o dia corrente |
 
-## Stack
+## Estrutura do repositório
 
-| Camada | Tecnologia |
-| --- | --- |
-| Fonte | CSVs mensais do VRA (`siros.anac.gov.br`) — um arquivo por mês, sem autenticação. |
-| Armazenamento bruto | Google Cloud Storage |
-| Data warehouse | BigQuery (Medallion: Bronze / Silver / Gold) |
-| Machine learning | BigQuery ML → Vertex AI Model Registry + Endpoint |
-| Serviço de predição | FastAPI no Cloud Run |
-| Streaming | Pub/Sub + Dataflow (Apache Beam) |
-| Orquestração | n8n no Cloud Run, com estado em Cloud SQL Postgres |
-| BI | Looker Studio |
+```text
+api/                  # API FastAPI + Dockerfile + cloudbuild.yaml (Cloud Run)
+streaming/
+  producer/           # gerador de eventos METAR -> Pub/Sub
+  dataflow/           # pipeline Apache Beam: Pub/Sub -> validacao -> BigQuery + dead-letter
+schemas/features.json # contrato de features (fonte unica)
+sql/
+  setup/ bronze/ silver/ gold/ ml/ streaming/   # uma pasta por camada
+scripts/              # ingestao batch: download, validacao de contagem, upload ao GCS
+  t2/                 # liga/desliga dos recursos do T2 e comandos da demo
+notebooks/            # criacao da Bronze e da Silver de voos (T1)
+terraform/            # Pub/Sub, Artifact Registry, buckets
+docs/                 # PRD, enunciados, guia de operacao, apresentacoes
+```
+
+## Como executar
+
+Pré-requisitos: `gcloud` autenticado (`gcloud auth login --update-adc`),
+[`uv`](https://docs.astral.sh/uv/) e `terraform` ≥ 1.9. Copie `.env.example` para
+`.env` e preencha `PROJECT_ID`.
+
+### Pipeline batch
+
+```bash
+uv run python scripts/baixar_dados.py               # CSVs mensais do VRA
+uv run python scripts/ingest_bronze_vra_to_gcs.py   # upload com validacao de contagem
+uv run python scripts/baixar_metar.py               # historico METAR da IEM
+uv run python scripts/ingest_bronze_metar_to_gcs.py
+```
+
+Depois, os SQL na ordem das camadas: `sql/setup` → `sql/bronze` → `sql/silver` →
+`sql/gold` → `sql/ml`. O SQL novo usa `${PROJECT_ID}`, substituído com
+`envsubst`.
+
+### Infraestrutura, streaming e API
+
+```bash
+cd terraform && terraform init -backend-config="bucket=<PROJECT_ID>-anac-tfstate" && terraform apply && cd ..
+./scripts/t2/metar_table.sh            # tabela de destino do streaming
+./scripts/t2/vertex_register.sh        # registra o modelo no Vertex Model Registry
+
+./scripts/t2/vertex_deploy.sh          # implanta o modelo no endpoint (cobrado por hora)
+./scripts/t2/api_deploy.sh             # build da imagem e deploy no Cloud Run
+./scripts/t2/dataflow_start_metar.sh   # liga o pipeline de streaming (cobrado por hora)
+./scripts/t2/simulate_metar.sh         # gerador: publica observacoes no Pub/Sub
+```
+
+Desligar ao terminar: `dataflow_drain_metar.sh` e `vertex_undeploy.sh`. Guia
+completo, com custos e roteiro da demo: [`docs/t2-operacao.md`](docs/t2-operacao.md).
+
+### Testes
+
+```bash
+(cd api && uv run --group dev pytest -q)
+(cd streaming/dataflow && uv run --no-project --with-requirements requirements.txt --with pytest python -m pytest -q tests)
+(cd streaming/producer && uv run --no-project --with "apache-beam[gcp]==2.77.0" --with-requirements requirements.txt --with pytest python -m pytest -q tests)
+```
+
+## Chamar a API
+
+A API no Cloud Run é **privada**: não aceita chamada anônima e responde 403 sem
+token. O motivo é custo e segurança: o repositório é público e o endpoint do
+Vertex AI é cobrado por uso. Quem tem acesso ao projeto chama com o token de
+identidade do `gcloud`:
+
+```bash
+curl -H "Authorization: Bearer $(gcloud auth print-identity-token)" \
+     -H "Content-Type: application/json" \
+     -d '{"sg_empresa_icao":"GLO","sg_icao_origem":"SBGO","sg_icao_destino":"SBGR",
+          "cd_tipo_linha":"N","sg_equipamento_icao":"B738","dia_semana":"2","mes":"12",
+          "nr_assentos_ofertados":186,"hora_partida_prevista":13,"duracao_prevista_min":75,
+          "clima_temperatura_c":25.0,"clima_umidade_relativa_pct":73.8,
+          "clima_velocidade_vento_kmh":18.5,"clima_rajada_vento_kmh":40.7,
+          "clima_visibilidade_m":9994.0,"clima_pressao_hpa":1015.9,
+          "clima_cobertura_nuvens":"FEW","clima_altura_nuvens_m":762.0,
+          "clima_fenomenos":"-TSRA"}' \
+     https://anac-api-67210160247.us-central1.run.app/predict
+```
+
+Resposta: `{"prob_atraso": 0.61, "modelo": "vertex:...", "latencia_ms": ..., ...}`.
+A documentação interativa, com exemplos prontos, fica em `/docs`. Rotas:
+`GET /health`, `POST /predict` e `POST /explain` (peso de cada variável na
+previsão).
 
 ## Os dados
 
-| | |
-| --- | --- |
-| Acesso | `https://siros.anac.gov.br/siros/registros/diversos/vra/<ano>/VRA_<ano>_<mês>.csv` — um arquivo por mês |
-| Autenticação | Nenhuma |
-| Formato | CSV `;`-separado, encoding Latin-1/CP1252 — **não** UTF-8 |
-| Schema | **Instável**: 20 ou 21 colunas conforme o mês (coluna extra `Codeshare` a partir de out/2022) e `dt_referencia` em dois formatos de data. Detalhe em [`docs/bronze_silver.md`](docs/bronze_silver.md) |
-| Recorte usado no modelo | 2016-2024 · 108 arquivos · ≈ 2,35 GB · ≈ 8,2 milhões de linhas na Bronze → 6,19 milhões de voos na Gold. 2025 (12 arquivos) está no GCS, retido fora do treino |
-| Taxa de atraso > 15 min | 17,4% na Gold 2016-2024 (varia de 11% em 2020 a 38% em 2017); 18,7% na amostra de jun/2026 via API |
+| | Voos (VRA/ANAC) | Meteorologia (METAR) |
+| --- | --- | --- |
+| Fonte | CSVs mensais em `siros.anac.gov.br` | Iowa Environmental Mesonet, rede `BR__ASOS` |
+| Frequência | um arquivo por mês | uma observação por hora por aeroporto |
+| Recorte | 2016–2024: 6,19 milhões de voos na Gold | 2016–2024: 6,47 milhões de observações, 127 estações |
+| Autenticação | nenhuma | nenhuma |
 
 Ressalvas que moldaram o projeto:
 
-- **Os CSVs do portal `gov.br` não são baixáveis por script.** Esse portal está
-  atrás de um WAF que devolve um desafio JavaScript no lugar do arquivo.
-  `siros.anac.gov.br` — de onde o T1 efetivamente baixa os dados — é um domínio
-  diferente, sem esse bloqueio: um `GET` simples por mês basta
-  (`baixar_dados.py`).
-- **O schema do CSV não é fixo.** No primeiro lote carregado (36 arquivos,
-  2022-2024), 15 trazem uma 21ª coluna (`Codeshare`) e 21 trazem só 20; a coluna
-  `dt_referencia` aparece em dois formatos de data diferentes conforme o mês.
-  Tratado na Bronze (`allow_jagged_rows`) e na Silver (parse com fallback).
-- **Nem HTTP 200 nem upload "concluído" são prova de dado completo.** A API do
-  SAS/ANAC (fonte planejada originalmente) já devolveu 841 e depois 2.768
-  registros para a mesma chamada, ambas com HTTP 200 — achado que motivou a
-  regra geral do projeto: **toda ingestão valida contagem antes de persistir**.
-  Para o CSV, a validação real é comparar tamanho e contagem de linhas do
-  arquivo local contra o que chegou no GCS
-  (`scripts/ingest_bronze_vra_to_gcs.py`).
+- **O schema do CSV do VRA não é fixo**: 20 ou 21 colunas conforme o mês e
+  `dt_referencia` em dois formatos. Tratado na Bronze e na Silver
+  ([`docs/bronze_silver.md`](docs/bronze_silver.md)).
+- **HTTP 200 não prova dado completo.** Toda ingestão valida contagem e tamanho
+  antes de persistir.
+- **O VRA está em horário de Brasília** para todos os aeroportos; a conversão
+  para UTC, necessária para cruzar com o METAR, é um deslocamento fixo de 3 h.
+- **Sem vazamento de alvo.** Só entram no modelo atributos conhecidos antes da
+  decolagem; horário real e situação do voo são proibidos como entrada.
 
 ## Documentação
 
 | Documento | Conteúdo |
 | --- | --- |
-| [`docs/PRD.md`](docs/PRD.md) | Documento de requisitos: escopo, requisitos funcionais e não funcionais, métricas-alvo, modelo de dados, glossário, riscos, cronograma e critérios de aceite |
-| [`docs/enunciados/`](docs/enunciados/) | Transcrição fiel dos três enunciados da disciplina |
-
-## Estado atual (T1)
-
-Implementado e versionado neste repositório:
-
-| Etapa | Onde |
-| --- | --- |
-| Download dos CSVs mensais do VRA | [`scripts/baixar_dados.py`](scripts/baixar_dados.py) → `vra/*.csv` (não versionado, 5,3 GB) |
-| Upload para o GCS com validação de contagem/tamanho | [`scripts/ingest_bronze_vra_to_gcs.py`](scripts/ingest_bronze_vra_to_gcs.py) |
-| Setup do dataset BigQuery | [`sql/setup/create_dataset.sql`](sql/setup/create_dataset.sql) |
-| Criação da Bronze (`external table`) | [`notebooks/raw_to_bronze_vra.ipynb`](notebooks/raw_to_bronze_vra.ipynb) · DDL equivalente em [`sql/bronze/`](sql/bronze/) |
-| Criação da Silver (tipagem, dedup, filtros) | [`notebooks/bronze_to_silver_vra.ipynb`](notebooks/bronze_to_silver_vra.ipynb) · SQL em [`sql/silver/`](sql/silver/) |
-| Gerenciamento de dependências Python | [`pyproject.toml`](pyproject.toml) / `uv.lock` — `uv run python <script>` |
-
-
-## Estrutura planejada do repositório
-
-```text
-terraform/                  # infraestrutura declarada, mínima
-scripts/                    # ingestão batch: baixa CSV, valida, grava no GCS [implementado]
-notebooks/                  # notebooks de criação das tabelas por camada [implementado]
-streaming/
-  producer/                 # simulador de eventos → Pub/Sub
-  dataflow/                 # pipeline Beam
-sql/
-  setup/  bronze/  silver/  gold/  ml/   # setup/bronze/silver implementados
-api/                        # FastAPI + Dockerfile (Cloud Run)
-orchestration/              # workflows n8n
-schemas/features.json       # contrato de features
-docs/
-```
-
-`sql/` tem uma pasta por camada Medallion (sem prefixo numérico) — a ordem de
-execução é a própria ordem das camadas: `bronze` → `silver` →
-`gold` → `ml`.
-
-## Restrições que moldam o projeto
-
-- **Custo.** Crédito educacional de US 200, fragmentado em quatro billing
-  accounts de US 50. Recursos que cobram por hora ligada (Vertex AI Endpoint,
-  Dataflow streaming) são criados dias antes da apresentação e desligados logo
-  depois.
-- **Demonstração ao vivo.** Cada entrega precisa estar rodando em produção no dia
-  da apresentação, com tempo cronometrado — estourar o limite zera o quesito.
-  Nenhuma etapa da demo depende de fonte externa: os eventos vêm de um simulador
-  que relê o histórico.
-- **Sem vazamento de alvo.** Só entram no modelo atributos conhecidos antes da
-  decolagem. Horário real, situação do voo, justificativa de atraso e os campos
-  `ds_situacao_partida` / `ds_situacao_chegada` estão explicitamente proibidos como
-  feature. O último é o mais tentador: já contém a faixa de atraso pronta, e por
-  isso serve como rótulo, nunca como entrada.
+| [`docs/t2-operacao.md`](docs/t2-operacao.md) | Como ligar, desligar e demonstrar o T2 |
+| [`docs/PRD.md`](docs/PRD.md) | Requisitos, métricas, modelo de dados e decisões |
+| [`docs/bronze_silver.md`](docs/bronze_silver.md) | Tratamento do schema instável do VRA |
+| [`docs/enunciados/`](docs/enunciados/) | Transcrição dos três enunciados |
 
 ## Equipe
 
@@ -176,5 +204,6 @@ execução é a própria ordem das camadas: `bronze` → `silver` →
 
 ## Segurança
 
-Nenhuma credencial, chave de serviço ou identificador de projeto é versionado.
-Todos os identificadores são parametrizados por variável de ambiente.
+Nenhuma credencial, chave de serviço ou token é versionado; a configuração local
+fica em `.env` e `terraform/terraform.tfvars`, fora do Git. O id do projeto GCP
+aparece no código e na documentação, o que não dá acesso a nada sem credencial.

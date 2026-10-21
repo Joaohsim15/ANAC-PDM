@@ -160,6 +160,29 @@ td.why { color: var(--ink-2); }
 .flow .lane { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; fill: var(--accent); }
 @media (max-width: 820px) { .roles { grid-template-columns: 1fr; } }
 
+
+/* links e evidencias da secao final */
+.links { display: grid; gap: 12px; }
+.links > div { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; min-width: 0; }
+.links .t { font-weight: 600; margin-bottom: 4px; }
+.links a { font-family: var(--mono); font-size: 14px; color: var(--accent-dark); overflow-wrap: anywhere; }
+.links p { font-size: 15px; color: var(--ink-2); margin-top: 6px; }
+.badge { display: inline-block; font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; padding: 1px 7px; border-radius: 3px; background: var(--warn); color: var(--panel); margin-left: 8px; vertical-align: 2px; }
+
+/* impressao (PDF): uma secao por pagina 16:9 */
+@page { size: 1280px 720px; margin: 0; }
+@media print {
+  html, body { background: var(--bg); scroll-snap-type: none; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  section { min-height: 0; height: 720px; padding-block: 34px; padding-inline: 56px; break-after: page; break-inside: avoid; border-bottom: 0; overflow: hidden; }
+  section:last-of-type { break-after: auto; }
+  .wrap { max-width: none; gap: 16px; }
+  body { font-size: 18px; }
+  h1 { font-size: 54px; max-width: 22ch; }
+  h2 { font-size: 34px; max-width: 40ch; }
+  .lede { font-size: 21px; max-width: 70ch; }
+}
+
 @media (max-width: 820px) {
   .cols { grid-template-columns: 1fr; }
   .obs-row { grid-template-columns: 1fr; }
@@ -505,6 +528,29 @@ td.why { color: var(--ink-2); }
           <li>Modelo implantado no endpoint do Vertex AI.</li>
           <li>Serviço e revisão no Cloud Run.</li>
           <li>Predição e explicação pela API.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="links" aria-label="Código e links">
+  <div class="wrap">
+    <div class="eyebrow">Código e links</div>
+    <h2>Repositório, API e testes</h2>
+    <div class="cols">
+      <div class="links">
+        <div><div class="t">Código no GitHub</div><a href="https://github.com/Joaohsim15/ANAC-PDM">github.com/Joaohsim15/ANAC-PDM</a><p>Versão entregue: tag <code>v2-streaming</code>. Gerador, pipeline Dataflow, API com Dockerfile, SQL e README com a execução.</p></div>
+        <div><div class="t">API no Cloud Run <span class="badge">privada</span></div><a href="https://anac-api-67210160247.us-central1.run.app">anac-api-67210160247.us-central1.run.app</a><p>A API não aceita chamada anônima: sem token de identidade, responde 403. O repositório é público e cada predição consulta um endpoint cobrado no Vertex AI, então o acesso é restrito a contas do projeto. A chamada com token está no README.</p></div>
+      </div>
+      <div style="display:grid; gap:12px; align-content:start; min-width:0">
+        <div class="col-title" style="margin:0">Testado no GCP</div>
+        <ul class="list">
+          <li>Gerador → Pub/Sub → Dataflow → BigQuery: todos os eventos publicados gravados, em segundos.</li>
+          <li>Mensagem fora do contrato retida no dead-letter, com o motivo da recusa.</li>
+          <li>Predição da API igual à do BigQuery ML para o mesmo voo.</li>
+          <li>Pedido inválido recusado; chamada sem token bloqueada.</li>
+          <li>Latência da API abaixo de 1 segundo.</li>
         </ul>
       </div>
     </div>
