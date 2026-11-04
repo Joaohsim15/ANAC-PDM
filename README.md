@@ -10,7 +10,7 @@ observações meteorológicas **METAR** dos aeroportos.
 | | |
 | --- | --- |
 | Apresentação do T2 | <https://joaohsim15.github.io/ANAC-PDM/docs/apresentacao/t2-apresentacao.html> |
-| API no Cloud Run | <https://anac-api-67210160247.us-central1.run.app> — **privada**, ver [Chamar a API](#chamar-a-api) |
+| API no Cloud Run | <https://anac-api-945558234213.us-central1.run.app> — **privada**, ver [Chamar a API](#chamar-a-api) |
 | Versão entregue no T2 | tag [`v2-streaming`](https://github.com/Joaohsim15/ANAC-PDM/tree/v2-streaming) |
 
 ---
@@ -88,11 +88,11 @@ streaming/
   dataflow/           # pipeline Apache Beam: Pub/Sub -> validacao -> BigQuery + dead-letter
 schemas/features.json # contrato de features (fonte unica)
 sql/
-  setup/ bronze/ silver/ gold/ ml/ streaming/   # uma pasta por camada
+  bronze/ silver/ gold/ ml/ streaming/   # uma pasta por camada
 scripts/              # ingestao batch: download, validacao de contagem, upload ao GCS
   t2/                 # liga/desliga dos recursos do T2 e comandos da demo
 notebooks/            # criacao da Bronze e da Silver de voos (T1)
-terraform/            # Pub/Sub, Artifact Registry, buckets
+terraform/            # dataset, Pub/Sub, Artifact Registry, buckets
 docs/                 # PRD, enunciados, guia de operacao, apresentacoes
 ```
 
@@ -111,9 +111,11 @@ uv run python scripts/baixar_metar.py               # historico METAR da IEM
 uv run python scripts/ingest_bronze_metar_to_gcs.py
 ```
 
-Depois, os SQL na ordem das camadas: `sql/setup` → `sql/bronze` → `sql/silver` →
-`sql/gold` → `sql/ml`. O SQL novo usa `${PROJECT_ID}`, substituído com
-`envsubst`.
+Depois, os SQL na ordem das camadas: `sql/bronze` → `sql/silver` → `sql/gold` →
+`sql/ml`, cada um com `./scripts/run_sql.sh <arquivo.sql>`. O SQL não fixa o
+projeto: usa `${PROJECT_ID}` e `${GCS_BUCKET}`, trocados pelos valores do `.env`
+(o bucket da Bronze tem padrão `<PROJECT_ID>-anac-dados`). O dataset `tf_anac` e
+os buckets são criados pelo Terraform.
 
 ### Infraestrutura, streaming e API
 
@@ -157,7 +159,7 @@ curl -H "Authorization: Bearer $(gcloud auth print-identity-token)" \
           "clima_visibilidade_m":9994.0,"clima_pressao_hpa":1015.9,
           "clima_cobertura_nuvens":"FEW","clima_altura_nuvens_m":762.0,
           "clima_fenomenos":"-TSRA"}' \
-     https://anac-api-67210160247.us-central1.run.app/predict
+     https://anac-api-945558234213.us-central1.run.app/predict
 ```
 
 Resposta: `{"prob_atraso": 0.61, "modelo": "vertex:...", "latencia_ms": ..., ...}`.

@@ -17,7 +17,28 @@ apresentação ao vivo em produção:
 | T2 | 23/10/2026 | Pub/Sub + Dataflow → BigQuery; Vertex AI; API no Cloud Run | 🟡 em andamento — ver "Estado atual" |
 | TF | 04/12/2026 | Dataflow chama a API em tempo real, enriquece e persiste; orquestrado com n8n | ⚪ não iniciado |
 
-## Estado atual (21/10/2026)
+## Estado atual (04/11/2026)
+
+**Projeto GCP trocado em 04/11/2026.** O projeto original, `pdm-bia-2026`,
+ficou com a conta de faturamento **fechada** (o Owner não estava acessível
+para trocar a conta). Ele não é mais usado nem alterado. Só foi lido, para
+copiar os dados. Tudo foi replicado em **`skilled-chalice-505512-m8`**
+(número `945558234213`), projeto do Igor, que é **Owner**:
+- Terraform aplicado do zero: 20 recursos, agora incluindo o dataset
+  `tf_anac` e o bucket da Bronze `<projeto>-anac-dados`.
+- Tabelas e modelos copiados com `bq cp`. As contagens batem com a origem, e o
+  `ML.PREDICT` do voo de exemplo dá os mesmos 0,613587.
+- Modelo registrado no Vertex como `anac_m1_boosted_tree` versão **1**.
+- Endpoint novo e API em `https://anac-api-945558234213.us-central1.run.app`.
+
+A Bronze não pôde ser copiada (o GCS antigo recusa leitura com o faturamento
+fechado), então foi **baixada de novo** das fontes. A ANAC republicou em 22/10
+41 dos 120 CSVs do VRA, por isso a Bronze nova não é idêntica à que gerou a
+Silver, a Gold e o modelo atuais. Silver, Gold e modelos são cópias exatas e
+não foram reconstruídos. O ID do projeto e o bucket não são mais fixos no
+repositório: o SQL usa `${PROJECT_ID}`/`${GCS_BUCKET}` via
+`scripts/run_sql.sh`, e os notebooks leem `os.environ`.
+
 
 **Dados (T1).** A Gold `tb_anac_gold_features_atraso` cobre **2016-01-01 a
 2024-12-31: 6.187.534 voos**, com 17,4% de atraso > 15 min. O GCS tem 120 CSVs
@@ -81,15 +102,16 @@ depois da promoção — a produção já carrega o conteúdo deles.
   `anac-metar-dlq`; job drenado. O streaming de voos foi **removido do código**
   em 21/10; os tópicos `anac-voos*` seguem no Terraform, ociosos, até um
   `apply` depois da apresentação.
-- `terraform/`: 14 recursos aplicados. State no bucket `<projeto>-anac-tfstate`.
+- `terraform/`: 20 recursos aplicados no projeto novo. State no bucket `<projeto>-anac-tfstate`.
 - O M1 está registrado no Vertex Model Registry como `anac_m1_boosted_tree`.
 - O endpoint `anac-atraso-endpoint` foi testado com o M1 v2 implantado em
-  20–21/10 e está **sem modelo implantado**. Religar na véspera (22/10, à
-  noite).
+  20–21/10, ainda no projeto antigo. No projeto novo foi criado vazio em
+  04/11. Implantar o modelo pela UI na véspera da apresentação.
 
-**T2 — falta:** reimplantar o modelo em 22/10 à noite, publicar a API com
-`--demo` e ligar o Dataflow no dia. Ativar as service accounts dedicadas exige
-o Owner do projeto e fica para depois. Apresentam o Igor e um colega, 2,5 min
+**T2 — falta:** implantar o modelo na véspera, subir a API com `min=1` e ligar
+o Dataflow no dia, tudo pelo console, como ensaio. Com o Igor como Owner, as
+service accounts dedicadas (`manage_iam = true`) passaram a ser possíveis, mas
+ficam para depois. Apresentam o Igor e um colega, 2,5 min
 cada. Como operar: [`docs/t2-operacao.md`](docs/t2-operacao.md).
 
 **Meteorologia (IEM ASOS/METAR) — decidido em 15/10/2026, fonte trocada no
@@ -146,16 +168,19 @@ programados das próximas horas naquele aeródromo — ainda não combinado.
 
 ## Ambiente GCP — leia antes de mexer
 
-- **O projeto é compartilhado com exercícios de aula.** Os recursos do trabalho
-  usam o prefixo `anac-` (Pub/Sub, Artifact Registry, buckets), o dataset
-  `tf_anac`, o bucket `dados-anac-vra` e os modelos `mdl_anac_*`. **Não usar,
-  alterar nem apagar** nada de aula:
+- **Projeto: `skilled-chalice-505512-m8`** (desde 04/11/2026; o ID vem do
+  `.env`). **Não tocar no `pdm-bia-2026`**: o faturamento dele está fechado e
+  o usuário pediu para não alterá-lo.
+- **O projeto também guarda exercícios de aula.** Os recursos do trabalho usam
+  o prefixo `anac-` (Pub/Sub, Artifact Registry, buckets `<projeto>-anac-*`), o
+  dataset `tf_anac` e os modelos `mdl_anac_*`. **Não usar, alterar nem apagar**
+  nada de aula:
   - Pub/Sub `aula-pdm-*`;
   - datasets `aula_pdm`, `anuncios`, `erp`;
-  - os buckets de MLOps e de anúncios das aulas;
-  - o modelo Vertex `rf-preco-imoveis`;
-  - `tf_anac.tb_anac_silver_pubsub`, que é resto de aula dentro do dataset do
-    trabalho.
+  - buckets `anuncios-pdm-igor` e `<projeto>-mlops-aula`;
+  - a SA `airflow-mlops`.
+
+  `tb_anac_silver_pubsub`, que era resto de aula, não foi copiada.
 
   O Pub/Sub `aula-pdm-anac` **não serve ao T2**: grava direto no BigQuery, sem
   Dataflow. Antes de reaproveitar qualquer recurso existente, confira a origem.
@@ -164,15 +189,15 @@ programados das próximas horas naquele aeródromo — ainda não combinado.
   o Cloud Run com `min-instances=1`. Ao terminar uma sessão, nada disso pode
   ficar ligado. Implantar modelo no endpoint é ação cobrada: confirme com o
   usuário antes.
-- **O papel do usuário é Editor**, que não concede IAM. Service accounts
-  dedicadas só com `manage_iam = true` no Terraform, aplicado pelo Owner. O
-  dead-letter é feito no próprio pipeline pelo mesmo motivo: a política nativa
-  do Pub/Sub exigiria conceder papéis.
+- **O usuário é Owner** do projeto novo. Mesmo assim, o Terraform segue com
+  `manage_iam = false`: Cloud Run e Dataflow usam a conta padrão do Compute,
+  que tem `roles/editor`. O dead-letter continua no próprio pipeline (no projeto
+  antigo, o papel Editor não permitia conceder papéis à política nativa do
+  Pub/Sub).
 - **Sirva o modelo pelo registro direto BQML → Vertex** (`ALTER MODEL ... SET
-  OPTIONS (vertex_ai_model_id = ...)`), não pelo artefato em
-  `gs://dados-anac-vra/models/`. O artefato foi exportado em 10/09, antes do
-  treino final de 11/09, e diverge do modelo vigente (0,634 contra 0,608 no voo
-  de exemplo).
+  OPTIONS (vertex_ai_model_id = ...)`), não por artefato exportado. O artefato
+  antigo (`gs://dados-anac-vra/models/`, inacessível desde 04/11) era de um
+  treino anterior e divergia do modelo vigente.
 - **Credenciais ADC podem apontar a cota para outro projeto.** Os scripts fixam
   `GOOGLE_CLOUD_QUOTA_PROJECT`; ao rodar bibliotecas Python à mão, faça o mesmo.
   O token do `gcloud` expira com frequência: `gcloud auth login --update-adc`.

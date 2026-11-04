@@ -1,4 +1,4 @@
-CREATE OR REPLACE EXTERNAL TABLE `pdm-bia-2026.tf_anac.tb_anac_bronze`
+CREATE OR REPLACE EXTERNAL TABLE `${PROJECT_ID}.tf_anac.tb_anac_bronze`
 (
   sg_empresa_icao       STRING OPTIONS(description = 'Código ICAO da companhia operadora'),
   nm_empresa            STRING OPTIONS(description = 'Razão social da companhia'),
@@ -25,8 +25,8 @@ CREATE OR REPLACE EXTERNAL TABLE `pdm-bia-2026.tf_anac.tb_anac_bronze`
 WITH PARTITION COLUMNS
 OPTIONS (
   format = 'CSV',
-  uris = ['gs://dados-anac-vra/bronze/vra/raw/*'],
-  hive_partition_uri_prefix = 'gs://dados-anac-vra/bronze/vra/raw/',
+  uris = ['gs://${GCS_BUCKET}/bronze/vra/raw/*'],
+  hive_partition_uri_prefix = 'gs://${GCS_BUCKET}/bronze/vra/raw/',
   require_hive_partition_filter = false,
   field_delimiter = ';',
   skip_leading_rows = 1,

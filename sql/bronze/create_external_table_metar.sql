@@ -34,8 +34,8 @@ CREATE OR REPLACE EXTERNAL TABLE `${PROJECT_ID}.tf_anac.tb_anac_metar_bronze`
 WITH PARTITION COLUMNS
 OPTIONS (
   format = 'CSV',
-  uris = ['gs://dados-anac-vra/bronze/metar/raw/*'],
-  hive_partition_uri_prefix = 'gs://dados-anac-vra/bronze/metar/raw/',
+  uris = ['gs://${GCS_BUCKET}/bronze/metar/raw/*'],
+  hive_partition_uri_prefix = 'gs://${GCS_BUCKET}/bronze/metar/raw/',
   require_hive_partition_filter = false,
   field_delimiter = ',',
   skip_leading_rows = 1,

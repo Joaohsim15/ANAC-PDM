@@ -4,7 +4,7 @@
 -- Destino : tf_anac.mdl_anac_baseline_logreg
 -- ============================================================================
 
-CREATE OR REPLACE MODEL `pdm-bia-2026.tf_anac.mdl_anac_baseline_logreg`
+CREATE OR REPLACE MODEL `${PROJECT_ID}.tf_anac.mdl_anac_baseline_logreg`
 OPTIONS (
 MODEL_TYPE               = 'LOGISTIC_REG',
 INPUT_LABEL_COLS         = ['atrasou'],
@@ -24,4 +24,4 @@ clima_temperatura_c, clima_umidade_relativa_pct, clima_velocidade_vento_kmh,
 clima_rajada_vento_kmh, clima_visibilidade_m, clima_pressao_hpa,
 clima_cobertura_nuvens, clima_altura_nuvens_m, clima_fenomenos,
 atrasou
-FROM `pdm-bia-2026.tf_anac.vw_anac_gold_treino_m1_clima`;
+FROM `${PROJECT_ID}.tf_anac.vw_anac_gold_treino_m1_clima`;

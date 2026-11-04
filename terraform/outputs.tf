@@ -37,3 +37,11 @@ output "api_service_account" {
 output "dataflow_service_account" {
   value = var.manage_iam ? google_service_account.dataflow[0].email : null
 }
+
+output "dataset" {
+  value = google_bigquery_dataset.anac.dataset_id
+}
+
+output "dados_bucket" {
+  value = google_storage_bucket.dados.name
+}

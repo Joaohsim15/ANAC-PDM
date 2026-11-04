@@ -153,3 +153,28 @@ resource "google_storage_bucket" "dataflow" {
     }
   }
 }
+
+# ------------------------------------------------- Dados (BigQuery e GCS) ---
+
+# Dataset de todas as camadas. Fica em US (multi-regiao): o modelo do BigQuery ML
+# so e registrado no Vertex de us-central1 se o dataset estiver em US.
+resource "google_bigquery_dataset" "anac" {
+  dataset_id                 = var.dataset_id
+  location                   = "US"
+  description                = "ANAC-PDM: Medallion do VRA, METAR, streaming e modelos de atraso"
+  labels                     = var.labels
+  delete_contents_on_destroy = false
+
+  depends_on = [google_project_service.apis]
+}
+
+# CSVs brutos da Bronze (VRA e METAR), lidos pelas external tables. Mesma
+# localizacao do dataset (US) para o BigQuery ler sem copia entre regioes.
+resource "google_storage_bucket" "dados" {
+  name                        = "${var.project_id}-anac-dados"
+  location                    = "US"
+  uniform_bucket_level_access = true
+  public_access_prevention    = "enforced"
+  force_destroy               = false # guarda a Bronze: destroy nao apaga dado
+  labels                      = var.labels
+}

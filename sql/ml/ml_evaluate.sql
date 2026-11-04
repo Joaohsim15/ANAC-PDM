@@ -12,8 +12,8 @@ ROUND(recall,    4)        AS revocacao,
 ROUND(f1_score,  4)        AS f1,
 ROUND(accuracy,  4)        AS acuracia
 FROM ML.EVALUATE(
-MODEL `pdm-bia-2026.tf_anac.mdl_anac_baseline_logreg`,
-TABLE `pdm-bia-2026.tf_anac.vw_anac_gold_avaliacao_m1_clima`,
+MODEL `${PROJECT_ID}.tf_anac.mdl_anac_baseline_logreg`,
+TABLE `${PROJECT_ID}.tf_anac.vw_anac_gold_avaliacao_m1_clima`,
 STRUCT(0.5 AS threshold)
 )
 UNION ALL
@@ -25,8 +25,8 @@ ROUND(recall,    4),
 ROUND(f1_score,  4),
 ROUND(accuracy,  4)
 FROM ML.EVALUATE(
-MODEL `pdm-bia-2026.tf_anac.mdl_anac_m1_boosted_tree`,
-TABLE `pdm-bia-2026.tf_anac.vw_anac_gold_avaliacao_m1_clima`,
+MODEL `${PROJECT_ID}.tf_anac.mdl_anac_m1_boosted_tree`,
+TABLE `${PROJECT_ID}.tf_anac.vw_anac_gold_avaliacao_m1_clima`,
 STRUCT(0.5 AS threshold)
 )
 ORDER BY auc_roc DESC;
@@ -37,8 +37,8 @@ expected_label AS real,
 _0             AS predito_0,
 _1             AS predito_1
 FROM ML.CONFUSION_MATRIX(
-MODEL `pdm-bia-2026.tf_anac.mdl_anac_m1_boosted_tree`,
-TABLE `pdm-bia-2026.tf_anac.vw_anac_gold_avaliacao_m1_clima`,
+MODEL `${PROJECT_ID}.tf_anac.mdl_anac_m1_boosted_tree`,
+TABLE `${PROJECT_ID}.tf_anac.vw_anac_gold_avaliacao_m1_clima`,
 STRUCT(0.5 AS threshold)
 );
 
@@ -49,27 +49,27 @@ ROUND(recall,              4) AS revocacao,
 ROUND(false_positive_rate, 4) AS taxa_falso_positivo,
 true_positives, false_positives, true_negatives, false_negatives
 FROM ML.ROC_CURVE(
-MODEL `pdm-bia-2026.tf_anac.mdl_anac_m1_boosted_tree`,
-TABLE `pdm-bia-2026.tf_anac.vw_anac_gold_avaliacao_m1_clima`,
+MODEL `${PROJECT_ID}.tf_anac.mdl_anac_m1_boosted_tree`,
+TABLE `${PROJECT_ID}.tf_anac.vw_anac_gold_avaliacao_m1_clima`,
 GENERATE_ARRAY(0.0, 1.0, 0.05)
 )
 ORDER BY limiar;
 
 -- ------------------------------ 4. Importancia global das features --------
 SELECT feature, ROUND(attribution, 5) AS atribuicao
-FROM ML.GLOBAL_EXPLAIN(MODEL `pdm-bia-2026.tf_anac.mdl_anac_m1_boosted_tree`)
+FROM ML.GLOBAL_EXPLAIN(MODEL `${PROJECT_ID}.tf_anac.mdl_anac_m1_boosted_tree`)
 ORDER BY atribuicao DESC;
 
 -- --------------------- 5. Ganho de M1 sobre o baseline --------
 WITH m1 AS (
 SELECT roc_auc FROM ML.EVALUATE(
-MODEL `pdm-bia-2026.tf_anac.mdl_anac_m1_boosted_tree`,
-TABLE `pdm-bia-2026.tf_anac.vw_anac_gold_avaliacao_m1_clima`)
+MODEL `${PROJECT_ID}.tf_anac.mdl_anac_m1_boosted_tree`,
+TABLE `${PROJECT_ID}.tf_anac.vw_anac_gold_avaliacao_m1_clima`)
 ),
 bl AS (
 SELECT roc_auc FROM ML.EVALUATE(
-MODEL `pdm-bia-2026.tf_anac.mdl_anac_baseline_logreg`,
-TABLE `pdm-bia-2026.tf_anac.vw_anac_gold_avaliacao_m1_clima`)
+MODEL `${PROJECT_ID}.tf_anac.mdl_anac_baseline_logreg`,
+TABLE `${PROJECT_ID}.tf_anac.vw_anac_gold_avaliacao_m1_clima`)
 )
 SELECT
 ROUND(m1.roc_auc, 4)              AS auc_m1,
