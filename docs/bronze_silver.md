@@ -11,14 +11,14 @@ mudar. Para o dicionário de dados e os requisitos formais, ver
 ```text
 vra/*.csv (local; 4 lotes: 2022-2024, 2017-2021, 2016 e 2025 — 120 arquivos)
   → scripts/ingest_bronze_vra_to_gcs.py
-  → gs://dados-anac-vra/bronze/vra/raw/_ingested_at=<data>/_batch_id=<lote>/*.csv
+  → gs://<PROJECT_ID>-anac-dados/bronze/vra/raw/_ingested_at=<data>/_batch_id=<lote>/*.csv
   → notebooks/raw_to_bronze_vra.ipynb
   → <projeto>.tf_anac.tb_anac_bronze            (external table, os 4 lotes)
   → notebooks/bronze_to_silver_vra.ipynb
   → <projeto>.tf_anac.tb_anac_silver            (tabela nativa, 2016-2024)
 ```
 
-Bucket `dados-anac-vra`, dataset `tf_anac`. A Silver recebe os lotes de 2016 a
+Bucket `<PROJECT_ID>-anac-dados` (antes `dados-anac-vra`), dataset `tf_anac`. A Silver recebe os lotes de 2016 a
 2024 (6,19 milhões de voos); o lote `vra_2025_2025` está na Bronze, mas fica
 retido fora da Silver e do treino.
 

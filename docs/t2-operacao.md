@@ -94,8 +94,8 @@ e `DATAFLOW_SERVICE_ACCOUNT` no `.env`.
 
 Regras:
 
-- O endpoint fica ligado **só na véspera da apresentação (22/10, à noite) até o
-  fim dela em 23/10**.
+- O endpoint fica ligado **só da véspera da apresentação, à noite, até o fim
+  dela**.
 - Desimplantar não apaga o endpoint: o id continua o mesmo, e a API já
   publicada volta a responder assim que o modelo é reimplantado, sem novo deploy.
 - `dataflow_start_metar.sh` devolve o terminal assim que o job é submetido. O
@@ -114,12 +114,16 @@ A demonstração é feita pelo console do GCP. Duas peças não sobem pelo conso
 ficam ligadas antes, por terminal: o job do Dataflow (o pipeline é Python) e o
 modelo no endpoint do Vertex.
 
-Na véspera (22/10, à noite):
+Na véspera, à noite:
 
 ```bash
 ./scripts/t2/vertex_deploy.sh        # leva de 15 a 35 min
 ./scripts/t2/predict.sh              # confere a paridade: 0,613587
 ```
+
+Pelo console, o mesmo passo é: Vertex AI → Model Registry →
+`anac_m1_boosted_tree` → versão mais recente → **Implantar no endpoint** →
+endpoint existente `anac-atraso-endpoint`, `n1-standard-2`, 1 réplica.
 
 No dia (até 30 min antes):
 
@@ -128,6 +132,11 @@ No dia (até 30 min antes):
 ./scripts/t2/dataflow_start_metar.sh # volta em ~16 s; o worker leva ~4 min
 ./scripts/t2/simulate_metar.sh --limite 100 --por-segundo 5   # carga inicial
 ```
+
+Sem terminal local, tudo isso roda no Cloud Shell do console: `git clone` do
+repositório, `pip install --user uv`, `.env` com `PROJECT_ID` e os mesmos
+scripts. A API também sobe com 1 instância quente pela UI: Cloud Run →
+`anac-api` → **Editar e implantar nova revisão** → mínimo de instâncias = 1.
 
 Para abrir a API privada no navegador, no Cloud Shell:
 
@@ -148,7 +157,7 @@ Ao vivo, pelo console:
 | BigQuery | rodar `sql/streaming/monitor_stream_metar.sql` | contagem e lag em segundos |
 | Pub/Sub → `anac-metar` → Mensagens | publicar a mensagem inválida abaixo | valor fora do contrato |
 | Pub/Sub → `anac-metar-dlq-inspecao` → Mensagens | Pull | a mensagem recusada, com o motivo |
-| Vertex AI → Endpoints | abrir `anac-atraso-endpoint` | modelo versão 2 implantado |
+| Vertex AI → Endpoints | abrir `anac-atraso-endpoint` | modelo do BigQuery ML implantado |
 | `/docs` da API | `/predict` com `com_trovoada` e `sem_estacao` | 0,6136 e 0,6026 |
 | `/docs` da API | `/explain` com `com_trovoada` | peso de cada variável |
 | `/docs` da API | `/predict` com `invalido` | HTTP 422 |
