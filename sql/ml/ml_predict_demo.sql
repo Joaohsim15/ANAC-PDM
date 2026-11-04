@@ -27,7 +27,7 @@ predicted_atrasou,
 (SELECT p.prob FROM UNNEST(predicted_atrasou_probs) AS p
 WHERE CAST(p.label AS STRING) = '1') AS prob_atraso
 FROM ML.PREDICT(
-MODEL `pdm-bia-2026.tf_anac.mdl_anac_m1_boosted_tree`,
+MODEL `${PROJECT_ID}.tf_anac.mdl_anac_m1_boosted_tree`,
 TABLE voo_inventado
 )
 )
@@ -52,7 +52,7 @@ WHERE CAST(p.label AS STRING) = '1'), 4)        AS prob_atraso,
 atrasou                                         AS atrasou_de_fato,
 atraso_partida_minutos                          AS atraso_real_min
 FROM ML.PREDICT(
-MODEL `pdm-bia-2026.tf_anac.mdl_anac_m1_boosted_tree`,
+MODEL `${PROJECT_ID}.tf_anac.mdl_anac_m1_boosted_tree`,
 (
 SELECT
 -- as 10 features do contrato
@@ -61,7 +61,7 @@ sg_equipamento_icao, dia_semana, mes,
 nr_assentos_ofertados, hora_partida_prevista, duracao_prevista_min,
 -- carona para exibicao (ignoradas pelo modelo)
 nr_voo, dt_partida_prevista, atrasou, atraso_partida_minutos
-FROM `pdm-bia-2026.tf_anac.tb_anac_gold_features_atraso`
+FROM `${PROJECT_ID}.tf_anac.tb_anac_gold_features_atraso`
 WHERE dt_referencia = DATE '2024-12-20'
 )
 )

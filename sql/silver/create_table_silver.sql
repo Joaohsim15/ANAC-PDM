@@ -1,4 +1,4 @@
-CREATE OR REPLACE TABLE `pdm-bia-2026.tf_anac.tb_anac_silver`
+CREATE OR REPLACE TABLE `${PROJECT_ID}.tf_anac.tb_anac_silver`
 PARTITION BY dt_referencia
 CLUSTER BY sg_empresa_icao, sg_icao_origem
 AS
@@ -31,7 +31,7 @@ WITH tipado AS (
     _ingested_at,
     _batch_id,
     _FILE_NAME AS _source_uri
-  FROM `pdm-bia-2026.tf_anac.tb_anac_bronze`
+  FROM `${PROJECT_ID}.tf_anac.tb_anac_bronze`
   WHERE ds_situacao_voo = 'REALIZADO'
 ),
 deduplicado AS (

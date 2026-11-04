@@ -32,6 +32,8 @@ METAR_STREAM_TABLE="${METAR_STREAM_TABLE:-tb_anac_stream_metar}"
 
 DATAFLOW_SERVICE_ACCOUNT="${DATAFLOW_SERVICE_ACCOUNT:-}"
 DATAFLOW_BUCKET="${DATAFLOW_BUCKET:-${PROJECT_ID}-anac-dataflow}"
+# CSVs brutos da Bronze (VRA e METAR); usado pelo SQL da Bronze e pela ingestao
+export GCS_BUCKET="${GCS_BUCKET:-${PROJECT_ID}-anac-dados}"
 export IMAGE_REPO="${REGION}-docker.pkg.dev/${PROJECT_ID}/anac"
 
 log() { printf '\033[1;34m[t2]\033[0m %s\n' "$*"; }
