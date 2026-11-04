@@ -10,7 +10,7 @@ variable "region" {
 }
 
 variable "dataset_id" {
-  description = "Dataset do BigQuery que recebe a tabela de eventos"
+  description = "Dataset do BigQuery com as camadas Medallion, o streaming e os modelos"
   type        = string
   default     = "tf_anac"
 }
